@@ -20,6 +20,48 @@ func getFirstCampaign(t *testing.T) models.Campaign {
 	return campaigns[0]
 }
 
+// TestCampaignCompleteRequiresPOST ensures the complete endpoint only
+// accepts POST (as documented in gophish.js's api.campaignId.complete),
+// and no longer accidentally accepts GET, which is unsafe for a
+// state-mutating action.
+func TestCampaignCompleteRequiresPOST(t *testing.T) {
+	testCtx := setupTest(t)
+	createTestData(t)
+	campaign := getFirstCampaign(t)
+	url := fmt.Sprintf("/api/campaigns/%d/complete", campaign.Id)
+
+	// A GET request should no longer complete the campaign.
+	r := httptest.NewRequest(http.MethodGet, url, nil)
+	r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", testCtx.apiKey))
+	w := httptest.NewRecorder()
+	testCtx.apiServer.ServeHTTP(w, r)
+
+	got, err := models.GetCampaign(campaign.Id, 1)
+	if err != nil {
+		t.Fatalf("error getting campaign: %v", err)
+	}
+	if got.Status == models.CampaignComplete {
+		t.Fatalf("GET request should not have completed the campaign")
+	}
+
+	// A POST request should complete the campaign.
+	r = httptest.NewRequest(http.MethodPost, url, nil)
+	r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", testCtx.apiKey))
+	w = httptest.NewRecorder()
+	testCtx.apiServer.ServeHTTP(w, r)
+	if w.Code != http.StatusOK {
+		t.Fatalf("unexpected status code received. expected %d got %d: %s", http.StatusOK, w.Code, w.Body.String())
+	}
+
+	got, err = models.GetCampaign(campaign.Id, 1)
+	if err != nil {
+		t.Fatalf("error getting campaign: %v", err)
+	}
+	if got.Status != models.CampaignComplete {
+		t.Fatalf("expected campaign status %q, got %q", models.CampaignComplete, got.Status)
+	}
+}
+
 func TestCampaignResultReport(t *testing.T) {
 	testCtx := setupTest(t)
 	createTestData(t)
