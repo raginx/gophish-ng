@@ -325,6 +325,24 @@ func (s *ModelsSuite) TestMailLogGenerateNoCC(ch *check.C) {
 	ch.Assert(got.Cc, check.HasLen, 0)
 }
 
+func (s *ModelsSuite) TestMailLogGenerateIDNFromAndCC(ch *check.C) {
+	smtp := SMTP{
+		Name:        "Test SMTP",
+		Host:        "1.1.1.1:25",
+		FromAddress: "admin@rēdact.com",
+		UserId:      1,
+		CC:          "cc@münchen.de",
+	}
+	ch.Assert(PostSMTP(&smtp), check.Equals, nil)
+	campaign := s.createCampaignDependencies(ch)
+	campaign.SMTP = smtp
+
+	ch.Assert(PostCampaign(&campaign, campaign.UserId), check.Equals, nil)
+	got := s.emailFromFirstMailLog(campaign, ch)
+	ch.Assert(got.From, check.Equals, "admin@xn--rdact-iza.com")
+	ch.Assert(got.Cc, check.DeepEquals, []string{"cc@xn--mnchen-3ya.de"})
+}
+
 func (s *ModelsSuite) TestUnlockAllMailLogs(ch *check.C) {
 	campaign := s.createCampaign(ch)
 	ms, err := GetMailLogsByCampaign(campaign.Id)

@@ -50,6 +50,40 @@ func (s *ModelsSuite) TestPostSMTPNegativeSendRate(c *check.C) {
 	c.Assert(err, check.Equals, ErrInvalidSendRate)
 }
 
+func (s *ModelsSuite) TestPostSMTPValidIDNFrom(c *check.C) {
+	smtp := SMTP{
+		Name:        "Test SMTP",
+		Host:        "1.1.1.1:25",
+		FromAddress: "admin@rēdact.com",
+		UserId:      1,
+	}
+	err := PostSMTP(&smtp)
+	c.Assert(err, check.Equals, nil)
+
+	got, err := GetSMTP(smtp.Id, 1)
+	c.Assert(err, check.Equals, nil)
+	c.Assert(got.FromAddress, check.Equals, "admin@rēdact.com")
+}
+
+func (s *ModelsSuite) TestPostSMTPValidIDNCC(c *check.C) {
+	smtp := SMTP{
+		Name:        "Test SMTP",
+		Host:        "1.1.1.1:25",
+		FromAddress: "foo@example.com",
+		UserId:      1,
+		CC:          "cc@münchen.de",
+	}
+	err := PostSMTP(&smtp)
+	c.Assert(err, check.Equals, nil)
+}
+
+func (s *ModelsSuite) TestToASCIIAddress(c *check.C) {
+	c.Assert(toASCIIAddress("admin@rēdact.com"), check.Equals, "admin@xn--rdact-iza.com")
+	c.Assert(toASCIIAddress("admin@xn--rdact-iza.com"), check.Equals, "admin@xn--rdact-iza.com")
+	c.Assert(toASCIIAddress("admin@example.com"), check.Equals, "admin@example.com")
+	c.Assert(toASCIIAddress("not-an-address"), check.Equals, "not-an-address")
+}
+
 func (s *ModelsSuite) TestPostSMTPValidCC(c *check.C) {
 	smtp := SMTP{
 		Name:        "Test SMTP",

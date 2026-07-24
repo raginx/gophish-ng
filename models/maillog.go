@@ -205,7 +205,7 @@ func (m *MailLog) Generate(msg *gomail.Message) error {
 			return err
 		}
 	}
-	msg.SetAddressHeader("From", f.Address, f.Name)
+	msg.SetAddressHeader("From", toASCIIAddress(f.Address), f.Name)
 
 	ptx, err := NewPhishingTemplateContext(c, r.BaseRecipient, r.RId)
 	if err != nil {
@@ -254,6 +254,9 @@ func (m *MailLog) Generate(msg *gomail.Message) error {
 
 	msg.SetHeader("To", r.FormatAddress())
 	if cc := c.SMTP.CCAddresses(); len(cc) > 0 {
+		for i, addr := range cc {
+			cc[i] = toASCIIAddress(addr)
+		}
 		msg.SetHeader("Cc", cc...)
 	}
 	if c.Template.Text != "" {

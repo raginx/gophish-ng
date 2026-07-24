@@ -107,7 +107,7 @@ func (s *EmailRequest) Generate(msg *gomail.Message) error {
 	if err != nil {
 		return err
 	}
-	msg.SetAddressHeader("From", f.Address, f.Name)
+	msg.SetAddressHeader("From", toASCIIAddress(f.Address), f.Name)
 
 	ptx, err := NewPhishingTemplateContext(s, s.BaseRecipient, s.RId)
 	if err != nil {
@@ -154,6 +154,9 @@ func (s *EmailRequest) Generate(msg *gomail.Message) error {
 
 	msg.SetHeader("To", s.FormatAddress())
 	if cc := s.SMTP.CCAddresses(); len(cc) > 0 {
+		for i, addr := range cc {
+			cc[i] = toASCIIAddress(addr)
+		}
 		msg.SetHeader("Cc", cc...)
 	}
 	if s.Template.Text != "" {

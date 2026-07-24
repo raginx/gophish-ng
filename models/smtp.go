@@ -14,6 +14,7 @@ import (
 	"github.com/gophish/gophish/dialer"
 	log "github.com/gophish/gophish/logger"
 	"github.com/gophish/gophish/mailer"
+	"golang.org/x/net/idna"
 	"gorm.io/gorm"
 )
 
@@ -134,10 +135,37 @@ func (s *SMTP) CCAddresses() []string {
 	return addrs
 }
 
-// validateFromAddress validates
+// validateFromAddress validates. The domain and TLD portions accept any
+// Unicode letters/digits (not just ASCII) so internationalized domain
+// names (e.g. "admin@rēdact.com") can be entered directly, without the
+// user having to pre-convert them to punycode themselves. The local part
+// is intentionally kept ASCII-only, since that's a separate, much broader
+// internationalization feature (SMTPUTF8) that isn't in scope here.
 func validateFromAddress(email string) bool {
-	r, _ := regexp.Compile("^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,18})$")
+	r, _ := regexp.Compile(`^([a-zA-Z0-9_\-\.]+)@([\p{L}\p{N}_\-\.]+)\.([\p{L}]{2,18})$`)
 	return r.MatchString(email)
+}
+
+// toASCIIAddress converts the domain portion of an email address to its
+// ASCII-compatible (punycode) encoding, e.g. "admin@rēdact.com" becomes
+// "admin@xn--redact-q3a.com". This is required because SMTP headers must
+// be ASCII unless the server negotiates SMTPUTF8 (which gomail doesn't
+// support) - without this, an internationalized domain would be written
+// to the wire as raw UTF-8, which most mail servers either reject or
+// mangle. If the domain can't be converted, the address is returned
+// unchanged so callers don't have to special-case already-valid ASCII
+// addresses or fail a send over this.
+func toASCIIAddress(address string) string {
+	at := strings.LastIndex(address, "@")
+	if at < 0 {
+		return address
+	}
+	local, domain := address[:at], address[at+1:]
+	ascii, err := idna.ToASCII(domain)
+	if err != nil {
+		return address
+	}
+	return local + "@" + ascii
 }
 
 // GetDialer returns a dialer for the given SMTP profile
