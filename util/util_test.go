@@ -2,9 +2,12 @@ package util
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"mime/multipart"
 	"net/http"
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -58,5 +61,41 @@ func TestParseCSVEmail(t *testing.T) {
 	}
 	if !reflect.DeepEqual(expected, got[0]) {
 		t.Fatalf("Incorrect targets received. Expected: %#v\nGot: %#v", expected, got)
+	}
+}
+
+func TestCheckAndCreateSSL(t *testing.T) {
+	dir := t.TempDir()
+	cp := filepath.Join(dir, "test.crt")
+	kp := filepath.Join(dir, "test.key")
+
+	err := CheckAndCreateSSL(cp, kp)
+	if err != nil {
+		t.Fatalf("error creating self-signed certificate: %v", err)
+	}
+
+	// The files should be valid, loadable, non-empty PEM-encoded cert/key
+	// files - this exercises the fix where the pem.Encode/Close errors
+	// used to be silently ignored, which could otherwise leave behind a
+	// truncated cert/key pair while still reporting success.
+	if _, err := tls.LoadX509KeyPair(cp, kp); err != nil {
+		t.Fatalf("generated certificate/key pair is not valid: %v", err)
+	}
+
+	// A second call should be a no-op, since the files already exist.
+	certInfo, err := os.Stat(cp)
+	if err != nil {
+		t.Fatalf("error stat'ing generated certificate: %v", err)
+	}
+	err = CheckAndCreateSSL(cp, kp)
+	if err != nil {
+		t.Fatalf("error on second call to CheckAndCreateSSL: %v", err)
+	}
+	certInfoAfter, err := os.Stat(cp)
+	if err != nil {
+		t.Fatalf("error stat'ing certificate after second call: %v", err)
+	}
+	if certInfo.ModTime() != certInfoAfter.ModTime() {
+		t.Fatalf("expected existing certificate to be left untouched on second call")
 	}
 }

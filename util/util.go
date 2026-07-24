@@ -174,8 +174,13 @@ func CheckAndCreateSSL(cp string, kp string) error {
 	if err != nil {
 		return fmt.Errorf("tls certificate generation: failed to open %s for writing: %s", cp, err)
 	}
-	pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
-	certOut.Close()
+	if err := pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
+		_ = certOut.Close() // best-effort cleanup - we're already returning the more relevant error above
+		return fmt.Errorf("tls certificate generation: failed to write %s: %s", cp, err)
+	}
+	if err := certOut.Close(); err != nil {
+		return fmt.Errorf("tls certificate generation: failed to save %s: %s", cp, err)
+	}
 
 	keyOut, err := os.OpenFile(kp, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
@@ -184,11 +189,17 @@ func CheckAndCreateSSL(cp string, kp string) error {
 
 	b, err := x509.MarshalECPrivateKey(priv)
 	if err != nil {
+		_ = keyOut.Close() // best-effort cleanup - we're already returning the more relevant error above
 		return fmt.Errorf("tls certificate generation: unable to marshal ECDSA private key: %v", err)
 	}
 
-	pem.Encode(keyOut, &pem.Block{Type: "EC PRIVATE KEY", Bytes: b})
-	keyOut.Close()
+	if err := pem.Encode(keyOut, &pem.Block{Type: "EC PRIVATE KEY", Bytes: b}); err != nil {
+		_ = keyOut.Close() // best-effort cleanup - we're already returning the more relevant error above
+		return fmt.Errorf("tls certificate generation: failed to write %s: %s", kp, err)
+	}
+	if err := keyOut.Close(); err != nil {
+		return fmt.Errorf("tls certificate generation: failed to save %s: %s", kp, err)
+	}
 
 	log.Info("TLS Certificate Generation complete")
 	return nil

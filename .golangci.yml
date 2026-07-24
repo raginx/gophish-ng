@@ -1,0 +1,25 @@
+version: "2"
+linters:
+  settings:
+    errcheck:
+      # Ignoring the error from a deferred Close() is a standard, low-risk
+      # Go idiom for read-only resources (HTTP response bodies, files
+      # opened for reading, DB handles, etc.) - none of this codebase's
+      # ~12 defer-Close call sites write data that a failed Close could
+      # silently lose.
+      exclude-functions:
+        # Matches interface-typed Close() calls (e.g. http.Response.Body,
+        # which is typed as io.ReadCloser) - covers most read-only cases.
+        - (io.Closer).Close
+        # These don't get matched by the interface rule above because
+        # errcheck only matches it against literally-io.Closer-typed
+        # values, not concrete/other-interface types that merely
+        # implement Close() error - so they need their own entries.
+        # All three are read-only resources (a resolved MaxMind DB
+        # handle, a multipart form part, an already-flushed SMTP
+        # connection), where a failed Close is inconsequential. This
+        # deliberately does NOT cover *os.File or *archive/zip.Writer
+        # used for writing, where a failed Close can mean lost data.
+        - (*github.com/oschwald/maxminddb-golang.Reader).Close
+        - (*mime/multipart.Part).Close
+        - (github.com/gophish/gophish/mailer.Sender).Close

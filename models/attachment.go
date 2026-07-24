@@ -111,7 +111,9 @@ func (a *Attachment) ApplyTemplate(ptx PhishingTemplateContext) (io.Reader, erro
 				// For each file apply the template.
 				tFile, err = ExecuteTemplate(string(contents), ptx)
 				if err != nil {
-					zipWriter.Close() // Don't use defer when writing files https://www.joeshaw.org/dont-defer-close-on-writable-files/
+					// Best-effort cleanup - we're already returning the more
+					// relevant error from ExecuteTemplate above.
+					_ = zipWriter.Close() // Don't use defer when writing files https://www.joeshaw.org/dont-defer-close-on-writable-files/
 					return nil, err
 				}
 				// Check if the subfile changed. We only need this to be set once to know in the future to check the 'parent' file
@@ -124,17 +126,26 @@ func (a *Attachment) ApplyTemplate(ptx PhishingTemplateContext) (io.Reader, erro
 			// Write new Word archive
 			newZipFile, err := zipWriter.Create(zipFile.Name)
 			if err != nil {
-				zipWriter.Close() // Don't use defer when writing files https://www.joeshaw.org/dont-defer-close-on-writable-files/
+				// Best-effort cleanup - we're already returning the more
+				// relevant error from zipWriter.Create above.
+				_ = zipWriter.Close() // Don't use defer when writing files https://www.joeshaw.org/dont-defer-close-on-writable-files/
 				return nil, err
 			}
 			_, err = newZipFile.Write([]byte(tFile))
 			if err != nil {
-				zipWriter.Close()
+				// Best-effort cleanup - we're already returning the more
+				// relevant error from newZipFile.Write above.
+				_ = zipWriter.Close()
 				return nil, err
 			}
 		}
-		zipWriter.Close()
-		return bytes.NewReader(newZipArchive.Bytes()), err
+		// Close flushes the zip's central directory footer - if that fails,
+		// newZipArchive would contain a truncated/corrupt zip, so this error
+		// takes priority over whatever "err" was left over from the loop.
+		if err := zipWriter.Close(); err != nil {
+			return nil, err
+		}
+		return bytes.NewReader(newZipArchive.Bytes()), nil
 
 	case ".txt", ".html", ".ics":
 		b, err := ioutil.ReadAll(decodedAttachment)
