@@ -918,10 +918,20 @@ function refresh() {
     setRefresh = setTimeout(refresh, 60000)
 };
 
+// localDatetimeInputValue formats a Date the way <input type="datetime-local">
+// expects (no timezone suffix), using the browser's local timezone.
+function localDatetimeInputValue(date) {
+    var offsetMs = date.getTimezoneOffset() * 60000
+    return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16)
+}
+
 function report_mail(rid, cid) {
+    var nowValue = localDatetimeInputValue(new Date())
     Swal.fire({
         title: "Are you sure?",
-        text: "This result will be flagged as reported (RID: " + rid + ")",
+        html: "This result will be flagged as reported (RID: " + rid + ")<br><br>" +
+            "<label for='reportedDate'>Reported at:</label><br>" +
+            "<input type='datetime-local' id='reportedDate' class='swal2-input' value='" + nowValue + "' max='" + nowValue + "'>",
         type: "question",
         animation: false,
         showCancelButton: true,
@@ -929,33 +939,34 @@ function report_mail(rid, cid) {
         confirmButtonColor: "#428bca",
         reverseButtons: true,
         allowOutsideClick: false,
-        showLoaderOnConfirm: true
+        showLoaderOnConfirm: true,
+        preConfirm: function () {
+            var value = document.getElementById("reportedDate").value
+            if (!value) {
+                Swal.showValidationMessage("Please provide a reported date/time")
+                return false
+            }
+            var reportedDate = new Date(value)
+            if (reportedDate > new Date()) {
+                Swal.showValidationMessage("Reported date/time can't be in the future")
+                return false
+            }
+            return reportedDate.toISOString()
+        }
     }).then(function (result) {
-        if (result.value){
-            api.campaignId.get(cid).success((function(c) {
-                report_url = new URL(c.url)
-                report_url.pathname = '/report'
-                report_url.search = "?rid=" + rid 
-                fetch(report_url)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
-                    }
-                    refresh();
+        if (result.value) {
+            api.campaignId.report(cid, rid, result.value)
+                .success(function () {
+                    refresh()
                 })
-                .catch(error => {
-                    let errorMessage = error.message;
-                    if (error.message === "Failed to fetch") {
-                        errorMessage = "This might be due to Mixed Content issues or network problems.";
-                    }
+                .error(function (data) {
                     Swal.fire({
                         title: 'Error',
-                        text: errorMessage,
+                        text: data.responseJSON.message,
                         type: 'error',
                         confirmButtonText: 'Close'
                     });
-                });
-            }));
+                })
         }
     })
 }

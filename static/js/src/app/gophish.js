@@ -104,6 +104,10 @@ var api = {
         complete: function (id) {
             return query("/campaigns/" + id + "/complete", "GET", {}, true)
         },
+        // report() - Marks a result as reported at PUT /campaigns/:id/results/:rid/report
+        report: function (id, rid, reportedDate) {
+            return query("/campaigns/" + id + "/results/" + rid + "/report", "PUT", { reported_date: reportedDate }, false)
+        },
         // summary() - Queries the API for GET /campaigns/summary
         summary: function (id) {
             return query("/campaigns/" + id + "/summary", "GET", {}, true)

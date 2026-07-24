@@ -290,6 +290,8 @@ func renderPhishResponse(w http.ResponseWriter, r *http.Request, ptx models.Phis
 		http.NotFound(w, r)
 		return
 	}
+	// Set the Content-Type explicitly 
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Write([]byte(html))
 }
 

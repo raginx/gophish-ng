@@ -75,6 +75,51 @@ func (s *ModelsSuite) TestResultVariableStatus(ch *check.C) {
 	}
 }
 
+func (s *ModelsSuite) TestHandleEmailReport(ch *check.C) {
+	c := s.createCampaign(ch)
+	r := c.Results[0]
+
+	err := r.HandleEmailReport(EventDetails{})
+	ch.Assert(err, check.Equals, nil)
+	ch.Assert(r.Reported, check.Equals, true)
+
+	got, err := GetResult(r.RId)
+	ch.Assert(err, check.Equals, nil)
+	ch.Assert(got.Reported, check.Equals, true)
+}
+
+func (s *ModelsSuite) TestHandleEmailReportAtCustomTime(ch *check.C) {
+	c := s.createCampaign(ch)
+	r := c.Results[0]
+	reportedTime := time.Now().UTC().Add(-24 * time.Hour).Truncate(time.Second)
+
+	err := r.HandleEmailReportAt(EventDetails{}, reportedTime)
+	ch.Assert(err, check.Equals, nil)
+	ch.Assert(r.Reported, check.Equals, true)
+	ch.Assert(r.ModifiedDate.Equal(reportedTime), check.Equals, true)
+
+	got, err := GetResult(r.RId)
+	ch.Assert(err, check.Equals, nil)
+	ch.Assert(got.Reported, check.Equals, true)
+	ch.Assert(got.ModifiedDate.Equal(reportedTime), check.Equals, true)
+
+	campaign, err := GetCampaign(c.Id, c.UserId)
+	ch.Assert(err, check.Equals, nil)
+	lastEvent := campaign.Events[len(campaign.Events)-1]
+	ch.Assert(lastEvent.Message, check.Equals, EventReported)
+	ch.Assert(lastEvent.Time.Equal(reportedTime), check.Equals, true)
+}
+
+func (s *ModelsSuite) TestHandleEmailReportAtZeroTimeUsesNow(ch *check.C) {
+	c := s.createCampaign(ch)
+	r := c.Results[0]
+	before := time.Now().UTC()
+
+	err := r.HandleEmailReportAt(EventDetails{}, time.Time{})
+	ch.Assert(err, check.Equals, nil)
+	ch.Assert(r.ModifiedDate.Before(before), check.Equals, false)
+}
+
 func (s *ModelsSuite) TestDuplicateResults(ch *check.C) {
 	group := Group{Name: "Test Group"}
 	group.Targets = []Target{

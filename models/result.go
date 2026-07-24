@@ -136,11 +136,28 @@ func (r *Result) HandleFormSubmit(details EventDetails) error {
 }
 
 // HandleEmailReport updates a Result in the case where they report a simulated
-// phishing email using the HTTP handler.
+// phishing email using the HTTP handler. The event and result are recorded
+// with the current time.
 func (r *Result) HandleEmailReport(details EventDetails) error {
+	return r.HandleEmailReportAt(details, time.Time{})
+}
+
+// HandleEmailReportAt behaves like HandleEmailReport, but records the event
+// and result as having happened at reportedTime instead of the current
+// time. This is used when an admin manually marks a result as reported and
+// knows it actually happened earlier (e.g. reported through a channel
+// Gophish doesn't see, like forwarding to IT). A zero reportedTime falls
+// back to the current time.
+func (r *Result) HandleEmailReportAt(details EventDetails, reportedTime time.Time) error {
 	event, err := r.createEvent(EventReported, details)
 	if err != nil {
 		return err
+	}
+	if !reportedTime.IsZero() {
+		event.Time = reportedTime.UTC()
+		if err := db.Save(event).Error; err != nil {
+			return err
+		}
 	}
 	r.Reported = true
 	r.ModifiedDate = event.Time

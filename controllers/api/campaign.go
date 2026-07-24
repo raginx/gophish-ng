@@ -2,8 +2,10 @@ package api
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"strconv"
+	"time"
 
 	ctx "github.com/gophish/gophish/context"
 	log "github.com/gophish/gophish/logger"
@@ -117,6 +119,49 @@ func (as *Server) CampaignSummary(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		JSONResponse(w, cs, http.StatusOK)
+	}
+}
+
+// CampaignResultReport marks a single result within a campaign as reported.
+// This lets an admin flag a result as reported from the admin UI itself,
+// rather than the browser calling the phishing server's /report endpoint
+// directly - that endpoint is often on a different origin/scheme than the
+// admin panel (e.g. plain HTTP vs. the admin panel's HTTPS), which browsers
+// block as mixed content.
+func (as *Server) CampaignResultReport(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, _ := strconv.ParseInt(vars["id"], 0, 64)
+	rid := vars["rid"]
+	switch r.Method {
+	case "PUT":
+		_, err := models.GetCampaign(id, ctx.Get(r, "user_id").(int64))
+		if err != nil {
+			JSONResponse(w, models.Response{Success: false, Message: "Campaign not found"}, http.StatusNotFound)
+			return
+		}
+		result, err := models.GetResult(rid)
+		if err != nil || result.CampaignId != id {
+			JSONResponse(w, models.Response{Success: false, Message: "Result not found"}, http.StatusNotFound)
+			return
+		}
+		var body struct {
+			ReportedDate time.Time `json:"reported_date"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil && err != io.EOF {
+			JSONResponse(w, models.Response{Success: false, Message: "Invalid JSON structure"}, http.StatusBadRequest)
+			return
+		}
+		if !body.ReportedDate.IsZero() && body.ReportedDate.After(time.Now()) {
+			JSONResponse(w, models.Response{Success: false, Message: "Reported date can't be in the future"}, http.StatusBadRequest)
+			return
+		}
+		err = result.HandleEmailReportAt(models.EventDetails{}, body.ReportedDate)
+		if err != nil {
+			log.Error(err)
+			JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusInternalServerError)
+			return
+		}
+		JSONResponse(w, models.Response{Success: true, Message: "Result marked as reported"}, http.StatusOK)
 	}
 }
 

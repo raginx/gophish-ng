@@ -229,6 +229,25 @@ func TestClickedPhishingLinkAfterOpen(t *testing.T) {
 	}
 }
 
+func TestPhishHandlerContentType(t *testing.T) {
+	ctx := setupTest(t)
+	defer tearDown(t, ctx)
+	campaign := getFirstCampaign(t)
+	result := campaign.Results[0]
+
+	resp, err := http.Get(fmt.Sprintf("%s/?%s=%s", ctx.phishServer.URL, models.RecipientParameter, result.RId))
+	if err != nil {
+		t.Fatalf("error requesting / endpoint: %v", err)
+	}
+	defer resp.Body.Close()
+
+	expected := "text/html; charset=utf-8"
+	got := resp.Header.Get("Content-Type")
+	if got != expected {
+		t.Fatalf("unexpected Content-Type header received. expected %q got %q", expected, got)
+	}
+}
+
 func TestNoRecipientID(t *testing.T) {
 	ctx := setupTest(t)
 	defer tearDown(t, ctx)
