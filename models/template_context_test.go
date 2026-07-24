@@ -39,9 +39,28 @@ func (s *ModelsSuite) TestNewTemplateContext(c *check.C) {
 		TrackingURL:   fmt.Sprintf("%s/track?rid=%s", ctx.URL, r.RId),
 		From:          "From Address",
 		RId:           r.RId,
+		Domain:        "bar.com",
 	}
 	expected.Tracker = "<img alt='' style='display: none' src='" + expected.TrackingURL + "'/>"
 	got, err := NewPhishingTemplateContext(ctx, r.BaseRecipient, r.RId)
 	c.Assert(err, check.Equals, nil)
 	c.Assert(got, check.DeepEquals, expected)
+}
+
+func (s *ModelsSuite) TestNewTemplateContextDomainNoAtSign(c *check.C) {
+	r := Result{
+		BaseRecipient: BaseRecipient{
+			FirstName: "Foo",
+			LastName:  "Bar",
+			Email:     "not-an-email",
+		},
+		RId: "1234567",
+	}
+	ctx := mockTemplateContext{
+		URL:         "http://example.com",
+		FromAddress: "From Address <from@example.com>",
+	}
+	got, err := NewPhishingTemplateContext(ctx, r.BaseRecipient, r.RId)
+	c.Assert(err, check.Equals, nil)
+	c.Assert(got.Domain, check.Equals, "")
 }

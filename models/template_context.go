@@ -5,6 +5,7 @@ import (
 	"net/mail"
 	"net/url"
 	"path"
+	"strings"
 	"text/template"
 )
 
@@ -24,6 +25,9 @@ type PhishingTemplateContext struct {
 	TrackingURL string
 	RId         string
 	BaseURL     string
+	// Domain is the portion of the recipient's Email after the "@", e.g.
+	// "example.com" for "foo@example.com". Empty if the email has no "@".
+	Domain string
 	BaseRecipient
 }
 
@@ -61,6 +65,11 @@ func NewPhishingTemplateContext(ctx TemplateContext, r BaseRecipient, rid string
 	trackingURL.Path = path.Join(trackingURL.Path, "/track")
 	trackingURL.RawQuery = q.Encode()
 
+	domain := ""
+	if at := strings.LastIndex(r.Email, "@"); at >= 0 {
+		domain = r.Email[at+1:]
+	}
+
 	return PhishingTemplateContext{
 		BaseRecipient: r,
 		BaseURL:       baseURL.String(),
@@ -69,6 +78,7 @@ func NewPhishingTemplateContext(ctx TemplateContext, r BaseRecipient, rid string
 		Tracker:       "<img alt='' style='display: none' src='" + trackingURL.String() + "'/>",
 		From:          fn,
 		RId:           rid,
+		Domain:        domain,
 	}, nil
 }
 

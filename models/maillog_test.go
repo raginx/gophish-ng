@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"net/textproto"
+	"strings"
 	"testing"
 	"time"
 
@@ -380,6 +381,28 @@ func (s *ModelsSuite) TestURLTemplateRendering(ch *check.C) {
 	ch.Assert(got.Subject, check.Equals, expectedURL)
 	ch.Assert(string(got.Text), check.Equals, expectedURL)
 	ch.Assert(string(got.HTML), check.Equals, expectedURL)
+}
+
+func (s *ModelsSuite) TestDomainTemplateRendering(ch *check.C) {
+	template := Template{
+		Name:    "DomainTemplate",
+		UserId:  1,
+		Text:    "{{.Domain}}",
+		HTML:    "{{.Domain}}",
+		Subject: "{{.Domain}}",
+	}
+	ch.Assert(PostTemplate(&template), check.Equals, nil)
+	campaign := s.createCampaignDependencies(ch)
+	campaign.Template = template
+
+	ch.Assert(PostCampaign(&campaign, campaign.UserId), check.Equals, nil)
+	result := campaign.Results[0]
+	expectedDomain := strings.SplitN(result.Email, "@", 2)[1]
+
+	got := s.emailFromFirstMailLog(campaign, ch)
+	ch.Assert(got.Subject, check.Equals, expectedDomain)
+	ch.Assert(string(got.Text), check.Equals, expectedDomain)
+	ch.Assert(string(got.HTML), check.Equals, expectedDomain)
 }
 
 func (s *ModelsSuite) TestMailLogGenerateEmptySubject(ch *check.C) {
