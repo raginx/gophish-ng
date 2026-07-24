@@ -253,6 +253,9 @@ func (m *MailLog) Generate(msg *gomail.Message) error {
 	}
 
 	msg.SetHeader("To", r.FormatAddress())
+	if cc := c.SMTP.CCAddresses(); len(cc) > 0 {
+		msg.SetHeader("Cc", cc...)
+	}
 	if c.Template.Text != "" {
 		text, err := ExecuteTemplate(c.Template.Text, ptx)
 		if err != nil {

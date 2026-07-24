@@ -18,6 +18,7 @@ function sendTestEmail() {
         url: '',
         smtp: {
             from_address: $("#from").val(),
+            cc: $("#cc").val(),
             host: $("#host").val(),
             username: $("#username").val(),
             password: $("#password").val(),
@@ -55,6 +56,7 @@ function save(idx) {
     profile.name = $("#name").val()
     profile.interface_type = $("#interface_type").val()
     profile.from_address = $("#from").val()
+    profile.cc = $("#cc").val()
     profile.host = $("#host").val()
     profile.username = $("#username").val()
     profile.password = $("#password").val()
@@ -90,6 +92,7 @@ function dismiss() {
     $("#name").val("")
     $("#interface_type").val("SMTP")
     $("#from").val("")
+    $("#cc").val("")
     $("#host").val("")
     $("#username").val("")
     $("#password").val("")
@@ -160,6 +163,7 @@ function edit(idx) {
         $("#name").val(profile.name)
         $("#interface_type").val(profile.interface_type)
         $("#from").val(profile.from_address)
+        $("#cc").val(profile.cc)
         $("#host").val(profile.host)
         $("#username").val(profile.username)
         $("#password").val(profile.password)
@@ -182,6 +186,7 @@ function copy(idx) {
     $("#name").val("Copy of " + profile.name)
     $("#interface_type").val(profile.interface_type)
     $("#from").val(profile.from_address)
+    $("#cc").val(profile.cc)
     $("#host").val(profile.host)
     $("#username").val(profile.username)
     $("#password").val(profile.password)

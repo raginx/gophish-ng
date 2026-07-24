@@ -50,6 +50,34 @@ func (s *ModelsSuite) TestPostSMTPNegativeSendRate(c *check.C) {
 	c.Assert(err, check.Equals, ErrInvalidSendRate)
 }
 
+func (s *ModelsSuite) TestPostSMTPValidCC(c *check.C) {
+	smtp := SMTP{
+		Name:        "Test SMTP",
+		Host:        "1.1.1.1:25",
+		FromAddress: "foo@example.com",
+		UserId:      1,
+		CC:          "cc1@example.com, cc2@example.com",
+	}
+	err := PostSMTP(&smtp)
+	c.Assert(err, check.Equals, nil)
+
+	got, err := GetSMTP(smtp.Id, 1)
+	c.Assert(err, check.Equals, nil)
+	c.Assert(got.CCAddresses(), check.DeepEquals, []string{"cc1@example.com", "cc2@example.com"})
+}
+
+func (s *ModelsSuite) TestPostSMTPInvalidCC(c *check.C) {
+	smtp := SMTP{
+		Name:        "Test SMTP",
+		Host:        "1.1.1.1:25",
+		FromAddress: "foo@example.com",
+		UserId:      1,
+		CC:          "not-an-email",
+	}
+	err := PostSMTP(&smtp)
+	c.Assert(err, check.Equals, ErrInvalidCCAddress)
+}
+
 func (s *ModelsSuite) TestPostSMTPNoHost(c *check.C) {
 	smtp := SMTP{
 		Name:        "Test SMTP",

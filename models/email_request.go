@@ -153,6 +153,9 @@ func (s *EmailRequest) Generate(msg *gomail.Message) error {
 	}
 
 	msg.SetHeader("To", s.FormatAddress())
+	if cc := s.SMTP.CCAddresses(); len(cc) > 0 {
+		msg.SetHeader("Cc", cc...)
+	}
 	if s.Template.Text != "" {
 		text, err := ExecuteTemplate(s.Template.Text, ptx)
 		if err != nil {

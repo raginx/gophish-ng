@@ -106,6 +106,41 @@ func (s *ModelsSuite) TestEmailRequestGenerate(ch *check.C) {
 	}
 }
 
+func (s *ModelsSuite) TestEmailRequestGenerateCC(ch *check.C) {
+	smtp := SMTP{
+		FromAddress: "from@example.com",
+		CC:          "cc1@example.com, cc2@example.com",
+	}
+	template := Template{
+		Name:    "Test Template",
+		Subject: "Subject",
+		Text:    "Text",
+		HTML:    "HTML",
+	}
+	req := &EmailRequest{
+		SMTP:     smtp,
+		Template: template,
+		BaseRecipient: BaseRecipient{
+			FirstName: "First",
+			LastName:  "Last",
+			Email:     "firstlast@example.com",
+		},
+		FromAddress: smtp.FromAddress,
+	}
+
+	msg := gomail.NewMessage()
+	err := req.Generate(msg)
+	ch.Assert(err, check.Equals, nil)
+
+	msgBuff := &bytes.Buffer{}
+	_, err = msg.WriteTo(msgBuff)
+	ch.Assert(err, check.Equals, nil)
+
+	got, err := email.NewEmailFromReader(msgBuff)
+	ch.Assert(err, check.Equals, nil)
+	ch.Assert(got.Cc, check.DeepEquals, []string{"cc1@example.com, cc2@example.com"})
+}
+
 func (s *ModelsSuite) TestGetSmtpFrom(ch *check.C) {
 	smtp := SMTP{
 		FromAddress: "from@example.com",

@@ -302,6 +302,29 @@ func (s *ModelsSuite) TestMailLogGenerateOverrideTransparencyHeaders(ch *check.C
 	}
 }
 
+func (s *ModelsSuite) TestMailLogGenerateCC(ch *check.C) {
+	smtp := SMTP{
+		Name:        "Test SMTP",
+		Host:        "1.1.1.1:25",
+		FromAddress: "foo@example.com",
+		UserId:      1,
+		CC:          "cc1@example.com, cc2@example.com",
+	}
+	ch.Assert(PostSMTP(&smtp), check.Equals, nil)
+	campaign := s.createCampaignDependencies(ch)
+	campaign.SMTP = smtp
+
+	ch.Assert(PostCampaign(&campaign, campaign.UserId), check.Equals, nil)
+	got := s.emailFromFirstMailLog(campaign, ch)
+	ch.Assert(got.Cc, check.DeepEquals, []string{"cc1@example.com, cc2@example.com"})
+}
+
+func (s *ModelsSuite) TestMailLogGenerateNoCC(ch *check.C) {
+	campaign := s.createCampaign(ch)
+	got := s.emailFromFirstMailLog(campaign, ch)
+	ch.Assert(got.Cc, check.HasLen, 0)
+}
+
 func (s *ModelsSuite) TestUnlockAllMailLogs(ch *check.C) {
 	campaign := s.createCampaign(ch)
 	ms, err := GetMailLogsByCampaign(campaign.Id)

@@ -43,7 +43,9 @@ type SMTP struct {
 	IgnoreCertErrors bool   `json:"ignore_cert_errors"`
 	// SendRate is the maximum number of emails to send per second for this
 	// profile. 0 means unlimited.
-	SendRate     int       `json:"send_rate"`
+	SendRate int `json:"send_rate"`
+	// CC is a comma-separated list of emails. Empty means no CC
+	CC           string    `json:"cc,omitempty"`
 	Headers      []Header  `json:"headers"`
 	ModifiedDate time.Time `json:"modified_date"`
 }
@@ -75,6 +77,10 @@ var ErrInvalidHost = errors.New("Invalid SMTP server address")
 // ErrInvalidSendRate indicates that a negative send rate was provided
 var ErrInvalidSendRate = errors.New("send rate cannot be negative")
 
+// ErrInvalidCCAddress is thrown when the SMTP CC field contains a value
+// that is not a valid email address
+var ErrInvalidCCAddress = errors.New("Invalid CC address because it is not an email address")
+
 // TableName specifies the database tablename for Gorm to use
 func (s SMTP) TableName() string {
 	return "smtp"
@@ -96,6 +102,11 @@ func (s *SMTP) Validate() error {
 	if err != nil {
 		return err
 	}
+	for _, cc := range s.CCAddresses() {
+		if _, err := mail.ParseAddress(cc); err != nil {
+			return ErrInvalidCCAddress
+		}
+	}
 	// Make sure addr is in host:port format
 	hp := strings.Split(s.Host, ":")
 	if len(hp) > 2 {
@@ -108,6 +119,19 @@ func (s *SMTP) Validate() error {
 		return ErrInvalidHost
 	}
 	return err
+}
+
+// CCAddresses splits the comma-separated CC field into individual,
+// trimmed email addresses, skipping empty entries
+func (s *SMTP) CCAddresses() []string {
+	addrs := []string{}
+	for _, addr := range strings.Split(s.CC, ",") {
+		addr = strings.TrimSpace(addr)
+		if addr != "" {
+			addrs = append(addrs, addr)
+		}
+	}
+	return addrs
 }
 
 // validateFromAddress validates
