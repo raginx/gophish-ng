@@ -2,7 +2,7 @@
   <img src="https://raw.github.com/raginx/gophish/master/static/images/gophish_purple.png" alt="gophish logo" width="500">
 </p>
 
-<h1 align="center">Gophish (raginx fork)</h1>
+<h1 align="center">Gophish-NG</h1>
 
 <p align="center">
   <a href="https://github.com/raginx/gophish/actions/workflows/ci.yml"><img src="https://github.com/raginx/gophish/workflows/CI/badge.svg" alt="Build Status"></a>
