@@ -28,11 +28,16 @@ type PhishServer struct {
 
 // Config represents the configuration information.
 type Config struct {
-	AdminConf      AdminServer `json:"admin_server"`
-	PhishConf      PhishServer `json:"phish_server"`
-	DBName         string      `json:"db_name"`
-	DBPath         string      `json:"db_path"`
-	DBSSLCaPath    string      `json:"db_sslca_path"`
+	AdminConf   AdminServer `json:"admin_server"`
+	PhishConf   PhishServer `json:"phish_server"`
+	DBName      string      `json:"db_name"`
+	DBPath      string      `json:"db_path"`
+	DBSSLCaPath string      `json:"db_sslca_path"`
+	// DBMaxOpenConns overrides the database connection pool size. 0 (the
+	// default) picks a dialect-appropriate default: 1 for SQLite (which
+	// only supports a single writer), or a small pool for MySQL. Only
+	// needed to tune for a restrictive MySQL max_connections limit.
+	DBMaxOpenConns int         `json:"db_max_open_conns"`
 	MigrationsPath string      `json:"migrations_prefix"`
 	TestFlag       bool        `json:"test_flag"`
 	ContactAddress string      `json:"contact_address"`

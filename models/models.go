@@ -28,6 +28,17 @@ var conf *config.Config
 
 const MaxDatabaseConnectionAttempts int = 10
 
+// DefaultMySQLMaxOpenConns is the default connection pool size used for
+// MySQL when conf.DBMaxOpenConns isn't set. Unlike SQLite, MySQL handles
+// concurrent connections natively.
+const DefaultMySQLMaxOpenConns int = 25
+
+// DefaultMySQLConnMaxLifetime bounds how long a pooled MySQL connection is
+// reused before being recycled, so it gets refreshed before the MySQL
+// server's own wait_timeout (default 8h, but often lower on shared hosting)
+// closes it out from under us.
+const DefaultMySQLConnMaxLifetime = 5 * time.Minute
+
 // DefaultAdminUsername is the default username for the administrative user
 const DefaultAdminUsername = "admin"
 
@@ -91,6 +102,26 @@ func chooseDBDialect(name string) string {
 	default:
 		return "sqlite3"
 	}
+}
+
+// resolveMaxOpenConns picks the database connection pool size. SQLite only
+// supports a single writer at a time, so the pool is kept at 1 there to
+// avoid "database is locked" errors (see #331). MySQL has no such
+// restriction - capping it at 1 there as well just serializes every query
+// through a single connection, and under load (e.g. large campaigns) that
+// connection becoming stale/dropped (e.g. MySQL's wait_timeout) can stall
+// sending until the service is restarted (see #2939). override, from
+// conf.DBMaxOpenConns, lets operators pick a different value for their
+// environment (e.g. a restrictive MySQL max_connections limit); 0 means
+// "use the dialect default".
+func resolveMaxOpenConns(dbName string, override int) int {
+	if override != 0 {
+		return override
+	}
+	if chooseDBDialect(dbName) == "mysql" {
+		return DefaultMySQLMaxOpenConns
+	}
+	return 1
 }
 
 func createTemporaryPassword(u *User) error {
@@ -184,7 +215,10 @@ func Setup(c *config.Config) error {
 		log.Error(err)
 		return err
 	}
-	sqlDB.SetMaxOpenConns(1)
+	sqlDB.SetMaxOpenConns(resolveMaxOpenConns(conf.DBName, conf.DBMaxOpenConns))
+	if chooseDBDialect(conf.DBName) == "mysql" {
+		sqlDB.SetConnMaxLifetime(DefaultMySQLConnMaxLifetime)
+	}
 	// Migrate up to the latest version
 	err = goose.SetDialect(chooseDBDialect(conf.DBName))
 	if err != nil {
