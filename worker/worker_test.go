@@ -217,7 +217,9 @@ func TestProcessCampaignsSkipsFailedCampaignContext(t *testing.T) {
 			t.Fatalf("error getting maillogs for campaign: %v", err)
 		}
 		for _, m := range ms {
-			m.Unlock()
+			if err := m.Unlock(); err != nil {
+				t.Fatalf("error unlocking maillog: %v", err)
+			}
 		}
 	}
 
