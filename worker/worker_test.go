@@ -161,3 +161,101 @@ func TestMailLogGrouping(t *testing.T) {
 		}
 	}
 }
+
+// TestProcessCampaignsSkipsFailedCampaignContext verifies that if
+// GetCampaignMailContext fails for one campaign (e.g. its sending profile
+// was deleted out from under it), processCampaigns still sends mail for
+// every other campaign, and unlocks the failed campaign's maillogs instead
+// of leaving them stuck until a full service restart.
+func TestProcessCampaignsSkipsFailedCampaignContext(t *testing.T) {
+	setupTest(t)
+
+	// A second, independent sending profile so we can break just one
+	// campaign's context without affecting the others.
+	smtp := models.SMTP{Name: "Broken Profile"}
+	smtp.UserId = 1
+	smtp.Host = "example.com"
+	smtp.FromAddress = "broken@test.com"
+	if err := models.PostSMTP(&smtp); err != nil {
+		t.Fatalf("error creating second sending profile: %v", err)
+	}
+
+	goodCampaign, err := setupCampaign(0)
+	if err != nil {
+		t.Fatalf("error creating good campaign: %v", err)
+	}
+
+	template, err := models.GetTemplate(1, 1)
+	if err != nil {
+		t.Fatalf("error getting template: %v", err)
+	}
+	page, err := models.GetPage(1, 1)
+	if err != nil {
+		t.Fatalf("error getting page: %v", err)
+	}
+	group, err := models.GetGroup(1, 1)
+	if err != nil {
+		t.Fatalf("error getting group: %v", err)
+	}
+	badCampaign := models.Campaign{Name: "Bad campaign"}
+	badCampaign.UserId = 1
+	badCampaign.Template = template
+	badCampaign.Page = page
+	badCampaign.SMTP = smtp
+	badCampaign.Groups = []models.Group{group}
+	if err := models.PostCampaign(&badCampaign, badCampaign.UserId); err != nil {
+		t.Fatalf("error creating bad campaign: %v", err)
+	}
+	if err := badCampaign.UpdateStatus(models.CampaignEmailsSent); err != nil {
+		t.Fatalf("error updating bad campaign status: %v", err)
+	}
+
+	// Unlock the maillogs for both campaigns so the worker picks them up.
+	for _, c := range []*models.Campaign{goodCampaign, &badCampaign} {
+		ms, err := models.GetMailLogsByCampaign(c.Id)
+		if err != nil {
+			t.Fatalf("error getting maillogs for campaign: %v", err)
+		}
+		for _, m := range ms {
+			m.Unlock()
+		}
+	}
+
+	// Break the bad campaign's context by deleting its sending profile.
+	if err := models.DeleteSMTP(smtp.Id, 1); err != nil {
+		t.Fatalf("error deleting sending profile: %v", err)
+	}
+
+	lm := &logMailer{queue: make(chan []mailer.Mail, 10)}
+	worker := &DefaultWorker{}
+	worker.mailer = lm
+
+	if err := worker.processCampaigns(time.Now()); err != nil {
+		t.Fatalf("processCampaigns returned an error: %v", err)
+	}
+
+	// The good campaign's mail should still have been queued for sending.
+	select {
+	case ms := <-lm.queue:
+		maillog, ok := ms[0].(*models.MailLog)
+		if !ok {
+			t.Fatalf("unable to cast mail to models.MailLog")
+		}
+		if maillog.CampaignId != goodCampaign.Id {
+			t.Fatalf("unexpected campaign ID received for maillog: got %d expected %d", maillog.CampaignId, goodCampaign.Id)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatalf("timed out waiting for the good campaign's mail to be queued")
+	}
+
+	// The bad campaign's maillogs must be unlocked again, not stranded.
+	badMs, err := models.GetMailLogsByCampaign(badCampaign.Id)
+	if err != nil {
+		t.Fatalf("error getting maillogs for bad campaign: %v", err)
+	}
+	for _, m := range badMs {
+		if m.Processing {
+			t.Fatalf("expected maillog %s to be unlocked after a failed campaign context, but it's still locked", m.RId)
+		}
+	}
+}

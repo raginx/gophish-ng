@@ -59,24 +59,45 @@ func (w *DefaultWorker) processCampaigns(t time.Time) error {
 		return err
 	}
 	campaignCache := make(map[int64]models.Campaign)
+	failedCampaigns := make(map[int64]bool)
 	// We'll group the maillogs by campaign ID to (roughly) group
 	// them by sending profile. This lets the mailer re-use the Sender
 	// instead of having to re-connect to the SMTP server for every
 	// email.
 	msg := make(map[int64][]mailer.Mail)
 	for _, m := range ms {
+		if failedCampaigns[m.CampaignId] {
+			continue
+		}
 		// We cache the campaign here to greatly reduce the time it takes to
 		// generate the message (ref #1726)
 		c, ok := campaignCache[m.CampaignId]
 		if !ok {
 			c, err = models.GetCampaignMailContext(m.CampaignId, m.UserId)
 			if err != nil {
-				return err
+				log.Error(err)
+				failedCampaigns[m.CampaignId] = true
+				continue
 			}
 			campaignCache[c.Id] = c
 		}
 		m.CacheCampaign(&c)
 		msg[m.CampaignId] = append(msg[m.CampaignId], m)
+	}
+	// MailLogs belonging to a campaign whose context failed to load above
+	// were locked at the start of this function but never queued for
+	// sending. Unlock them so they're retried on the next tick instead of
+	// staying stuck until a full service restart.
+	if len(failedCampaigns) > 0 {
+		var stranded []*models.MailLog
+		for _, m := range ms {
+			if failedCampaigns[m.CampaignId] {
+				stranded = append(stranded, m)
+			}
+		}
+		if err := models.LockMailLogs(stranded, false); err != nil {
+			log.Error(err)
+		}
 	}
 
 	// Next, we process each group of maillogs in parallel
@@ -120,7 +141,10 @@ func (w *DefaultWorker) LaunchCampaign(c models.Campaign) {
 		log.Error(err)
 		return
 	}
-	models.LockMailLogs(ms, true)
+	if err := models.LockMailLogs(ms, true); err != nil {
+		log.Error(err)
+		return
+	}
 	// This is required since you cannot pass a slice of values
 	// that implements an interface as a slice of that interface.
 	mailEntries := []mailer.Mail{}
@@ -128,6 +152,9 @@ func (w *DefaultWorker) LaunchCampaign(c models.Campaign) {
 	campaignMailCtx, err := models.GetCampaignMailContext(c.Id, c.UserId)
 	if err != nil {
 		log.Error(err)
+		if unlockErr := models.LockMailLogs(ms, false); unlockErr != nil {
+			log.Error(unlockErr)
+		}
 		return
 	}
 	for _, m := range ms {
