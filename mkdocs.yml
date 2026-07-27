@@ -1,8 +1,8 @@
 site_name: Gophish-NG Documentation
 site_description: User guide for Gophish-NG, an actively maintained fork of Gophish
-site_url: https://raginx.github.io/gophish/
-repo_url: https://github.com/raginx/gophish
-repo_name: raginx/gophish
+site_url: https://raginx.github.io/gophish-ng/
+repo_url: https://github.com/raginx/gophish-ng
+repo_name: raginx/gophish-ng
 edit_uri: edit/master/docs/
 
 docs_dir: docs

@@ -1,14 +1,14 @@
 <p align="center">
-  <img src="https://raw.github.com/raginx/gophish/master/static/images/gophish_purple.png" alt="gophish logo" width="500">
+  <img src="https://raw.github.com/raginx/gophish-ng/master/static/images/gophish_purple.png" alt="gophish logo" width="500">
 </p>
 
 <h1 align="center">Gophish-NG</h1>
 
 <p align="center">
-  <a href="https://github.com/raginx/gophish/actions/workflows/ci.yml"><img src="https://github.com/raginx/gophish/workflows/CI/badge.svg" alt="Build Status"></a>
-  <a href="https://github.com/raginx/gophish/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License"></a>
-  <img src="https://img.shields.io/github/go-mod/go-version/raginx/gophish" alt="Go Version">
-  <a href="https://github.com/raginx/gophish/commits/master"><img src="https://img.shields.io/github/last-commit/raginx/gophish" alt="Last Commit"></a>
+  <a href="https://github.com/raginx/gophish-ng/actions/workflows/ci.yml"><img src="https://github.com/raginx/gophish-ng/workflows/CI/badge.svg" alt="Build Status"></a>
+  <a href="https://github.com/raginx/gophish-ng/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License"></a>
+  <img src="https://img.shields.io/github/go-mod/go-version/raginx/gophish-ng" alt="Go Version">
+  <a href="https://github.com/raginx/gophish-ng/commits/master"><img src="https://img.shields.io/github/last-commit/raginx/gophish-ng" alt="Last Commit"></a>
 </p>
 
 <p align="center"><strong>An actively maintained fork of Gophish, the open-source phishing toolkit.</strong></p>
@@ -73,7 +73,7 @@ per-recipient tracking, all through a single web UI.
 ## Install
 
 Pre-built binaries for this fork are available on the
-[releases page](https://github.com/raginx/gophish/releases). Alternatively,
+[releases page](https://github.com/raginx/gophish-ng/releases). Alternatively,
 build from source (see below). If you're looking for official upstream
 binaries instead, see the
 [upstream releases page](https://github.com/gophish/gophish/releases/).
@@ -83,8 +83,8 @@ binaries instead, see the
 **Requires Go 1.25 or above.**
 
 ```sh
-git clone https://github.com/raginx/gophish.git
-cd gophish
+git clone https://github.com/raginx/gophish-ng.git
+cd gophish-ng
 go build
 ```
 
@@ -119,14 +119,16 @@ time="2020-07-29T01:24:08Z" level=info msg="Please login with the username admin
 
 ## Documentation
 
+The full user guide is available at
+**[raginx.github.io/gophish-ng](https://raginx.github.io/gophish-ng/)**.
 Since this fork tracks upstream Gophish closely, the
-[upstream documentation](http://getgophish.com/documentation) mostly
+[upstream documentation](http://getgophish.com/documentation) also mostly
 applies.
 
 ## Issues
 
 Found a bug specific to this fork? Please
-[file an issue](https://github.com/raginx/gophish/issues/new) here. For
+[file an issue](https://github.com/raginx/gophish-ng/issues/new) here. For
 issues that also affect upstream Gophish, consider checking the
 [upstream issue tracker](https://github.com/gophish/gophish/issues) as
 well.

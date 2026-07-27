@@ -9,7 +9,7 @@ Then, execute the gophish binary. You will see some informational output showing
 If you're running a version of Gophish **after** v0.10.1, then temporary admin credentials are printed in these logs which you can use to login.
 
 ```text
-gophish@gophish.dev:~/src/github.com/raginx/gophish$ ./gophish
+gophish@gophish.dev:~/src/github.com/raginx/gophish-ng$ ./gophish
  time="2020-06-30T08:04:33-05:00" level=warning msg="No contact address has been configured."
  time="2020-06-30T08:04:33-05:00" level=warning msg="Please consider adding a contact_address entry in your config.json"
  time="2020-06-30T08:04:33-05:00" level=info msg="Please login with the username admin and the password 1178f855283d03d3"

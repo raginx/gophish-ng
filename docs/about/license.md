@@ -1,7 +1,7 @@
 # License
 
 Gophish-NG is licensed under the MIT License, same as upstream Gophish. The
-full, authoritative text lives in [`LICENSE`](https://github.com/raginx/gophish/blob/master/LICENSE)
+full, authoritative text lives in [`LICENSE`](https://github.com/raginx/gophish-ng/blob/master/LICENSE)
 at the root of the repository; it is reproduced here for convenience.
 
 ```text

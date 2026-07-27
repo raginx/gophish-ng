@@ -27,5 +27,5 @@ Gophish actually does:
 The features, workflows, and screenshots described in the rest of this
 guide apply equally to Gophish-NG and upstream Gophish, since this fork
 doesn't change user-facing behavior. See the
-[project README](https://github.com/raginx/gophish#readme) for the full
+[project README](https://github.com/raginx/gophish-ng#readme) for the full
 rationale.

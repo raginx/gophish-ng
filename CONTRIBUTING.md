@@ -16,6 +16,6 @@ suspected vulnerability.
 
 ## Reporting bugs / requesting features
 
-Please [file an issue](https://github.com/raginx/gophish/issues/new) with
+Please [file an issue](https://github.com/raginx/gophish-ng/issues/new) with
 as much detail as possible (steps to reproduce, expected vs. actual
 behavior, Gophish version/commit).

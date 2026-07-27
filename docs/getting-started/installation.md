@@ -2,7 +2,7 @@
 
 ## Installing Gophish-NG Using Pre-Built Binaries
 
-Gophish-NG is provided as a [pre-built binary](https://github.com/raginx/gophish/releases) for most operating systems. With this being the case, installation is as simple as downloading the ZIP file containing the binary that is built for your OS and extracting the contents.
+Gophish-NG is provided as a [pre-built binary](https://github.com/raginx/gophish-ng/releases) for most operating systems. With this being the case, installation is as simple as downloading the ZIP file containing the binary that is built for your OS and extracting the contents.
 
 If you're looking for official upstream Gophish binaries instead, see the
 [upstream releases page](https://github.com/gophish/gophish/releases/).
@@ -12,8 +12,8 @@ If you're looking for official upstream Gophish binaries instead, see the
 One of the major benefits of Gophish being written in the Go programming language is that it is extremely simple to build from source. All you will need is Go 1.25 or above.
 
 ```sh
-git clone https://github.com/raginx/gophish.git
-cd gophish
+git clone https://github.com/raginx/gophish-ng.git
+cd gophish-ng
 go build
 ```
 
@@ -127,7 +127,7 @@ Now that you have gophish installed, you’re ready to run the software. To laun
 Then, execute the gophish binary. You will see some informational output showing both the admin and phishing web servers starting up, as well as the database being created. This output will tell you the port numbers you can use to connect to the web interfaces.
 
 ```text
-gophish@gophish.dev:~/src/github.com/raginx/gophish$ ./gophish
+gophish@gophish.dev:~/src/github.com/raginx/gophish-ng$ ./gophish
  time="2020-06-30T08:04:33-05:00" level=warning msg="No contact address has been configured."
  time="2020-06-30T08:04:33-05:00" level=warning msg="Please consider adding a contact_address entry in your config.json"
  time="2020-06-30T08:04:33-05:00" level=info msg="Please login with the username admin and the password 1178f855283d03d3"
