@@ -72,9 +72,11 @@ per-recipient tracking, all through a single web UI.
 
 ## Install
 
-This fork does not currently publish binary releases. Build from source
-(see below). If you're looking for official upstream binaries instead, see
-the [upstream releases page](https://github.com/gophish/gophish/releases/).
+Pre-built binaries for this fork are available on the
+[releases page](https://github.com/raginx/gophish/releases). Alternatively,
+build from source (see below). If you're looking for official upstream
+binaries instead, see the
+[upstream releases page](https://github.com/gophish/gophish/releases/).
 
 ## Building From Source
 

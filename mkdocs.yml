@@ -1,0 +1,74 @@
+site_name: Gophish-NG Documentation
+site_description: User guide for Gophish-NG, an actively maintained fork of Gophish
+site_url: https://raginx.github.io/gophish/
+repo_url: https://github.com/raginx/gophish
+repo_name: raginx/gophish
+edit_uri: edit/master/docs/
+
+docs_dir: docs
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - content.action.edit
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Introduction: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - First Login: getting-started/first-login.md
+  - Tutorial:
+      - Overview: tutorial/index.md
+      - Introducing Morning Catch: tutorial/morning-catch.md
+      - Creating the Sending Profile: tutorial/creating-the-sending-profile.md
+      - Importing Groups: tutorial/importing-groups.md
+      - Creating the Template: tutorial/creating-the-template.md
+      - Creating the Landing Page: tutorial/creating-the-landing-page.md
+      - Launching the Campaign: tutorial/launching-the-campaign.md
+  - User Guide:
+      - Groups: guide/groups.md
+      - Templates: guide/templates.md
+      - Attachment Tracking: guide/attachments.md
+      - Landing Pages: guide/landing-pages.md
+      - Sending Profiles: guide/sending-profiles.md
+      - Campaigns: guide/campaigns.md
+      - Account Settings: guide/account-settings.md
+      - User Management: guide/user-management.md
+      - Logging: guide/logging.md
+  - Automation & Reporting:
+      - Using the API: automation/api.md
+      - Webhooks: automation/webhooks.md
+      - Generating Reports: automation/generating-reports.md
+      - Email Reporting: automation/email-reporting.md
+  - Reference:
+      - Template Reference: reference/template-reference.md
+      - Additional References: reference/additional-references.md
+      - FAQ: reference/faq.md
+  - About:
+      - What is Gophish?: about/what-is.md
+      - License: about/license.md

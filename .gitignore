@@ -30,3 +30,6 @@ gophish_admin.key
 gophish.db*
 gophish
 ROADMAP.md
+
+# MkDocs build output
+/site
