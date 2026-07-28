@@ -487,6 +487,10 @@ func (as *AdminServer) ResetPassword(w http.ResponseWriter, r *http.Request) {
 
 // TODO: Make this execute the template, too
 func getTemplate(w http.ResponseWriter, tmpl string) *template.Template {
+	// Every admin page is per-user data behind auth; don't let browsers
+	// cache or bfcache-restore it (ref gophish/gophish#2022 - stale data
+	// shown after switching accounts in the same browser).
+	w.Header().Set("Cache-Control", "no-store")
 	templates := template.New("template")
 	_, err := templates.ParseFiles("templates/base.html", "templates/nav.html", "templates/"+tmpl+".html", "templates/flashes.html")
 	if err != nil {

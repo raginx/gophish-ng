@@ -17,6 +17,10 @@ func JSONResponse(w http.ResponseWriter, d interface{}, c int) {
 		log.Error(err)
 	}
 	w.Header().Set("Content-Type", "application/json")
+	// Every API response is per-user data behind auth; don't let browsers or
+	// intermediate caches store it (ref gophish/gophish#2022 - stale data
+	// shown after switching accounts in the same browser).
+	w.Header().Set("Cache-Control", "no-store")
 	w.WriteHeader(c)
 	fmt.Fprintf(w, "%s", dj)
 }

@@ -122,6 +122,55 @@ func TestSuccessfulRedirect(t *testing.T) {
 	}
 }
 
+// TestAdminPageNoStore verifies that authenticated admin pages tell the
+// browser not to cache/bfcache them - otherwise a stale page can be shown
+// after switching accounts in the same browser (ref gophish/gophish#2022).
+func TestAdminPageNoStore(t *testing.T) {
+	ctx := setupTest(t)
+	defer tearDown(t, ctx)
+	// Stop at the first redirect so we get the POST /login response itself
+	// (and its Set-Cookie for the newly-authenticated session), rather than
+	// following on to further hops that only ever see an unauthenticated
+	// request - this http.Client has no CookieJar, so it can't carry a
+	// Secure session cookie across a plain-HTTP redirect chain, same as a
+	// real browser wouldn't either.
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		}}
+	loginResp := attemptLogin(t, ctx, client, "admin", "gophish", "")
+	if loginResp.StatusCode != http.StatusFound {
+		t.Fatalf("invalid status code received. expected %d got %d", http.StatusFound, loginResp.StatusCode)
+	}
+	sessionCookie := loginResp.Header.Get("Set-Cookie")
+	if sessionCookie == "" {
+		t.Fatalf("expected a session cookie to be set on successful login")
+	}
+
+	// Forward the session cookie manually (as attemptLogin itself does for
+	// the CSRF cookie), since it's Secure and this test server is plain
+	// HTTP - a CookieJar would (correctly) refuse to send it back.
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/campaigns", ctx.adminServer.URL), nil)
+	if err != nil {
+		t.Fatalf("error creating /campaigns request: %v", err)
+	}
+	req.Header.Set("Cookie", sessionCookie)
+	resp, err := (&http.Client{}).Do(req)
+	if err != nil {
+		t.Fatalf("error requesting /campaigns: %v", err)
+	}
+	// The freshly-created test admin has PasswordChangeRequired set, so the
+	// authenticated request above actually lands on /reset_password rather
+	// than /campaigns itself - that's still a getTemplate-rendered admin
+	// page, which is what this test cares about.
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected authenticated request to succeed, got status %d", resp.StatusCode)
+	}
+	if cc := resp.Header.Get("Cache-Control"); cc != "no-store" {
+		t.Fatalf("unexpected Cache-Control header on admin page: got %q, want %q", cc, "no-store")
+	}
+}
+
 func TestAccountLocked(t *testing.T) {
 	ctx := setupTest(t)
 	defer tearDown(t, ctx)
