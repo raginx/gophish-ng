@@ -210,6 +210,34 @@ func (s *ModelsSuite) TestCampaignGetResults(c *check.C) {
 	c.Assert(len(campaign.Results), check.Equals, len(got.Results))
 }
 
+// TestGetCampaignPhishContext verifies that the lightweight context used to
+// serve landing pages carries the fields it needs, but - unlike GetCampaign
+// - doesn't load the campaign's Results/Events history. That history is
+// what made every landing page hit scale with the campaign's size; see
+// gophish/gophish#2527.
+func (s *ModelsSuite) TestGetCampaignPhishContext(c *check.C) {
+	campaign := s.createCampaignDependencies(c)
+	campaign.URL = "http://example.com"
+	err := PostCampaign(&campaign, campaign.UserId)
+	c.Assert(err, check.Equals, nil)
+
+	got, err := GetCampaignPhishContext(campaign.Id, campaign.UserId)
+	c.Assert(err, check.Equals, nil)
+	c.Assert(got.Status, check.Equals, campaign.Status)
+	c.Assert(got.PageId, check.Equals, campaign.PageId)
+	c.Assert(got.URL, check.Equals, "http://example.com")
+	c.Assert(got.SMTP.FromAddress, check.Equals, campaign.SMTP.FromAddress)
+	c.Assert(len(got.Results), check.Equals, 0)
+	c.Assert(len(got.Events), check.Equals, 0)
+
+	// Sanity check that this campaign actually has results/events, so the
+	// assertions above are meaningful rather than vacuously true.
+	full, err := GetCampaign(campaign.Id, campaign.UserId)
+	c.Assert(err, check.Equals, nil)
+	c.Assert(len(full.Results) > 0, check.Equals, true)
+	c.Assert(len(full.Events) > 0, check.Equals, true)
+}
+
 func setupCampaignDependencies(b *testing.B, size int) {
 	group := Group{Name: "Test Group"}
 	// Create a large group of 5000 members

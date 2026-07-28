@@ -351,7 +351,7 @@ func setupContext(r *http.Request) (*http.Request, error) {
 	if err != nil {
 		return r, err
 	}
-	c, err := models.GetCampaign(rs.CampaignId, rs.UserId)
+	c, err := models.GetCampaignPhishContext(rs.CampaignId, rs.UserId)
 	if err != nil {
 		log.Error(err)
 		return r, err

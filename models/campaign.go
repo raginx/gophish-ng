@@ -406,6 +406,30 @@ func GetCampaignMailContext(id int64, uid int64) (Campaign, error) {
 	return c, nil
 }
 
+// GetCampaignPhishContext returns a campaign object with just the relevant
+// data needed to serve a landing page and record an event for a target
+// (open, click, or form submission). This includes the top-level metadata
+// and the sending profile (needed for the "From" address used in template
+// rendering) - notably not the template, nor the potentially large
+// Results/Events history.
+//
+// This should only ever be used if you specifically want this lightweight
+// context, since it returns a non-standard campaign object. Loading the
+// full Results/Events history here would make every landing page hit
+// scale with the campaign's size. ref: #2527
+func GetCampaignPhishContext(id int64, uid int64) (Campaign, error) {
+	c := Campaign{}
+	err := db.Where("id = ?", id).Where("user_id = ?", uid).First(&c).Error
+	if err != nil {
+		return c, err
+	}
+	err = db.Table("smtp").Where("id=?", c.SMTPId).First(&c.SMTP).Error
+	if err != nil {
+		return c, err
+	}
+	return c, nil
+}
+
 // GetCampaign returns the campaign, if it exists, specified by the given id and user_id.
 func GetCampaign(id int64, uid int64) (Campaign, error) {
 	c := Campaign{}
