@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -240,7 +241,7 @@ func Setup(c *config.Config) error {
 		return err
 	}
 	if userCount == 0 {
-		adminUser := User{
+		adminUser = User{
 			Username:               DefaultAdminUsername,
 			Role:                   adminRole,
 			RoleID:                 adminRole.ID,
@@ -272,6 +273,13 @@ func Setup(c *config.Config) error {
 	if adminUser.Username == "" {
 		adminUser, err = GetUserByUsername(DefaultAdminUsername)
 		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				// The default admin account was renamed or deleted after
+				// initial setup. That's fine - there's no bootstrap
+				// password left to manage, so there's nothing more to do
+				// here.
+				return nil
+			}
 			log.Error(err)
 			return err
 		}
