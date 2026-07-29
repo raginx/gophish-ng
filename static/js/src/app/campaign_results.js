@@ -219,7 +219,9 @@ function exportAsCSV(scope) {
     var csvString = Papa.unparse(csvScope, {
         'escapeFormulae': true
     })
-    var csvData = new Blob([csvString], {
+    // Prepend a UTF-8 BOM so Excel correctly detects the
+    // encoding instead of garbling non-ASCII names
+    var csvData = new Blob(['\uFEFF' + csvString], {
         type: 'text/csv;charset=utf-8;'
     });
     if (navigator.msSaveBlob) {
