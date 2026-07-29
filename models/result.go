@@ -3,6 +3,7 @@ package models
 import (
 	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"math/big"
 	"net"
 	"time"
@@ -11,6 +12,10 @@ import (
 	"github.com/oschwald/maxminddb-golang"
 	"gorm.io/gorm"
 )
+
+// ErrResultNotEligibleForResend is returned when trying to resend a result
+// that isn't currently in an Error status.
+var ErrResultNotEligibleForResend = errors.New("only results with a status of Error can be resent")
 
 type mmCity struct {
 	GeoPoint mmGeoPoint `maxminddb:"location"`
@@ -224,4 +229,39 @@ func GetResult(rid string) (Result, error) {
 	r := Result{}
 	err := db.Where("r_id=?", rid).First(&r).Error
 	return r, err
+}
+
+// Resend resets a failed Result so the background worker will attempt to
+// send it again on its next tick. Only valid for results with an Error
+// status - the failure could be transient (rate limiting, a typo in the
+// address since fixed, a temporary mail server issue), and there was
+// previously no way to retry a single recipient without recreating the
+// whole campaign. See gophish/gophish#79.
+func (r *Result) Resend() error {
+	if r.Status != Error {
+		return ErrResultNotEligibleForResend
+	}
+	now := time.Now().UTC()
+	m, err := GetMailLogByRId(r.RId)
+	if err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return err
+		}
+		// A permanent failure (e.g. a 5xx SMTP error) deletes the mail log
+		// generate a fresh one rather than treating this as an error.
+		c := Campaign{Id: r.CampaignId, UserId: r.UserId}
+		if err := GenerateMailLog(&c, r, now); err != nil {
+			return err
+		}
+	} else {
+		m.SendAttempt = 0
+		m.SendDate = now
+		m.Processing = false
+		if err := db.Save(m).Error; err != nil {
+			return err
+		}
+	}
+	r.Status = StatusScheduled
+	r.ModifiedDate = now
+	return db.Save(r).Error
 }

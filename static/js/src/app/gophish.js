@@ -108,6 +108,14 @@ var api = {
         report: function (id, rid, reportedDate) {
             return query("/campaigns/" + id + "/results/" + rid + "/report", "PUT", { reported_date: reportedDate }, false)
         },
+        // resend() - Resends a single failed result at PUT /campaigns/:id/results/:rid/resend
+        resend: function (id, rid) {
+            return query("/campaigns/" + id + "/results/" + rid + "/resend", "PUT", {}, false)
+        },
+        // resendFailed() - Resends every failed result at PUT /campaigns/:id/resend
+        resendFailed: function (id) {
+            return query("/campaigns/" + id + "/resend", "PUT", {}, false)
+        },
         // summary() - Queries the API for GET /campaigns/summary
         summary: function (id) {
             return query("/campaigns/" + id + "/summary", "GET", {}, true)

@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -162,6 +163,66 @@ func (as *Server) CampaignResultReport(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		JSONResponse(w, models.Response{Success: true, Message: "Result marked as reported"}, http.StatusOK)
+	}
+}
+
+// CampaignResultResend resends a single result within a campaign that
+// previously failed to send. Only valid for results currently in an Error
+// status
+func (as *Server) CampaignResultResend(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, _ := strconv.ParseInt(vars["id"], 0, 64)
+	rid := vars["rid"]
+	switch r.Method {
+	case "PUT":
+		_, err := models.GetCampaign(id, ctx.Get(r, "user_id").(int64))
+		if err != nil {
+			JSONResponse(w, models.Response{Success: false, Message: "Campaign not found"}, http.StatusNotFound)
+			return
+		}
+		result, err := models.GetResult(rid)
+		if err != nil || result.CampaignId != id {
+			JSONResponse(w, models.Response{Success: false, Message: "Result not found"}, http.StatusNotFound)
+			return
+		}
+		err = result.Resend()
+		if err == models.ErrResultNotEligibleForResend {
+			JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusBadRequest)
+			return
+		}
+		if err != nil {
+			log.Error(err)
+			JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusInternalServerError)
+			return
+		}
+		JSONResponse(w, models.Response{Success: true, Message: "Result queued for resending"}, http.StatusOK)
+	}
+}
+
+// CampaignResendFailed resends every result within a campaign that's
+// currently in an Error status
+func (as *Server) CampaignResendFailed(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, _ := strconv.ParseInt(vars["id"], 0, 64)
+	switch r.Method {
+	case "PUT":
+		c, err := models.GetCampaign(id, ctx.Get(r, "user_id").(int64))
+		if err != nil {
+			JSONResponse(w, models.Response{Success: false, Message: "Campaign not found"}, http.StatusNotFound)
+			return
+		}
+		count := 0
+		for i := range c.Results {
+			if c.Results[i].Status != models.Error {
+				continue
+			}
+			if err := c.Results[i].Resend(); err != nil {
+				log.Error(err)
+				continue
+			}
+			count++
+		}
+		JSONResponse(w, models.Response{Success: true, Message: fmt.Sprintf("Queued %d result(s) for resending", count)}, http.StatusOK)
 	}
 }
 

@@ -303,6 +303,17 @@ func GetMailLogsByCampaign(cid int64) ([]*MailLog, error) {
 	return ms, err
 }
 
+// GetMailLogByRId returns the mail log for the given result ID, if one
+// exists. A permanent send failure (MailLog.Error) deletes the mail log,
+// so this returns gorm.ErrRecordNotFound in that case - callers that need
+// to resend a failed result should treat that as "generate a new one"
+// rather than an error
+func GetMailLogByRId(rid string) (*MailLog, error) {
+	m := &MailLog{}
+	err := db.Where("r_id = ?", rid).First(m).Error
+	return m, err
+}
+
 // LockMailLogs locks or unlocks a slice of maillogs for processing.
 func LockMailLogs(ms []*MailLog, lock bool) error {
 	tx := db.Begin()

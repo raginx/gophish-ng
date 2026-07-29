@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"gopkg.in/check.v1"
+	"gorm.io/gorm"
 )
 
 func (s *ModelsSuite) TestGenerateResultId(c *check.C) {
@@ -86,6 +87,83 @@ func (s *ModelsSuite) TestHandleEmailReport(ch *check.C) {
 	got, err := GetResult(r.RId)
 	ch.Assert(err, check.Equals, nil)
 	ch.Assert(got.Reported, check.Equals, true)
+}
+
+// TestResendNotEligible ensures Resend() refuses to act on a result that
+// isn't currently in an Error status
+func (s *ModelsSuite) TestResendNotEligible(ch *check.C) {
+	c := s.createCampaign(ch)
+	r := c.Results[0]
+	ch.Assert(r.Status, check.Equals, StatusSending)
+
+	err := r.Resend()
+	ch.Assert(err, check.Equals, ErrResultNotEligibleForResend)
+}
+
+// TestResendReusesExistingMailLog covers the case where a results mail
+// log still exists (eg. it errored out via a repeated transient failure
+// hitting MaxSendAttempts). Resend() should reset and reuse it rather
+// than creating a duplicate.
+func (s *ModelsSuite) TestResendReusesExistingMailLog(ch *check.C) {
+	c := s.createCampaign(ch)
+	r := c.Results[0]
+	r.Status = Error
+	ch.Assert(db.Save(&r).Error, check.Equals, nil)
+
+	m, err := GetMailLogByRId(r.RId)
+	ch.Assert(err, check.Equals, nil)
+	m.SendAttempt = 5
+	m.Processing = true
+	m.SendDate = time.Now().UTC().Add(-1 * time.Hour)
+	ch.Assert(db.Save(m).Error, check.Equals, nil)
+
+	ch.Assert(r.Resend(), check.Equals, nil)
+
+	got, err := GetResult(r.RId)
+	ch.Assert(err, check.Equals, nil)
+	ch.Assert(got.Status, check.Equals, StatusScheduled)
+
+	ms, err := GetMailLogsByCampaign(c.Id)
+	ch.Assert(err, check.Equals, nil)
+	found := 0
+	for _, m := range ms {
+		if m.RId != r.RId {
+			continue
+		}
+		found++
+		ch.Assert(m.SendAttempt, check.Equals, 0)
+		ch.Assert(m.Processing, check.Equals, false)
+		ch.Assert(m.SendDate.After(time.Now().Add(-time.Minute)), check.Equals, true)
+	}
+	ch.Assert(found, check.Equals, 1)
+}
+
+// TestResendGeneratesMailLogWhenDeleted covers the case where a results
+// mail log was already deleted (a permanent SMTP failure deletes it, see
+// MailLog.Error), Resend() should generate a fresh one rather than
+// erroring
+func (s *ModelsSuite) TestResendGeneratesMailLogWhenDeleted(ch *check.C) {
+	c := s.createCampaign(ch)
+	r := c.Results[0]
+	r.Status = Error
+	ch.Assert(db.Save(&r).Error, check.Equals, nil)
+
+	m, err := GetMailLogByRId(r.RId)
+	ch.Assert(err, check.Equals, nil)
+	ch.Assert(db.Delete(m).Error, check.Equals, nil)
+	_, err = GetMailLogByRId(r.RId)
+	ch.Assert(err, check.Equals, gorm.ErrRecordNotFound)
+
+	ch.Assert(r.Resend(), check.Equals, nil)
+
+	got, err := GetResult(r.RId)
+	ch.Assert(err, check.Equals, nil)
+	ch.Assert(got.Status, check.Equals, StatusScheduled)
+
+	newM, err := GetMailLogByRId(r.RId)
+	ch.Assert(err, check.Equals, nil)
+	ch.Assert(newM.SendAttempt, check.Equals, 0)
+	ch.Assert(newM.Processing, check.Equals, false)
 }
 
 func (s *ModelsSuite) TestHandleEmailReportAtCustomTime(ch *check.C) {

@@ -610,16 +610,22 @@ var updateMap = function (results) {
 
 /**
  * Creates a status label for use in the results datatable
- * @param {string} status 
- * @param {moment(datetime)} send_date 
+ * @param {string} status
+ * @param {moment(datetime)} send_date
+ * @param {string} rid
  */
-function createStatusLabel(status, send_date) {
+function createStatusLabel(status, send_date, rid) {
     var label = statuses[status].label || "label-default";
     var statusColumn = "<span class=\"label " + label + "\">" + status + "</span>"
     // Add the tooltip if the email is scheduled to be sent
     if (status == "Scheduled" || status == "Retrying") {
         var sendDateMessage = "Scheduled to send at " + send_date
         statusColumn = "<span class=\"label " + label + "\" data-toggle=\"tooltip\" data-placement=\"top\" data-html=\"true\" title=\"" + sendDateMessage + "\">" + status + "</span>"
+    }
+    // Let the admin retry a single failed send without recreating the
+    // whole campaign
+    if (status == "Error") {
+        statusColumn += " <i role=\"button\" class=\"fa fa-repeat text-muted\" data-toggle=\"tooltip\" title=\"Resend\" onclick=\"resend_mail('" + rid + "', '" + campaign.id + "');\"></i>"
     }
     return statusColumn
 }
@@ -770,7 +776,7 @@ function load() {
                         },
                         {
                             "render": function (data, type, row) {
-                                return createStatusLabel(data, row[8])
+                                return createStatusLabel(data, row[8], row[0])
                             },
                             "targets": [6]
                         },
@@ -959,6 +965,69 @@ function report_mail(rid, cid) {
         if (result.value) {
             api.campaignId.report(cid, rid, result.value)
                 .success(function () {
+                    refresh()
+                })
+                .error(function (data) {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.responseJSON.message,
+                        type: 'error',
+                        confirmButtonText: 'Close'
+                    });
+                })
+        }
+    })
+}
+
+// resend_mail resends a single result that previously failed to send
+function resend_mail(rid, cid) {
+    Swal.fire({
+        title: "Are you sure?",
+        text: "This will attempt to resend the email for this result (RID: " + rid + ")",
+        type: "question",
+        animation: false,
+        showCancelButton: true,
+        confirmButtonText: "Resend",
+        confirmButtonColor: "#428bca",
+        reverseButtons: true,
+        allowOutsideClick: false
+    }).then(function (result) {
+        if (result.value) {
+            api.campaignId.resend(cid, rid)
+                .success(function () {
+                    successFlash("Result queued for resending")
+                    refresh()
+                })
+                .error(function (data) {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.responseJSON.message,
+                        type: 'error',
+                        confirmButtonText: 'Close'
+                    });
+                })
+        }
+    })
+}
+
+// resend_all_failed resends every result in the campaign that's currently
+// in an Error state
+function resend_all_failed(cid) {
+    Swal.fire({
+        title: "Are you sure?",
+        text: "This will attempt to resend every failed email in this campaign.",
+        type: "question",
+        animation: false,
+        showCancelButton: true,
+        confirmButtonText: "Resend All Failed",
+        confirmButtonColor: "#428bca",
+        reverseButtons: true,
+        allowOutsideClick: false
+    }).then(function (result) {
+        if (result.value) {
+            api.campaignId.resendFailed(cid)
+                .success(function (data) {
+                    successFlash(data.message)
                     refresh()
                 })
                 .error(function (data) {
