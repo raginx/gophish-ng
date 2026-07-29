@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -41,6 +42,13 @@ func (as *Server) Pages(w http.ResponseWriter, r *http.Request) {
 		p.ModifiedDate = time.Now().UTC()
 		p.UserId = ctx.Get(r, "user_id").(int64)
 		err = models.PostPage(&p)
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			// Two concurrent requests both passed the check above before
+			// either finished inserting - the DB-level unique constraint
+			// is what actually stops the race (see #3278).
+			JSONResponse(w, models.Response{Success: false, Message: "Page name already in use"}, http.StatusConflict)
+			return
+		}
 		if err != nil {
 			JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusInternalServerError)
 			return

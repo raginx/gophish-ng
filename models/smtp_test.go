@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 
 	"gorm.io/gorm"
@@ -192,6 +193,17 @@ func (s *ModelsSuite) TestSMTPGetDialer(ch *check.C) {
 func (s *ModelsSuite) TestGetInvalidSMTP(ch *check.C) {
 	_, err := GetSMTP(-1, 1)
 	ch.Assert(err, check.Equals, gorm.ErrRecordNotFound)
+}
+
+// TestPostSMTPDuplicateName verifies that the database itself rejects a
+// second sending profile with the same (user_id, name)
+func (s *ModelsSuite) TestPostSMTPDuplicateName(ch *check.C) {
+	s1 := SMTP{Name: "Duplicate Profile", Host: "example.com:25", FromAddress: "test@example.com"}
+	ch.Assert(PostSMTP(&s1), check.Equals, nil)
+
+	s2 := SMTP{Name: "Duplicate Profile", Host: "example.com:25", FromAddress: "test@example.com"}
+	err := PostSMTP(&s2)
+	ch.Assert(errors.Is(err, gorm.ErrDuplicatedKey), check.Equals, true)
 }
 
 func (s *ModelsSuite) TestDefaultDeniedDial(ch *check.C) {

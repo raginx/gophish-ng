@@ -1,10 +1,12 @@
 package models
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 	"gopkg.in/check.v1"
+	"gorm.io/gorm"
 )
 
 func (s *ModelsSuite) TestPostPage(c *check.C) {
@@ -139,4 +141,15 @@ func (s *ModelsSuite) TestPageValidation(c *check.C) {
 	p.RedirectURL = "http://example.com/{{.INVALIDTAG}}"
 	err = p.Validate()
 	c.Assert(err, check.NotNil)
+}
+
+// TestPostPageDuplicateName verifies that the database itself rejects a
+// second page with the same (user_id, name)
+func (s *ModelsSuite) TestPostPageDuplicateName(c *check.C) {
+	p1 := Page{Name: "Duplicate Page", HTML: "<html></html>"}
+	c.Assert(PostPage(&p1), check.Equals, nil)
+
+	p2 := Page{Name: "Duplicate Page", HTML: "<html></html>"}
+	err := PostPage(&p2)
+	c.Assert(errors.Is(err, gorm.ErrDuplicatedKey), check.Equals, true)
 }

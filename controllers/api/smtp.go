@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -41,6 +42,13 @@ func (as *Server) SendingProfiles(w http.ResponseWriter, r *http.Request) {
 		s.ModifiedDate = time.Now().UTC()
 		s.UserId = ctx.Get(r, "user_id").(int64)
 		err = models.PostSMTP(&s)
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			// Two concurrent requests both passed the check above before
+			// either finished inserting - the DB-level unique constraint
+			// is what actually stops the race (see #3278).
+			JSONResponse(w, models.Response{Success: false, Message: "SMTP name already in use"}, http.StatusConflict)
+			return
+		}
 		if err != nil {
 			JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusInternalServerError)
 			return

@@ -196,6 +196,9 @@ func Setup(c *config.Config) error {
 		// Logging is handled separately via the gophish logger; keep gorm's
 		// own SQL logging silent to match the previous LogMode(false).
 		Logger: gormlogger.Default.LogMode(gormlogger.Silent),
+		// Lets callers check for gorm.ErrDuplicatedKey instead of parsing
+		// dialect-specific driver error codes
+		TranslateError: true,
 	}
 	i := 0
 	for {

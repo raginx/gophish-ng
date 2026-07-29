@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -32,6 +33,21 @@ func (s *ModelsSuite) TestPostGroupNoTargets(c *check.C) {
 	g.UserId = 1
 	err := PostGroup(&g)
 	c.Assert(err, check.Equals, ErrNoTargetsSpecified)
+}
+
+// TestPostGroupDuplicateName verifies that the database itself rejects a
+// second group with the same (user_id, name)
+func (s *ModelsSuite) TestPostGroupDuplicateName(c *check.C) {
+	g1 := Group{Name: "Duplicate Group"}
+	g1.Targets = []Target{{BaseRecipient: BaseRecipient{Email: "test@example.com"}}}
+	g1.UserId = 1
+	c.Assert(PostGroup(&g1), check.Equals, nil)
+
+	g2 := Group{Name: "Duplicate Group"}
+	g2.Targets = []Target{{BaseRecipient: BaseRecipient{Email: "test2@example.com"}}}
+	g2.UserId = 1
+	err := PostGroup(&g2)
+	c.Assert(errors.Is(err, gorm.ErrDuplicatedKey), check.Equals, true)
 }
 
 func (s *ModelsSuite) TestGetGroups(c *check.C) {
