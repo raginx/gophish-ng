@@ -129,7 +129,7 @@ func PostIMAP(im *IMAP, uid int64) error {
 	}
 
 	// Insert new settings into the DB
-	err = db.Save(im).Error
+	err = db.Create(im).Error
 	if err != nil {
 		log.Error("Unable to save to database: ", err.Error())
 	}
