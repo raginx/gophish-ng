@@ -39,6 +39,7 @@ There are some settings that are configurable via a file called config.json, loc
 | admin\_server.key\_path | example.key | Path to SSL Private Key |
 | admin\_server.trusted_origins | [] | Comma separated list of trusted origins |
 | phish\_server.listen\_url | 0.0.0.0:80 | IP/Port of the phishing server - this is where landing pages are hosted. |
+| secret\_key | (none) | Base64-encoded 32-byte key used to encrypt OAuth2 tokens at rest (only required if using [OAuth2 IMAP reporting](../automation/email-reporting.md)). Generate one with `openssl rand -base64 32`. |
 
 !!! warning
     **Be careful:** Since the `config.json` file contains database credentials, you will want to ensure it is only readable by the correct user. For Linux users, you can do this using `chmod 640 config.json`.

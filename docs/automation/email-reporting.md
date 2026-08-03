@@ -35,6 +35,18 @@ There is also a number of Advanced Settings that allow you to configure which fo
 
 After IMAP settings have been configured, you can either save them or use the "Test Settings" button to confirm that Gophish can establish an IMAP connection.
 
+### OAuth2 Authentication
+
+Some providers (notably Microsoft 365 / Exchange Online) have disabled plain username/password ("Basic Auth") logins for IMAP. For these providers, choose "OAuth2" as the authentication method instead of "Basic Auth".
+
+Gophish-NG uses the OAuth2 Authorization Code flow, and supports Google, Microsoft, and any other provider that exposes standard OAuth2 authorization/token endpoints and IMAP OAUTHBEARER/XOAUTH2 support ("Custom").
+
+1. Register an OAuth2 application with your provider (Azure AD app registration for Microsoft, Google Cloud OAuth client for Google) with IMAP access scope and a redirect URI of `https://<your-gophish-host>/oauth/imap/callback`.
+2. In "Reporting Settings", select "OAuth2", choose your provider, and enter the Client ID and Client Secret from your app registration (plus Tenant ID for Microsoft, or Authorization/Token URLs and scopes for a Custom provider).
+3. Save the settings, then click "Connect Account" to complete the OAuth2 consent flow and authorize Gophish to access the mailbox.
+
+OAuth2 tokens are encrypted at rest, which requires a `secret_key` to be configured in `config.json` - see the [installation guide](../getting-started/installation.md) for details.
+
 ## How Reporting Works in Gophish
 
 Every email sent by Gophish contains a link pointing to the [Landing Page](../guide/landing-pages.md) configured for the campaign. This URL looks like this:
