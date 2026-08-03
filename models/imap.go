@@ -129,8 +129,8 @@ var ErrOAuthScopesNotSpecified = errors.New("No OAuth scopes specified")
 
 // ErrOAuthSecretKeyNotConfigured is thrown when OAuth2 auth is selected but
 // the server has no secret_key configured in config.json - OAuth2 tokens
-// are encrypted at rest and can't be stored without it. Caught here, 
-// at save time, so the admin finds out before going through the provider's 
+// are encrypted at rest and can't be stored without it. Caught here,
+// at save time, so the admin finds out before going through the provider's
 // consent screen rather than after
 var ErrOAuthSecretKeyNotConfigured = errors.New("OAuth2 requires secret_key to be configured in config.json")
 

@@ -71,7 +71,7 @@ func setupOAuthIMAPConfig(t *testing.T, testCtx *testContext, tokenURL string) {
 }
 
 // gophishSessionCookie picks the "gophish" session cookie out of a
-// response's Set-Cookie headers 
+// response's Set-Cookie headers
 func gophishSessionCookie(resp *http.Response) string {
 	for _, sc := range resp.Header.Values("Set-Cookie") {
 		if strings.HasPrefix(sc, "gophish=") {
