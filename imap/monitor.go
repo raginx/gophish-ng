@@ -128,6 +128,15 @@ func checkForNewEmails(im models.IMAP) {
 		Folder:           im.Folder,
 	}
 
+	if im.AuthType == models.IMAPAuthTypeOAuth2 {
+		token, err := models.GetValidAccessToken(context.Background(), &im)
+		if err != nil {
+			log.Error("Unable to get a valid OAuth2 access token for user ", im.UserId, ": ", err.Error())
+			return
+		}
+		mailServer.OAuthToken = token
+	}
+
 	msgs, err := mailServer.GetUnread(true, false)
 	if err != nil {
 		log.Error(err)

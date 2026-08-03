@@ -11,6 +11,20 @@ import (
 const DefaultIMAPFolder = "INBOX"
 const DefaultIMAPFreq = 60 // Every 60 seconds
 
+// IMAP authentication types - see IMAP.AuthType.
+const (
+	IMAPAuthTypeBasic  = "basic"
+	IMAPAuthTypeOAuth2 = "oauth2"
+)
+
+// OAuth2 providers supported for IMAP authentication - see
+// IMAP.OAuthProvider and oauth_imap.go.
+const (
+	OAuthProviderGoogle    = "google"
+	OAuthProviderMicrosoft = "microsoft"
+	OAuthProviderCustom    = "custom"
+)
+
 // IMAP contains the attributes needed to handle logging into an IMAP server to check
 // for reported emails
 type IMAP struct {
@@ -28,6 +42,31 @@ type IMAP struct {
 	LastLogin                   time.Time `json:"last_login,omitempty"`
 	ModifiedDate                time.Time `json:"modified_date"`
 	IMAPFreq                    uint32    `json:"imap_freq,string,omitempty"`
+
+	// AuthType selects between Basic Auth (the default, existing behavior)
+	// and OAuth2
+	AuthType          string `json:"auth_type" gorm:"column:auth_type"`
+	OAuthProvider     string `json:"oauth_provider,omitempty" gorm:"column:oauth_provider"`
+	OAuthTenantID     string `json:"oauth_tenant_id,omitempty" gorm:"column:oauth_tenant_id"`
+	OAuthClientID     string `json:"oauth_client_id,omitempty" gorm:"column:oauth_client_id"`
+	OAuthClientSecret string `json:"oauth_client_secret,omitempty" gorm:"column:oauth_client_secret"`
+	// OAuthAuthURL/OAuthTokenURL are only used (and shown in the UI) when
+	// OAuthProvider is "custom" - well-known providers use fixed endpoints
+	// from oauthEndpoint in oauth_imap.go.
+	OAuthAuthURL  string `json:"oauth_auth_url,omitempty" gorm:"column:oauth_auth_url"`
+	OAuthTokenURL string `json:"oauth_token_url,omitempty" gorm:"column:oauth_token_url"`
+	// OAuthScopes is a space-separated OAuth2 scope list. Required for the
+	// "custom" provider (there's no sane default for an arbitrary IMAP
+	// OAuth2 server); optional for google/microsoft, where it overrides
+	// the built-in default scopes from oauthScopes in oauth_imap.go.
+	OAuthScopes string `json:"oauth_scopes,omitempty" gorm:"column:oauth_scopes"`
+	// OAuthRefreshTokenEnc/OAuthAccessTokenEnc are AES-256-GCM encrypted
+	// (see the crypto package) and never exposed over JSON - they're only
+	// ever written by the OAuth callback handler and read by
+	// GetValidAccessToken.
+	OAuthRefreshTokenEnc string    `json:"-" gorm:"column:oauth_refresh_token_enc"`
+	OAuthAccessTokenEnc  string    `json:"-" gorm:"column:oauth_access_token_enc"`
+	OAuthTokenExpiry     time.Time `json:"-" gorm:"column:oauth_token_expiry"`
 }
 
 // ErrIMAPHostNotSpecified is thrown when there is no Host specified
@@ -56,6 +95,45 @@ var ErrIMAPPasswordNotSpecified = errors.New("No Password specified")
 // IMAP server is invalid
 var ErrInvalidIMAPFreq = errors.New("Invalid polling frequency")
 
+// ErrIMAPInvalidAuthType is thrown when AuthType is neither "basic" nor
+// "oauth2"
+var ErrIMAPInvalidAuthType = errors.New("Invalid IMAP authentication type")
+
+// ErrOAuthProviderNotSpecified is thrown when OAuth2 auth is selected
+// without specifying a provider
+var ErrOAuthProviderNotSpecified = errors.New("No OAuth provider specified")
+
+// ErrInvalidOAuthProvider is thrown when OAuthProvider isn't one of the
+// supported providers
+var ErrInvalidOAuthProvider = errors.New("Invalid OAuth provider")
+
+// ErrOAuthClientIDNotSpecified is thrown when OAuth2 auth is selected
+// without specifying a client ID
+var ErrOAuthClientIDNotSpecified = errors.New("No OAuth client ID specified")
+
+// ErrOAuthClientSecretNotSpecified is thrown when OAuth2 auth is selected
+// without specifying a client secret
+var ErrOAuthClientSecretNotSpecified = errors.New("No OAuth client secret specified")
+
+// ErrOAuthTenantIDNotSpecified is thrown when the Microsoft OAuth provider
+// is selected without specifying a tenant ID
+var ErrOAuthTenantIDNotSpecified = errors.New("No OAuth tenant ID specified")
+
+// ErrOAuthEndpointNotSpecified is thrown when the custom OAuth provider is
+// selected without specifying both the authorization and token URLs
+var ErrOAuthEndpointNotSpecified = errors.New("No OAuth authorization/token URL specified")
+
+// ErrOAuthScopesNotSpecified is thrown when the custom OAuth provider is
+// selected without specifying the OAuth scopes to request
+var ErrOAuthScopesNotSpecified = errors.New("No OAuth scopes specified")
+
+// ErrOAuthSecretKeyNotConfigured is thrown when OAuth2 auth is selected but
+// the server has no secret_key configured in config.json - OAuth2 tokens
+// are encrypted at rest and can't be stored without it. Caught here, 
+// at save time, so the admin finds out before going through the provider's 
+// consent screen rather than after
+var ErrOAuthSecretKeyNotConfigured = errors.New("OAuth2 requires secret_key to be configured in config.json")
+
 // TableName specifies the database tablename for Gorm to use
 func (im IMAP) TableName() string {
 	return "imap"
@@ -63,6 +141,10 @@ func (im IMAP) TableName() string {
 
 // Validate ensures that IMAP configs/connections are valid
 func (im *IMAP) Validate() error {
+	if im.AuthType == "" {
+		im.AuthType = IMAPAuthTypeBasic
+	}
+
 	switch {
 	case im.Host == "":
 		return ErrIMAPHostNotSpecified
@@ -70,8 +152,43 @@ func (im *IMAP) Validate() error {
 		return ErrIMAPPortNotSpecified
 	case im.Username == "":
 		return ErrIMAPUsernameNotSpecified
-	case im.Password == "":
-		return ErrIMAPPasswordNotSpecified
+	}
+
+	switch im.AuthType {
+	case IMAPAuthTypeBasic:
+		if im.Password == "" {
+			return ErrIMAPPasswordNotSpecified
+		}
+	case IMAPAuthTypeOAuth2:
+		switch im.OAuthProvider {
+		case OAuthProviderGoogle, OAuthProviderMicrosoft, OAuthProviderCustom:
+		case "":
+			return ErrOAuthProviderNotSpecified
+		default:
+			return ErrInvalidOAuthProvider
+		}
+		if im.OAuthClientID == "" {
+			return ErrOAuthClientIDNotSpecified
+		}
+		if im.OAuthClientSecret == "" {
+			return ErrOAuthClientSecretNotSpecified
+		}
+		if im.OAuthProvider == OAuthProviderMicrosoft && im.OAuthTenantID == "" {
+			return ErrOAuthTenantIDNotSpecified
+		}
+		if im.OAuthProvider == OAuthProviderCustom {
+			if im.OAuthAuthURL == "" || im.OAuthTokenURL == "" {
+				return ErrOAuthEndpointNotSpecified
+			}
+			if im.OAuthScopes == "" {
+				return ErrOAuthScopesNotSpecified
+			}
+		}
+		if _, err := conf.SecretKeyBytes(); err != nil {
+			return ErrOAuthSecretKeyNotConfigured
+		}
+	default:
+		return ErrIMAPInvalidAuthType
 	}
 
 	// Set the default value for Folder

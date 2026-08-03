@@ -72,6 +72,11 @@ body {
 }
 .main .page-header {
   margin-top: 0;
+  font-size: 26px;
+}
+
+.main h2 {
+  font-size: 20px;
 }
 
 

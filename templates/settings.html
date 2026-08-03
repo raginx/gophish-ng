@@ -113,7 +113,27 @@
              </div>
             <br />
 
-            
+            <div class="row">
+                <label class="col-sm-2 control-label form-label">Authentication:</label>
+                <div class="col-md-6">
+                    <div class="radio radio-primary radio-inline">
+                        <input type="radio" id="authtype_basic" name="authtype" value="basic" checked>
+                        <label for="authtype_basic">Basic Auth</label>
+                    </div>
+                    <div class="radio radio-primary radio-inline">
+                        <input type="radio" id="authtype_oauth2" name="authtype" value="oauth2">
+                        <label for="authtype_oauth2">OAuth2</label>
+                    </div>
+                </div>
+            </div>
+            <br />
+
+            <div class="row" id="oauth2hostnote" style="display: none;">
+                <div class="col-sm-offset-2 col-md-6">
+                    <p class="text-muted">Host, Port and Username below are still required with OAuth2 - they identify the IMAP server and mailbox to connect to. OAuth2 only replaces the password with the connected account below.</p>
+                </div>
+            </div>
+
             <div class="row">
                 <label for="imaphost" class="col-sm-2 control-label form-label">IMAP Host:</label>
                 <div class="col-md-6">
@@ -141,14 +161,95 @@
             </div>
             <br />
 
-            <div class="row">
-                <label for="imappassword" class="col-sm-2 control-label form-label">IMAP Password:</label>
-                <div class="col-md-6">
-                    <input type="password" id="imappassword" name="imappassword" placeholder="Password" autocomplete="off"
-                        class="form-control" />
+            <div id="basicauthfields">
+                <div class="row">
+                    <label for="imappassword" class="col-sm-2 control-label form-label">IMAP Password:</label>
+                    <div class="col-md-6">
+                        <input type="password" id="imappassword" name="imappassword" placeholder="Password" autocomplete="off"
+                            class="form-control" />
+                    </div>
                 </div>
+                <br />
             </div>
-            <br />
+
+            <div id="oauth2fields" style="display: none;">
+                <div class="row">
+                    <label for="oauthprovider" class="col-sm-2 control-label form-label">Provider:</label>
+                    <div class="col-md-6">
+                        <select id="oauthprovider" class="form-control">
+                            <option value="google">Google</option>
+                            <option value="microsoft">Microsoft</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                </div>
+                <br />
+
+                <div class="row" id="oauthtenantiddiv" style="display: none;">
+                    <label for="oauthtenantid" class="col-sm-2 control-label form-label" data-toggle="tooltip" title="Your Azure AD tenant ID, or 'common' for multi-tenant apps.">Tenant ID:</label>
+                    <div class="col-md-6">
+                        <input type="text" id="oauthtenantid" name="oauthtenantid" placeholder="common"
+                            class="form-control" />
+                    </div>
+                </div>
+                <br />
+
+                <div class="row">
+                    <label for="oauthclientid" class="col-sm-2 control-label form-label">Client ID:</label>
+                    <div class="col-md-6">
+                        <input type="text" id="oauthclientid" name="oauthclientid"
+                            class="form-control" />
+                    </div>
+                </div>
+                <br />
+
+                <div class="row">
+                    <label for="oauthclientsecret" class="col-sm-2 control-label form-label">Client Secret:</label>
+                    <div class="col-md-6">
+                        <input type="password" id="oauthclientsecret" name="oauthclientsecret" autocomplete="off"
+                            class="form-control" />
+                    </div>
+                </div>
+                <br />
+
+                <div id="oauthcustomfields" style="display: none;">
+                    <div class="row">
+                        <label for="oauthauthurl" class="col-sm-2 control-label form-label">Authorization URL:</label>
+                        <div class="col-md-6">
+                            <input type="text" id="oauthauthurl" name="oauthauthurl"
+                                class="form-control" />
+                        </div>
+                    </div>
+                    <br />
+
+                    <div class="row">
+                        <label for="oauthtokenurl" class="col-sm-2 control-label form-label">Token URL:</label>
+                        <div class="col-md-6">
+                            <input type="text" id="oauthtokenurl" name="oauthtokenurl"
+                                class="form-control" />
+                        </div>
+                    </div>
+                    <br />
+
+                    <div class="row">
+                        <label for="oauthscopes" class="col-sm-2 control-label form-label">Scopes:</label>
+                        <div class="col-md-6">
+                            <input type="text" id="oauthscopes" name="oauthscopes" placeholder="space-separated scopes"
+                                class="form-control" />
+                        </div>
+                    </div>
+                    <br />
+                </div>
+
+                <div class="row">
+                    <label class="col-sm-2 control-label form-label">Account:</label>
+                    <div class="col-md-6">
+                        <span id="oauthstatus" class="label label-default">Not Connected</span>
+                        <a id="oauthconnect" href="/oauth/imap/authorize" class="btn btn-default btn-sm">Connect Account</a>
+                    </div>
+                </div>
+                <br />
+            </div>
 
 
             <div class="row">

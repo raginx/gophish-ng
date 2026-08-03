@@ -2,6 +2,7 @@ package imap
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"fmt"
 	"regexp"
@@ -11,6 +12,7 @@ import (
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
 	"github.com/emersion/go-message/charset"
+	"github.com/emersion/go-sasl"
 	"github.com/gophish/gophish/dialer"
 	log "github.com/gophish/gophish/logger"
 	"github.com/gophish/gophish/models"
@@ -41,7 +43,13 @@ type Mailbox struct {
 	IgnoreCertErrors bool
 	User             string
 	Pwd              string
-	Folder           string
+	// OAuthToken, if set, is used instead of Pwd - newClient()
+	// authenticates via OAUTHBEARER rather than plain LOGIN
+	// Callers are responsible for resolving a currently-valid access
+	// token (see models.GetValidAccessToken) before constructing a
+	// Mailbox this way, since Mailbox itself has no way to refresh it.
+	OAuthToken string
+	Folder     string
 	// Read only mode, false (original logic) if not initialized
 	ReadOnly bool
 }
@@ -62,6 +70,15 @@ func Validate(s *models.IMAP) error {
 		User:             s.Username,
 		Pwd:              s.Password,
 		Folder:           s.Folder}
+
+	if s.AuthType == models.IMAPAuthTypeOAuth2 {
+		token, err := models.GetValidAccessToken(context.Background(), s)
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+		mailServer.OAuthToken = token
+	}
 
 	imapClient, err := mailServer.newClient()
 	if err != nil {
@@ -197,7 +214,14 @@ func (mbox *Mailbox) newClient() (*client.Client, error) {
 		return imapClient, err
 	}
 
-	err = imapClient.Login(mbox.User, mbox.Pwd)
+	if mbox.OAuthToken != "" {
+		err = imapClient.Authenticate(sasl.NewOAuthBearerClient(&sasl.OAuthBearerOptions{
+			Username: mbox.User,
+			Token:    mbox.OAuthToken,
+		}))
+	} else {
+		err = imapClient.Login(mbox.User, mbox.Pwd)
+	}
 	if err != nil {
 		return imapClient, err
 	}

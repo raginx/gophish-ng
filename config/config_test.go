@@ -76,3 +76,32 @@ func TestLoadConfig(t *testing.T) {
 		t.Fatalf("expected error when loading invalid config, but got %v", err)
 	}
 }
+
+func TestSecretKeyBytesNotConfigured(t *testing.T) {
+	c := &Config{}
+	_, err := c.SecretKeyBytes()
+	if err != ErrSecretKeyNotConfigured {
+		t.Fatalf("expected ErrSecretKeyNotConfigured, got %v", err)
+	}
+}
+
+func TestSecretKeyBytesInvalid(t *testing.T) {
+	c := &Config{SecretKey: "not-a-valid-key"}
+	if _, err := c.SecretKeyBytes(); err == nil {
+		t.Fatalf("expected an error for an invalid secret_key, got nil")
+	}
+}
+
+func TestSecretKeyBytesValid(t *testing.T) {
+	// 32 zero bytes, base64-encoded - a validly-shaped (if not
+	// operationally recommended) key for exercising the happy path.
+	c := &Config{SecretKey: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="}
+	key, err := c.SecretKeyBytes()
+	if err != nil {
+		t.Fatalf("unexpected error for a valid secret_key: %v", err)
+	}
+	var zero [32]byte
+	if key != zero {
+		t.Fatalf("expected an all-zero key, got %x", key)
+	}
+}

@@ -2,10 +2,16 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 
+	gophishcrypto "github.com/gophish/gophish/crypto"
 	log "github.com/gophish/gophish/logger"
 )
+
+// ErrSecretKeyNotConfigured is returned by SecretKeyBytes when secret_key
+// isn't set in config.json
+var ErrSecretKeyNotConfigured = errors.New("secret_key is not configured in config.json")
 
 // AdminServer represents the Admin server configuration details
 type AdminServer struct {
@@ -42,6 +48,20 @@ type Config struct {
 	TestFlag       bool        `json:"test_flag"`
 	ContactAddress string      `json:"contact_address"`
 	Logging        *log.Config `json:"logging"`
+	// SecretKey is a base64-encoded 32-byte key (e.g. from `openssl rand
+	// -base64 32`) used to encrypt secrets that need to be stored at rest,
+	// such as OAuth2 refresh tokens for IMAP email reporting
+	SecretKey string `json:"secret_key"`
+}
+
+// SecretKeyBytes decodes and validates SecretKey for use with the crypto
+// package's Encrypt/Decrypt. Returns ErrSecretKeyNotConfigured if
+// SecretKey is empty, or a decoding/length error if it's set but invalid.
+func (c *Config) SecretKeyBytes() ([gophishcrypto.KeySize]byte, error) {
+	if c.SecretKey == "" {
+		return [gophishcrypto.KeySize]byte{}, ErrSecretKeyNotConfigured
+	}
+	return gophishcrypto.ParseKey(c.SecretKey)
 }
 
 // Version contains the current gophish version
