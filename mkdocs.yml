@@ -65,6 +65,15 @@ nav:
       - Webhooks: automation/webhooks.md
       - Generating Reports: automation/generating-reports.md
       - Email Reporting: automation/email-reporting.md
+  - API Reference:
+      - Introduction: api/index.md
+      - Settings: api/settings.md
+      - Sending Profiles: api/sending-profiles.md
+      - Templates: api/templates.md
+      - Landing Pages: api/landing-pages.md
+      - Users & Groups: api/users-and-groups.md
+      - Campaigns: api/campaigns.md
+      - User Management: api/user-management.md
   - Reference:
       - Template Reference: reference/template-reference.md
       - Additional References: reference/additional-references.md
