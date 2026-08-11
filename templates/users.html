@@ -23,6 +23,7 @@
                 <tr>
                     <th>Username</th>
                     <th>Role</th>
+                    <th>Team</th>
                     <th>Last Login</th>
                     <th class="col-md-2 no-sort"></th>
                 </tr>
@@ -77,6 +78,12 @@
                     <option value="admin">Admin</option>
                     <option value="user">User</option>
                     </select>
+                </div>
+                <label class="control-label" for="team">Team:</label>
+                <div class="form-group">
+                    <input type="text" class="form-control" placeholder="Team" id="team" list="team-options" />
+                    <datalist id="team-options"></datalist>
+                    <span class="help-block">Users in the same team share campaigns, templates, landing pages, groups, and sending profiles. A new name creates a new team.</span>
                 </div>
             </div>
             <div class="modal-footer">

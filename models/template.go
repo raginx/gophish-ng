@@ -13,6 +13,7 @@ import (
 type Template struct {
 	Id             int64        `json:"id" gorm:"column:id;primaryKey"`
 	UserId         int64        `json:"-" gorm:"column:user_id"`
+	TeamId         int64        `json:"-" gorm:"column:team_id"`
 	Name           string       `json:"name"`
 	EnvelopeSender string       `json:"envelope_sender"`
 	Subject        string       `json:"subject"`
@@ -56,10 +57,10 @@ func (t *Template) Validate() error {
 	return nil
 }
 
-// GetTemplates returns the templates owned by the given user.
-func GetTemplates(uid int64) ([]Template, error) {
+// GetTemplates returns the templates visible to the given team.
+func GetTemplates(teamID int64) ([]Template, error) {
 	ts := []Template{}
-	err := db.Where("user_id=?", uid).Find(&ts).Error
+	err := db.Where("team_id=?", teamID).Find(&ts).Error
 	if err != nil {
 		log.Error(err)
 		return ts, err
@@ -78,10 +79,10 @@ func GetTemplates(uid int64) ([]Template, error) {
 	return ts, err
 }
 
-// GetTemplate returns the template, if it exists, specified by the given id and user_id.
-func GetTemplate(id int64, uid int64) (Template, error) {
+// GetTemplate returns the template, if it exists, specified by the given id and team_id.
+func GetTemplate(id int64, teamID int64) (Template, error) {
 	t := Template{}
-	err := db.Where("user_id=? and id=?", uid, id).First(&t).Error
+	err := db.Where("team_id=? and id=?", teamID, id).First(&t).Error
 	if err != nil {
 		log.Error(err)
 		return t, err
@@ -99,10 +100,10 @@ func GetTemplate(id int64, uid int64) (Template, error) {
 	return t, err
 }
 
-// GetTemplateByName returns the template, if it exists, specified by the given name and user_id.
-func GetTemplateByName(n string, uid int64) (Template, error) {
+// GetTemplateByName returns the template, if it exists, specified by the given name and team_id.
+func GetTemplateByName(n string, teamID int64) (Template, error) {
 	t := Template{}
-	err := db.Where("user_id=? and name=?", uid, n).First(&t).Error
+	err := db.Where("team_id=? and name=?", teamID, n).First(&t).Error
 	if err != nil {
 		log.Error(err)
 		return t, err
@@ -124,6 +125,9 @@ func GetTemplateByName(n string, uid int64) (Template, error) {
 func PostTemplate(t *Template) error {
 	// Insert into the DB
 	if err := t.Validate(); err != nil {
+		return err
+	}
+	if err := setTeamIdFromUser(&t.TeamId, t.UserId); err != nil {
 		return err
 	}
 	err := db.Save(t).Error
@@ -178,8 +182,8 @@ func PutTemplate(t *Template) error {
 }
 
 // DeleteTemplate deletes an existing template in the database.
-// An error is returned if a template with the given user id and template id is not found.
-func DeleteTemplate(id int64, uid int64) error {
+// An error is returned if a template with the given team id and template id is not found.
+func DeleteTemplate(id int64, teamID int64) error {
 	// Delete attachments
 	err := db.Where("template_id=?", id).Delete(&Attachment{}).Error
 	if err != nil {
@@ -188,7 +192,7 @@ func DeleteTemplate(id int64, uid int64) error {
 	}
 
 	// Finally, delete the template itself
-	err = db.Where("user_id=?", uid).Delete(Template{Id: id}).Error
+	err = db.Where("team_id=?", teamID).Delete(Template{Id: id}).Error
 	if err != nil {
 		log.Error(err)
 		return err

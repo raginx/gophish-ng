@@ -23,6 +23,9 @@ var ErrEmptyUsername = errors.New("No username provided")
 // ErrEmptyRole is throws when no role is provided when creating or modifying a user.
 var ErrEmptyRole = errors.New("No role specified")
 
+// ErrEmptyTeam is thrown when no team is provided when creating or modifying a user.
+var ErrEmptyTeam = errors.New("No team specified")
+
 // ErrInsufficientPermission is thrown when a user attempts to change an
 // attribute (such as the role) for which they don't have permission.
 var ErrInsufficientPermission = errors.New("Permission denied")
@@ -32,6 +35,7 @@ type userRequest struct {
 	Username               string `json:"username"`
 	Password               string `json:"password"`
 	Role                   string `json:"role"`
+	Team                   string `json:"team"`
 	PasswordChangeRequired bool   `json:"password_change_required"`
 	AccountLocked          bool   `json:"account_locked"`
 }
@@ -42,6 +46,8 @@ func (ur *userRequest) Validate(existingUser *models.User) error {
 		return ErrEmptyUsername
 	case ur.Role == "":
 		return ErrEmptyRole
+	case ur.Team == "":
+		return ErrEmptyTeam
 	}
 	// Verify that the username isn't already taken. We consider two cases:
 	// * We're creating a new user, in which case any match is a conflict
@@ -102,12 +108,19 @@ func (as *Server) Users(w http.ResponseWriter, r *http.Request) {
 			JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusInternalServerError)
 			return
 		}
+		team, err := models.GetOrCreateTeamByName(ur.Team)
+		if err != nil {
+			JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusInternalServerError)
+			return
+		}
 		user := models.User{
 			Username:               ur.Username,
 			Hash:                   hash,
 			ApiKey:                 auth.GenerateSecureKey(auth.APIKeyLength),
 			Role:                   role,
 			RoleID:                 role.ID,
+			Team:                   team,
+			TeamID:                 team.Id,
 			PasswordChangeRequired: ur.PasswordChangeRequired,
 			AccountLocked:          ur.AccountLocked,
 		}
@@ -189,7 +202,18 @@ func (as *Server) User(w http.ResponseWriter, r *http.Request) {
 			JSONResponse(w, models.Response{Success: false, Message: ErrInsufficientPermission.Error()}, http.StatusBadRequest)
 			return
 		}
+		// Same reasoning as Role - only admins can move a user to a
+		// different team, since that changes which objects they can see.
+		if !hasSystem && ur.Team != existingUser.Team.Name {
+			JSONResponse(w, models.Response{Success: false, Message: ErrInsufficientPermission.Error()}, http.StatusBadRequest)
+			return
+		}
 		role, err := models.GetRoleBySlug(ur.Role)
+		if err != nil {
+			JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusInternalServerError)
+			return
+		}
+		team, err := models.GetOrCreateTeamByName(ur.Team)
 		if err != nil {
 			JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusInternalServerError)
 			return
@@ -205,6 +229,8 @@ func (as *Server) User(w http.ResponseWriter, r *http.Request) {
 		}
 		existingUser.Role = role
 		existingUser.RoleID = role.ID
+		existingUser.Team = team
+		existingUser.TeamID = team.Id
 		// We don't force the password to be provided, since it may be an admin
 		// managing the user's account, and making a simple change like
 		// updating the username or role. However, if it _is_ provided, we'll

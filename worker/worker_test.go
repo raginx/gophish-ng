@@ -106,7 +106,7 @@ func setupCampaign(id int) (*models.Campaign, error) {
 		return nil, err
 	}
 	c.Groups = []models.Group{group}
-	err = models.PostCampaign(&c, c.UserId)
+	err = models.PostCampaign(&c, c.UserId, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +203,7 @@ func TestProcessCampaignsSkipsFailedCampaignContext(t *testing.T) {
 	badCampaign.Page = page
 	badCampaign.SMTP = smtp
 	badCampaign.Groups = []models.Group{group}
-	if err := models.PostCampaign(&badCampaign, badCampaign.UserId); err != nil {
+	if err := models.PostCampaign(&badCampaign, badCampaign.UserId, 0); err != nil {
 		t.Fatalf("error creating bad campaign: %v", err)
 	}
 	if err := badCampaign.UpdateStatus(models.CampaignEmailsSent); err != nil {

@@ -102,7 +102,7 @@ func (s *ModelsSuite) createCampaignDependencies(ch *check.C, optional ...string
 func (s *ModelsSuite) createCampaign(ch *check.C) Campaign {
 	c := s.createCampaignDependencies(ch)
 	// Setup and "launch" our campaign
-	ch.Assert(PostCampaign(&c, c.UserId), check.Equals, nil)
+	ch.Assert(PostCampaign(&c, c.UserId, 0), check.Equals, nil)
 
 	// For comparing the dates, we need to fetch the campaign again. This is
 	// to solve an issue where the campaign object right now has time down to

@@ -234,6 +234,14 @@ func Setup(c *config.Config) error {
 		log.Error(err)
 		return err
 	}
+	// Ensure a default team exists - the teams migration already seeds one,
+	// but this is a belt-and-suspenders check in case a DB is at an older
+	// migration state or the seed row was otherwise removed.
+	defaultTeam, err := GetOrCreateTeamByName("Default Team")
+	if err != nil {
+		log.Error(err)
+		return err
+	}
 	// Create the admin user if it doesn't exist
 	var userCount int64
 	var adminUser User
@@ -248,6 +256,8 @@ func Setup(c *config.Config) error {
 			Username:               DefaultAdminUsername,
 			Role:                   adminRole,
 			RoleID:                 adminRole.ID,
+			Team:                   defaultTeam,
+			TeamID:                 defaultTeam.Id,
 			PasswordChangeRequired: true,
 		}
 

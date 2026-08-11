@@ -39,7 +39,7 @@ func (s *ModelsSuite) TestFormatAddress(c *check.C) {
 
 func (s *ModelsSuite) TestResultSendingStatus(ch *check.C) {
 	c := s.createCampaignDependencies(ch)
-	ch.Assert(PostCampaign(&c, c.UserId), check.Equals, nil)
+	ch.Assert(PostCampaign(&c, c.UserId, 0), check.Equals, nil)
 	// This campaign wasn't scheduled, so we expect the status to
 	// be sending
 	for _, r := range c.Results {
@@ -50,7 +50,7 @@ func (s *ModelsSuite) TestResultSendingStatus(ch *check.C) {
 func (s *ModelsSuite) TestResultScheduledStatus(ch *check.C) {
 	c := s.createCampaignDependencies(ch)
 	c.LaunchDate = time.Now().UTC().Add(time.Hour * time.Duration(1))
-	ch.Assert(PostCampaign(&c, c.UserId), check.Equals, nil)
+	ch.Assert(PostCampaign(&c, c.UserId, 0), check.Equals, nil)
 	// This campaign wasn't scheduled, so we expect the status to
 	// be sending
 	for _, r := range c.Results {
@@ -63,7 +63,7 @@ func (s *ModelsSuite) TestResultVariableStatus(ch *check.C) {
 	c := s.createCampaignDependencies(ch)
 	c.LaunchDate = time.Now().UTC()
 	c.SendByDate = c.LaunchDate.Add(2 * time.Minute)
-	ch.Assert(PostCampaign(&c, c.UserId), check.Equals, nil)
+	ch.Assert(PostCampaign(&c, c.UserId, 0), check.Equals, nil)
 
 	// The campaign has a window smaller than our group size, so we expect some
 	// emails to be sent immediately, while others will be scheduled
@@ -236,7 +236,7 @@ func (s *ModelsSuite) TestDuplicateResults(ch *check.C) {
 	c.SMTP = smtp
 	c.Groups = []Group{group}
 
-	ch.Assert(PostCampaign(&c, c.UserId), check.Equals, nil)
+	ch.Assert(PostCampaign(&c, c.UserId, 0), check.Equals, nil)
 	ch.Assert(len(c.Results), check.Equals, 2)
 	// Results are shuffled (see TestPostCampaignShufflesTargets in
 	// campaign_test.go), so we can't assert on positional order here -

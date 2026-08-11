@@ -70,6 +70,39 @@ func (s *ModelsSuite) verifyRoleCount(c *check.C, roleID, expected int64) {
 	c.Assert(adminCount, check.Equals, expected)
 }
 
+// TestDeleteUserPreservesTeamObjects verifies that deleting a user account
+// no longer cascade-deletes the campaigns/templates/etc. they created -
+// those are team-owned now, so the rest of the team keeps them.
+func (s *ModelsSuite) TestDeleteUserPreservesTeamObjects(c *check.C) {
+	admin, err := GetUser(1)
+	c.Assert(err, check.Equals, nil)
+
+	role, err := GetRoleBySlug(RoleUser)
+	c.Assert(err, check.Equals, nil)
+	teammate := User{
+		Username: "soon-to-be-deleted",
+		Hash:     "hash",
+		ApiKey:   "soon-to-be-deleted-key",
+		Role:     role,
+		RoleID:   role.ID,
+		TeamID:   admin.TeamID,
+	}
+	c.Assert(PutUser(&teammate), check.Equals, nil)
+
+	template := Template{Name: "Owned By Teammate", Text: "Text", UserId: teammate.Id, TeamId: teammate.TeamID}
+	c.Assert(PostTemplate(&template), check.Equals, nil)
+
+	c.Assert(DeleteUser(teammate.Id), check.Equals, nil)
+
+	_, err = GetUser(teammate.Id)
+	c.Assert(err, check.Equals, gorm.ErrRecordNotFound)
+
+	// The template should still exist and still be visible to the team.
+	got, err := GetTemplate(template.Id, admin.TeamID)
+	c.Assert(err, check.Equals, nil)
+	c.Assert(got.Name, check.Equals, "Owned By Teammate")
+}
+
 func (s *ModelsSuite) TestDeleteLastAdmin(c *check.C) {
 	// Create a new admin user
 	role, err := GetRoleBySlug(RoleAdmin)

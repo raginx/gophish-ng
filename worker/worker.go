@@ -73,7 +73,7 @@ func (w *DefaultWorker) processCampaigns(t time.Time) error {
 		// generate the message (ref #1726)
 		c, ok := campaignCache[m.CampaignId]
 		if !ok {
-			c, err = models.GetCampaignMailContext(m.CampaignId, m.UserId)
+			c, err = models.GetCampaignMailContext(m.CampaignId, m.TeamId)
 			if err != nil {
 				log.Error(err)
 				failedCampaigns[m.CampaignId] = true
@@ -149,7 +149,7 @@ func (w *DefaultWorker) LaunchCampaign(c models.Campaign) {
 	// that implements an interface as a slice of that interface.
 	mailEntries := []mailer.Mail{}
 	currentTime := time.Now().UTC()
-	campaignMailCtx, err := models.GetCampaignMailContext(c.Id, c.UserId)
+	campaignMailCtx, err := models.GetCampaignMailContext(c.Id, c.TeamId)
 	if err != nil {
 		log.Error(err)
 		if unlockErr := models.LockMailLogs(ms, false); unlockErr != nil {

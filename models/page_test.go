@@ -18,6 +18,7 @@ func (s *ModelsSuite) TestPostPage(c *check.C) {
 			</form></body>
 		  </html>`
 	p := Page{
+		UserId:      1,
 		Name:        "Test Page",
 		HTML:        html,
 		RedirectURL: "http://example.com",
@@ -146,10 +147,10 @@ func (s *ModelsSuite) TestPageValidation(c *check.C) {
 // TestPostPageDuplicateName verifies that the database itself rejects a
 // second page with the same (user_id, name)
 func (s *ModelsSuite) TestPostPageDuplicateName(c *check.C) {
-	p1 := Page{Name: "Duplicate Page", HTML: "<html></html>"}
+	p1 := Page{UserId: 1, Name: "Duplicate Page", HTML: "<html></html>"}
 	c.Assert(PostPage(&p1), check.Equals, nil)
 
-	p2 := Page{Name: "Duplicate Page", HTML: "<html></html>"}
+	p2 := Page{UserId: 1, Name: "Duplicate Page", HTML: "<html></html>"}
 	err := PostPage(&p2)
 	c.Assert(errors.Is(err, gorm.ErrDuplicatedKey), check.Equals, true)
 }

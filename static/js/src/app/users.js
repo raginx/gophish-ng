@@ -11,6 +11,7 @@ const save = (id) => {
         username: $("#username").val(),
         password: $("#password").val(),
         role: $("#role").val(),
+        team: $("#team").val(),
         password_change_required: $("#force_password_change_checkbox").prop('checked'),
         account_locked: $("#account_locked_checkbox").prop('checked')
     }
@@ -50,6 +51,7 @@ const dismiss = () => {
     $("#password").val("")
     $("#confirm_password").val("")
     $("#role").val("")
+    $("#team").val("")
     $("#force_password_change_checkbox").prop('checked', true)
     $("#account_locked_checkbox").prop('checked', false)
     $("#modal\\.flashes").empty()
@@ -65,16 +67,18 @@ const edit = (id) => {
         $("#userModalLabel").text("New User")
         $("#role").val("user")
         $("#role").trigger("change")
+        $("#team").val(user.team)
     } else {
         $("#userModalLabel").text("Edit User")
         api.userId.get(id)
-            .success((user) => {
-                $("#username").val(user.username)
-                $("#role").val(user.role.slug)
+            .success((editUser) => {
+                $("#username").val(editUser.username)
+                $("#role").val(editUser.role.slug)
                 $("#role").trigger("change")
-                $("#force_password_change_checkbox").prop('checked', user.password_change_required)
-                $("#account_locked_checkbox").prop('checked', user.account_locked)
-                if (user.username == "admin") {
+                $("#team").val(editUser.team.name)
+                $("#force_password_change_checkbox").prop('checked', editUser.password_change_required)
+                $("#account_locked_checkbox").prop('checked', editUser.account_locked)
+                if (editUser.username == "admin") {
                     $("#username").attr("disabled", true);
                 }
             })
@@ -99,7 +103,7 @@ const deleteUser = (id) => {
     }
     Swal.fire({
         title: "Are you sure?",
-        text: "This will delete the account for " + escapeHtml(user.username) + " as well as all of the objects they have created.\n\nThis can't be undone!",
+        text: "This will delete the account for " + escapeHtml(user.username) + ". Campaigns, templates, and other objects they created stay with their team.\n\nThis can't be undone!",
         type: "warning",
         animation: false,
         showCancelButton: true,
@@ -125,7 +129,7 @@ const deleteUser = (id) => {
         if (result.value){
             Swal.fire(
                 'User Deleted!',
-                "The user account for " + escapeHtml(user.username) + " and all associated objects have been deleted!",
+                "The user account for " + escapeHtml(user.username) + " has been deleted.",
                 'success'
             );
         }
@@ -210,6 +214,7 @@ const load = () => {
                 userRows.push([
                     escapeHtml(user.username),
                     escapeHtml(user.role.name),
+                    escapeHtml(user.team.name),
                     lastlogin,
                     "<div class='pull-right'>\
                     <button class='btn btn-warning impersonate_button' data-user-id='" + user.id + "'>\
@@ -232,6 +237,12 @@ const load = () => {
 
 $(document).ready(function () {
     load()
+    api.teams.get()
+        .success((teams) => {
+            $.each(teams, (i, team) => {
+                $("#team-options").append($("<option>").val(team.name))
+            })
+        })
     // Setup the event listeners
     $("#modal").on("hide.bs.modal", function () {
         dismiss();

@@ -31,6 +31,7 @@ type EmailRequest struct {
 	Tracker     string       `json:"tracker" gorm:"-"`
 	TrackingURL string       `json:"tracking_url" gorm:"-"`
 	UserId      int64        `json:"-"`
+	TeamId      int64        `json:"-" gorm:"column:team_id"`
 	ErrorChan   chan (error) `json:"-" gorm:"-"`
 	RId         string       `json:"id"`
 	FromAddress string       `json:"-"`

@@ -81,7 +81,7 @@ func createTestData(t *testing.T) {
 	c.Page = p
 	c.SMTP = smtp
 	c.Groups = []models.Group{group}
-	models.PostCampaign(&c, c.UserId)
+	models.PostCampaign(&c, c.UserId, 0)
 	c.UpdateStatus(models.CampaignEmailsSent)
 }
 

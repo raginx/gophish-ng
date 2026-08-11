@@ -19,7 +19,8 @@
         {{if .User}}
     var user = {
         api_key : {{ .User.ApiKey }},
-        username : {{ .User.Username }}
+        username : {{ .User.Username }},
+        team : {{ .User.Team.Name }}
     }
     {{end}}
     {{if .Token}}

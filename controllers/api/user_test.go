@@ -20,18 +20,54 @@ func createUnpriviledgedUser(t *testing.T, slug string) *models.User {
 	if err != nil {
 		t.Fatalf("error getting role by slug: %v", err)
 	}
+	team, err := models.GetOrCreateTeamByName("Default Team")
+	if err != nil {
+		t.Fatalf("error getting default team: %v", err)
+	}
 	unauthorizedUser := &models.User{
 		Username: "foo",
 		Hash:     "bar",
 		ApiKey:   "12345",
 		Role:     role,
 		RoleID:   role.ID,
+		Team:     team,
+		TeamID:   team.Id,
 	}
 	err = models.PutUser(unauthorizedUser)
 	if err != nil {
 		t.Fatalf("error saving unpriviledged user: %v", err)
 	}
 	return unauthorizedUser
+}
+
+// createUserInOtherTeam creates a user on a different team than the
+// Default Team the bootstrap admin (and createUnpriviledgedUser) belong
+// to. Team members can see and act on each other's campaigns/objects by
+// design (that's the point of teams) - this is for tests that need to
+// verify isolation still holds *across* teams.
+func createUserInOtherTeam(t *testing.T, slug string) *models.User {
+	role, err := models.GetRoleBySlug(slug)
+	if err != nil {
+		t.Fatalf("error getting role by slug: %v", err)
+	}
+	team, err := models.GetOrCreateTeamByName("Other Team")
+	if err != nil {
+		t.Fatalf("error getting other team: %v", err)
+	}
+	otherUser := &models.User{
+		Username: "otherteamuser",
+		Hash:     "bar",
+		ApiKey:   "67890",
+		Role:     role,
+		RoleID:   role.ID,
+		Team:     team,
+		TeamID:   team.Id,
+	}
+	err = models.PutUser(otherUser)
+	if err != nil {
+		t.Fatalf("error saving other-team user: %v", err)
+	}
+	return otherUser
 }
 
 func TestGetUsers(t *testing.T) {
@@ -69,6 +105,7 @@ func TestCreateUser(t *testing.T) {
 		Username: "foo",
 		Password: "validpassword",
 		Role:     models.RoleUser,
+		Team:     "Default Team",
 	}
 	body, err := json.Marshal(payload)
 	if err != nil {
@@ -110,6 +147,7 @@ func TestModifyUser(t *testing.T) {
 		Username: newUsername,
 		Password: newPassword,
 		Role:     unpriviledgedUser.Role.Slug,
+		Team:     unpriviledgedUser.Team.Name,
 	}
 	body, err := json.Marshal(payload)
 	if err != nil {
@@ -198,6 +236,7 @@ func TestUnauthorizedSetRole(t *testing.T) {
 	payload := &userRequest{
 		Username: unauthorizedUser.Username,
 		Role:     models.RoleAdmin,
+		Team:     unauthorizedUser.Team.Name,
 	}
 	body, err := json.Marshal(payload)
 	if err != nil {
@@ -246,6 +285,7 @@ func TestUnauthorizedUnlockAccount(t *testing.T) {
 	payload := &userRequest{
 		Username:      unauthorizedUser.Username,
 		Role:          unauthorizedUser.Role.Slug,
+		Team:          unauthorizedUser.Team.Name,
 		AccountLocked: false,
 	}
 	body, err := json.Marshal(payload)
@@ -291,6 +331,7 @@ func TestUnauthorizedClearPasswordChangeRequired(t *testing.T) {
 	payload := &userRequest{
 		Username:               unauthorizedUser.Username,
 		Role:                   unauthorizedUser.Role.Slug,
+		Team:                   unauthorizedUser.Team.Name,
 		PasswordChangeRequired: false,
 	}
 	body, err := json.Marshal(payload)
@@ -331,6 +372,7 @@ func TestModifyWithExistingUsername(t *testing.T) {
 	payload := &userRequest{
 		Username: testCtx.admin.Username,
 		Role:     unauthorizedUser.Role.Slug,
+		Team:     unauthorizedUser.Team.Name,
 	}
 	body, err := json.Marshal(payload)
 	if err != nil {

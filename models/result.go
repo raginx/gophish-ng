@@ -32,6 +32,7 @@ type Result struct {
 	Id           int64     `json:"-"`
 	CampaignId   int64     `json:"-"`
 	UserId       int64     `json:"-"`
+	TeamId       int64     `json:"-" gorm:"column:team_id"`
 	RId          string    `json:"id"`
 	Status       string    `json:"status" gorm:"not null"`
 	IP           string    `json:"ip"`
@@ -249,7 +250,7 @@ func (r *Result) Resend() error {
 		}
 		// A permanent failure (e.g. a 5xx SMTP error) deletes the mail log
 		// generate a fresh one rather than treating this as an error.
-		c := Campaign{Id: r.CampaignId, UserId: r.UserId}
+		c := Campaign{Id: r.CampaignId, UserId: r.UserId, TeamId: r.TeamId}
 		if err := GenerateMailLog(&c, r, now); err != nil {
 			return err
 		}

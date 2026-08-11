@@ -28,6 +28,11 @@ const (
 // IMAP contains the attributes needed to handle logging into an IMAP server to check
 // for reported emails
 type IMAP struct {
+	// IMAP is intentionally NOT team-scoped like the other owned models -
+	// it holds one specific person's connected mailbox credentials/OAuth
+	// grant, not a shared campaign asset. Making it team-visible would let
+	// teammates see (and potentially reconnect/hijack) each other's
+	// personal email accounts.
 	UserId                      int64     `json:"-" gorm:"column:user_id"`
 	Enabled                     bool      `json:"enabled"`
 	Host                        string    `json:"host"`

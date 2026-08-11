@@ -170,7 +170,7 @@ func TestCampaignResultReportWrongOwner(t *testing.T) {
 	createTestData(t)
 	campaign := getFirstCampaign(t)
 	result := campaign.Results[0]
-	unauthorizedUser := createUnpriviledgedUser(t, models.RoleUser)
+	unauthorizedUser := createUserInOtherTeam(t, models.RoleUser)
 
 	url := fmt.Sprintf("/api/campaigns/%d/results/%s/report", campaign.Id, result.RId)
 	r := httptest.NewRequest(http.MethodPut, url, bytes.NewBuffer([]byte{}))
@@ -270,7 +270,7 @@ func TestCampaignResultResendWrongOwner(t *testing.T) {
 	createTestData(t)
 	campaign := getFirstCampaign(t)
 	result := markResultErrored(t, campaign.Results[0].RId)
-	unauthorizedUser := createUnpriviledgedUser(t, models.RoleUser)
+	unauthorizedUser := createUserInOtherTeam(t, models.RoleUser)
 
 	url := fmt.Sprintf("/api/campaigns/%d/results/%s/resend", campaign.Id, result.RId)
 	r := httptest.NewRequest(http.MethodPut, url, nil)

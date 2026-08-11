@@ -36,6 +36,7 @@ var embeddedFileExtensions = []string{".jpg", ".jpeg", ".png", ".gif"}
 type MailLog struct {
 	Id          int64     `json:"-"`
 	UserId      int64     `json:"-"`
+	TeamId      int64     `json:"-" gorm:"column:team_id"`
 	CampaignId  int64     `json:"campaign_id"`
 	RId         string    `json:"id"`
 	SendDate    time.Time `json:"send_date"`
@@ -50,6 +51,7 @@ type MailLog struct {
 func GenerateMailLog(c *Campaign, r *Result, sendDate time.Time) error {
 	m := &MailLog{
 		UserId:     c.UserId,
+		TeamId:     c.TeamId,
 		CampaignId: c.Id,
 		RId:        r.RId,
 		SendDate:   sendDate,
@@ -136,7 +138,7 @@ func (m *MailLog) Success() error {
 func (m *MailLog) GetDialer() (mailer.Dialer, error) {
 	c := m.cachedCampaign
 	if c == nil {
-		campaign, err := GetCampaignMailContext(m.CampaignId, m.UserId)
+		campaign, err := GetCampaignMailContext(m.CampaignId, m.TeamId)
 		if err != nil {
 			return nil, err
 		}
@@ -151,7 +153,7 @@ func (m *MailLog) GetDialer() (mailer.Dialer, error) {
 func (m *MailLog) GetSendRate() int {
 	c := m.cachedCampaign
 	if c == nil {
-		campaign, err := GetCampaignMailContext(m.CampaignId, m.UserId)
+		campaign, err := GetCampaignMailContext(m.CampaignId, m.TeamId)
 		if err != nil {
 			return 0
 		}
@@ -171,7 +173,7 @@ func (m *MailLog) CacheCampaign(campaign *Campaign) error {
 }
 
 func (m *MailLog) GetSmtpFrom() (string, error) {
-	c, err := GetCampaign(m.CampaignId, m.UserId)
+	c, err := GetCampaign(m.CampaignId, m.TeamId)
 	if err != nil {
 		return "", err
 	}
@@ -191,7 +193,7 @@ func (m *MailLog) Generate(msg *gomail.Message) error {
 	}
 	c := m.cachedCampaign
 	if c == nil {
-		campaign, err := GetCampaignMailContext(m.CampaignId, m.UserId)
+		campaign, err := GetCampaignMailContext(m.CampaignId, m.TeamId)
 		if err != nil {
 			return err
 		}

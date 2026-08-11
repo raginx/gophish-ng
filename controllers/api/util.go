@@ -15,9 +15,11 @@ import (
 // SendTestEmail sends a test email using the template name
 // and Target given.
 func (as *Server) SendTestEmail(w http.ResponseWriter, r *http.Request) {
+	teamID := ctx.Get(r, "team_id").(int64)
 	s := &models.EmailRequest{
 		ErrorChan: make(chan error),
 		UserId:    ctx.Get(r, "user_id").(int64),
+		TeamId:    teamID,
 	}
 	if r.Method != "POST" {
 		JSONResponse(w, models.Response{Success: false, Message: "Method not allowed"}, http.StatusBadRequest)
@@ -47,7 +49,7 @@ func (as *Server) SendTestEmail(w http.ResponseWriter, r *http.Request) {
 		s.Template = t
 	} else {
 		// Get the Template requested by name
-		s.Template, err = models.GetTemplateByName(s.Template.Name, s.UserId)
+		s.Template, err = models.GetTemplateByName(s.Template.Name, teamID)
 		if err == gorm.ErrRecordNotFound {
 			log.WithFields(logrus.Fields{
 				"template": s.Template.Name,
@@ -66,7 +68,7 @@ func (as *Server) SendTestEmail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if s.Page.Name != "" {
-		s.Page, err = models.GetPageByName(s.Page.Name, s.UserId)
+		s.Page, err = models.GetPageByName(s.Page.Name, teamID)
 		if err == gorm.ErrRecordNotFound {
 			log.WithFields(logrus.Fields{
 				"page": s.Page.Name,
@@ -84,7 +86,7 @@ func (as *Server) SendTestEmail(w http.ResponseWriter, r *http.Request) {
 	// If a complete sending profile is provided use it
 	if err := s.SMTP.Validate(); err != nil {
 		// Otherwise get the SMTP requested by name
-		smtp, lookupErr := models.GetSMTPByName(s.SMTP.Name, s.UserId)
+		smtp, lookupErr := models.GetSMTPByName(s.SMTP.Name, teamID)
 		// If the Sending Profile doesn't exist, let's err on the side
 		// of caution and assume that the validation failure was more important.
 		if lookupErr != nil {

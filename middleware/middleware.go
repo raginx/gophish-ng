@@ -113,6 +113,7 @@ func RequireAPIKey(handler http.Handler) http.Handler {
 		}
 		r = ctx.Set(r, "user", u)
 		r = ctx.Set(r, "user_id", u.Id)
+		r = ctx.Set(r, "team_id", u.TeamID)
 		r = ctx.Set(r, "api_key", ak)
 		handler.ServeHTTP(w, r)
 	})

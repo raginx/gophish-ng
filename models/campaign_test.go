@@ -17,7 +17,7 @@ func (s *ModelsSuite) TestGenerateSendDate(c *check.C) {
 	// Test that if no launch date is provided, the campaign's creation date
 	// is used.
 	campaign := Campaign{Name: dep.Name, UserId: dep.UserId, Template: dep.Template, Page: dep.Page, SMTP: dep.SMTP, Groups: dep.Groups}
-	err := PostCampaign(&campaign, campaign.UserId)
+	err := PostCampaign(&campaign, campaign.UserId, 0)
 	c.Assert(err, check.Equals, nil)
 	c.Assert(campaign.LaunchDate, check.Equals, campaign.CreatedDate)
 
@@ -36,7 +36,7 @@ func (s *ModelsSuite) TestGenerateSendDate(c *check.C) {
 	// campaign's launch date
 	campaign = Campaign{Name: dep.Name, UserId: dep.UserId, Template: dep.Template, Page: dep.Page, SMTP: dep.SMTP, Groups: dep.Groups}
 	campaign.LaunchDate = time.Now().UTC()
-	err = PostCampaign(&campaign, campaign.UserId)
+	err = PostCampaign(&campaign, campaign.UserId, 0)
 	c.Assert(err, check.Equals, nil)
 
 	campaign, _ = GetCampaign(campaign.Id, campaign.UserId)
@@ -52,7 +52,7 @@ func (s *ModelsSuite) TestGenerateSendDate(c *check.C) {
 	campaign = Campaign{Name: dep.Name, UserId: dep.UserId, Template: dep.Template, Page: dep.Page, SMTP: dep.SMTP, Groups: dep.Groups}
 	campaign.LaunchDate = time.Now().UTC()
 	campaign.SendByDate = campaign.LaunchDate.Add(2 * time.Minute)
-	err = PostCampaign(&campaign, campaign.UserId)
+	err = PostCampaign(&campaign, campaign.UserId, 0)
 	c.Assert(err, check.Equals, nil)
 
 	campaign, _ = GetCampaign(campaign.Id, campaign.UserId)
@@ -111,7 +111,7 @@ func (s *ModelsSuite) TestPostCampaignShufflesTargets(c *check.C) {
 	campaign.SMTP = smtp
 	campaign.Groups = []Group{group}
 
-	c.Assert(PostCampaign(&campaign, campaign.UserId), check.Equals, nil)
+	c.Assert(PostCampaign(&campaign, campaign.UserId, 0), check.Equals, nil)
 	c.Assert(len(campaign.Results), check.Equals, numTargets)
 
 	inOriginalOrder := true
@@ -166,7 +166,7 @@ func (s *ModelsSuite) TestLaunchCampaignMaillogStatus(c *check.C) {
 	// createCampaignDependencies again
 	newCampaign := Campaign{Name: "New Campaign", UserId: campaign.UserId, Template: campaign.Template, Page: campaign.Page, SMTP: campaign.SMTP, Groups: []Group{{Name: "Test Group"}}}
 	newCampaign.LaunchDate = time.Now().Add(1 * time.Hour)
-	c.Assert(PostCampaign(&newCampaign, newCampaign.UserId), check.Equals, nil)
+	c.Assert(PostCampaign(&newCampaign, newCampaign.UserId, 0), check.Equals, nil)
 	ms, err = GetMailLogsByCampaign(newCampaign.Id)
 	c.Assert(err, check.Equals, nil)
 
@@ -218,7 +218,7 @@ func (s *ModelsSuite) TestCampaignGetResults(c *check.C) {
 func (s *ModelsSuite) TestGetCampaignPhishContext(c *check.C) {
 	campaign := s.createCampaignDependencies(c)
 	campaign.URL = "http://example.com"
-	err := PostCampaign(&campaign, campaign.UserId)
+	err := PostCampaign(&campaign, campaign.UserId, 0)
 	c.Assert(err, check.Equals, nil)
 
 	got, err := GetCampaignPhishContext(campaign.Id, campaign.UserId)
@@ -291,7 +291,7 @@ func setupCampaign(b *testing.B, size int) Campaign {
 	campaign.Page = Page{Name: "Test Page"}
 	campaign.SMTP = SMTP{Name: "Test Page"}
 	campaign.Groups = []Group{Group{Name: "Test Group"}}
-	PostCampaign(&campaign, 1)
+	PostCampaign(&campaign, 1, 0)
 	return campaign
 }
 
@@ -308,7 +308,7 @@ func BenchmarkCampaign100(b *testing.B) {
 		campaign.Groups = []Group{Group{Name: "Test Group"}}
 
 		b.StartTimer()
-		err := PostCampaign(&campaign, 1)
+		err := PostCampaign(&campaign, 1, 0)
 		if err != nil {
 			b.Fatalf("error posting campaign: %v", err)
 		}
@@ -334,7 +334,7 @@ func BenchmarkCampaign1000(b *testing.B) {
 		campaign.Groups = []Group{Group{Name: "Test Group"}}
 
 		b.StartTimer()
-		err := PostCampaign(&campaign, 1)
+		err := PostCampaign(&campaign, 1, 0)
 		if err != nil {
 			b.Fatalf("error posting campaign: %v", err)
 		}
@@ -360,7 +360,7 @@ func BenchmarkCampaign10000(b *testing.B) {
 		campaign.Groups = []Group{Group{Name: "Test Group"}}
 
 		b.StartTimer()
-		err := PostCampaign(&campaign, 1)
+		err := PostCampaign(&campaign, 1, 0)
 		if err != nil {
 			b.Fatalf("error posting campaign: %v", err)
 		}

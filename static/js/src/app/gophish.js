@@ -241,6 +241,17 @@ var api = {
             return query("/imap/validate", "POST", e, true)
         }
     },
+    // teams contains the endpoints for /teams
+    teams: {
+        // get() - Queries the API for GET /teams
+        get: function () {
+            return query("/teams/", "GET", {}, true)
+        },
+        // post() - Posts a team to POST /teams
+        post: function (team) {
+            return query("/teams/", "POST", team, true)
+        }
+    },
     // users contains the endpoints for /users
     users: {
         // get() - Queries the API for GET /users
