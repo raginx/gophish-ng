@@ -54,6 +54,20 @@ function escapeHtml(text) {
 }
 window.escapeHtml = escapeHtml
 
+/**
+ * canModifyObjects reports whether the current account holds the
+ * modify_objects permission, as rendered into the user object by base.html.
+ *
+ * This is used to hide controls a read-only account (the auditor role) cannot
+ * use. It is a convenience for the UI only - the API applies the same check
+ * server-side in the EnforceViewOnly middleware, so hiding a button is never
+ * what actually prevents a write.
+ */
+function canModifyObjects() {
+    return typeof user !== "undefined" && user.modify_objects
+}
+window.canModifyObjects = canModifyObjects
+
 function unescapeHtml(html) {
     return $("<div/>").html(html).text()
 }

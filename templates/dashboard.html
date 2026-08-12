@@ -9,7 +9,7 @@
     {{template "flashes" .Flashes}}
     <div id="emptyMessage" style="display:none;">
         <div class="alert alert-info">
-            No campaigns created yet. Let's create one!
+            No campaigns created yet.{{if .ModifyObjects}} Let's create one!{{end}}
         </div>
     </div>
     <div id="dashboard" style="display:none;">

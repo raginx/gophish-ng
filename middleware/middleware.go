@@ -142,6 +142,15 @@ func RequireLogin(handler http.Handler) http.HandlerFunc {
 	}
 }
 
+// selfServicePaths are API endpoints that only ever act on the requesting
+// user's own account rather than on Gophish objects, and so stay available to
+// read-only accounts. Rotating a leaked API key is something a read-only user
+// must be able to do for themselves - that key is their credential, not an
+// object belonging to their team.
+var selfServicePaths = map[string]bool{
+	"/api/reset": true,
+}
+
 // EnforceViewOnly is a global middleware that limits the ability to edit
 // objects to accounts with the PermissionModifyObjects permission.
 func EnforceViewOnly(next http.Handler) http.Handler {
@@ -149,7 +158,7 @@ func EnforceViewOnly(next http.Handler) http.Handler {
 		// If the request is for any non-GET HTTP method, e.g. POST, PUT,
 		// or DELETE, we need to ensure the user has the appropriate
 		// permission.
-		if r.Method != http.MethodGet && r.Method != http.MethodHead && r.Method != http.MethodOptions {
+		if !selfServicePaths[r.URL.Path] && r.Method != http.MethodGet && r.Method != http.MethodHead && r.Method != http.MethodOptions {
 			user := ctx.Get(r, "user").(models.User)
 			access, err := user.HasPermission(models.PermissionModifyObjects)
 			if err != nil {

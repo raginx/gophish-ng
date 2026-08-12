@@ -4,17 +4,19 @@
         Landing Pages
     </h1>
     <div id="flashes" class="row"></div>
+    {{if .ModifyObjects}}
     <div class="row">
         <button type="button" class="btn btn-primary" onclick="edit(-1)" data-toggle="modal" data-backdrop="static"
             data-target="#modal"><i class="fa fa-plus"></i> New Page</button>
     </div>
+    {{end}}
     &nbsp;
     <div id="loading">
         <i class="fa fa-spinner fa-spin fa-4x"></i>
     </div>
     <div id="emptyMessage" class="row" style="display:none;">
         <div class="alert alert-info">
-            No pages created yet. Let's create one!
+            No pages created yet.{{if .ModifyObjects}} Let's create one!{{end}}
         </div>
     </div>
     <div class="row">

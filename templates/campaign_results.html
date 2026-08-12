@@ -26,6 +26,7 @@
                     </li>
                 </ul>
             </div>
+            {{if .ModifyObjects}}
             <button id="complete_button" type="button" class="btn btn-blue" data-toggle="tooltip" onclick="completeCampaign()">
                 <i class="fa fa-flag-checkered"></i> Complete
             </button>
@@ -35,6 +36,7 @@
             <button type="button" class="btn btn-danger" data-toggle="tooltip" onclick="deleteCampaign()">
                 <i class="fa fa-trash-o fa-lg"></i> Delete
             </button>
+            {{end}}
             <button id="refresh_btn" type="button" class="btn btn-blue" data-toggle="tooltip" onclick="refresh()">
                 <i class="fa fa-refresh fa-lg"></i> Refresh
             </button>

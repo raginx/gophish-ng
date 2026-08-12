@@ -20,7 +20,11 @@
     var user = {
         api_key : {{ .User.ApiKey }},
         username : {{ .User.Username }},
-        team : {{ .User.Team.Name }}
+        team : {{ .User.Team.Name }},
+        // Mirrors the PermissionModifyObjects check done server-side. This
+        // only hides controls the account may not use - the API enforces the
+        // same permission in EnforceViewOnly regardless of what the UI shows.
+        modify_objects : {{ .ModifyObjects }}
     }
     {{end}}
     {{if .Token}}

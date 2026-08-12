@@ -21,6 +21,11 @@ func (s *ModelsSuite) TestHasPermission(c *check.C) {
 			PermissionModifyObjects: true,
 			PermissionViewObjects:   true,
 		},
+		RoleAuditor: PermissionCheck{
+			PermissionModifySystem:  false,
+			PermissionModifyObjects: false,
+			PermissionViewObjects:   true,
+		},
 	}
 
 	for r, checks := range permissionTests {
@@ -46,7 +51,7 @@ func (s *ModelsSuite) TestHasPermission(c *check.C) {
 }
 
 func (s *ModelsSuite) TestGetRoleBySlug(c *check.C) {
-	roles := []string{RoleAdmin, RoleUser}
+	roles := []string{RoleAdmin, RoleUser, RoleAuditor}
 	for _, role := range roles {
 		got, err := GetRoleBySlug(role)
 		c.Assert(err, check.Equals, nil)

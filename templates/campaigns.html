@@ -6,11 +6,13 @@
         </h1>
     </div>
     <div id="flashes" class="row"></div>
+    {{if .ModifyObjects}}
     <div class="row">
         <button type="button" class="btn btn-primary" data-toggle="modal" data-backdrop="static" data-target="#modal"
             onclick="edit('new')">
             <i class="fa fa-plus"></i> New Campaign</button>
     </div>
+    {{end}}
     &nbsp;
 
     <ul class="nav nav-tabs" role="tablist">
@@ -29,7 +31,7 @@
             </div>
             <div id="emptyMessage" class="row" style="display:none;">
                 <div class="alert alert-info">
-                    No campaigns created yet. Let's create one!
+                    No campaigns created yet.{{if .ModifyObjects}} Let's create one!{{end}}
                 </div>
             </div>
             <div class="row">

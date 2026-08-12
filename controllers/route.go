@@ -185,12 +185,13 @@ func (as *AdminServer) registerRoutes() {
 }
 
 type templateParams struct {
-	Title        string
-	Flashes      []interface{}
-	User         models.User
-	Token        string
-	Version      string
-	ModifySystem bool
+	Title         string
+	Flashes       []interface{}
+	User          models.User
+	Token         string
+	Version       string
+	ModifySystem  bool
+	ModifyObjects bool
 }
 
 // newTemplateParams returns the default template parameters for a user and
@@ -199,12 +200,14 @@ func newTemplateParams(r *http.Request) templateParams {
 	user := ctx.Get(r, "user").(models.User)
 	session := ctx.Get(r, "session").(*sessions.Session)
 	modifySystem, _ := user.HasPermission(models.PermissionModifySystem)
+	modifyObjects, _ := user.HasPermission(models.PermissionModifyObjects)
 	return templateParams{
-		Token:        csrf.Token(r),
-		User:         user,
-		ModifySystem: modifySystem,
-		Version:      config.Version,
-		Flashes:      session.Flashes(),
+		Token:         csrf.Token(r),
+		User:          user,
+		ModifySystem:  modifySystem,
+		ModifyObjects: modifyObjects,
+		Version:       config.Version,
+		Flashes:       session.Flashes(),
 	}
 }
 

@@ -64,6 +64,14 @@ func TestEnforceViewOnly(t *testing.T) {
 			http.MethodPut:     http.StatusOK,
 			http.MethodDelete:  http.StatusOK,
 		},
+		models.RoleAuditor: MiddlewarePermissionTest{
+			http.MethodGet:     http.StatusOK,
+			http.MethodHead:    http.StatusOK,
+			http.MethodOptions: http.StatusOK,
+			http.MethodPost:    http.StatusForbidden,
+			http.MethodPut:     http.StatusForbidden,
+			http.MethodDelete:  http.StatusForbidden,
+		},
 	}
 	for r, checks := range permissionTests {
 		role, err := models.GetRoleBySlug(r)
@@ -85,6 +93,35 @@ func TestEnforceViewOnly(t *testing.T) {
 			if got != expected {
 				t.Fatalf("incorrect status code received. expected %d got %d", expected, got)
 			}
+		}
+	}
+}
+
+// TestEnforceViewOnlySelfService ensures that a read-only account can still
+// POST to the endpoints that only act on its own account, so that an auditor
+// is able to rotate their own API key.
+func TestEnforceViewOnlySelfService(t *testing.T) {
+	setupTest(t)
+	role, err := models.GetRoleBySlug(models.RoleAuditor)
+	if err != nil {
+		t.Fatalf("error getting role by slug: %v", err)
+	}
+	for path, expected := range map[string]int{
+		"/api/reset":    http.StatusOK,
+		"/api/imap/":    http.StatusForbidden,
+		"/api/reset/":   http.StatusForbidden,
+		"/api/campaign": http.StatusForbidden,
+	} {
+		req := httptest.NewRequest(http.MethodPost, path, nil)
+		response := httptest.NewRecorder()
+		req = ctx.Set(req, "user", models.User{
+			Role:   role,
+			RoleID: role.ID,
+		})
+
+		EnforceViewOnly(successHandler).ServeHTTP(response, req)
+		if got := response.Code; got != expected {
+			t.Fatalf("incorrect status code received for %s. expected %d got %d", path, expected, got)
 		}
 	}
 }

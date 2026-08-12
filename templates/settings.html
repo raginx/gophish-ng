@@ -11,8 +11,10 @@
                 data-toggle="tab">Account Settings</a></li>
         <li role="uiSettings"><a href="#uiSettings" aria-controls="uiSettings" role="tab" data-toggle="tab">UI
                 Settings</a></li>
+        {{if .ModifyObjects}}
         <li role="reportingSettings"><a href="#reportingSettings" aria-controls="reportingSettings" role="tab" id="reporttab"
             data-toggle="tab">Reporting Settings</a></li>
+        {{end}}
     </ul>
     <!-- Tab Panes -->
     <div class="tab-content">
@@ -93,6 +95,10 @@
             </div>
         </div>
         <!-- Reporting Settings Begin -->
+        <!-- Read-only accounts don't get this tab: enabling mailbox
+             monitoring makes the worker write reported-email events into
+             campaign results, which the API denies them anyway. -->
+        {{if .ModifyObjects}}
         <div role="tabpanel" class="tab-pane" id="reportingSettings">
             <form id="imapForm" >
             <br />
@@ -341,6 +347,7 @@
 
         </form>
         </div>
+        {{end}}
         <!-- Reporting Settings End -->
     </div>
 </div>

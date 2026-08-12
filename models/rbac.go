@@ -6,15 +6,17 @@ Design:
 Gophish implements simple Role-Based-Access-Control (RBAC) to control access to
 certain resources.
 
-By default, Gophish has two separate roles, with each user being assigned to
+By default, Gophish has three separate roles, with each user being assigned to
 a single role:
 
-* Admin  - Can modify all objects as well as system-level configuration
-* User   - Can modify all objects
+* Admin   - Can modify all objects as well as system-level configuration
+* User    - Can modify all objects
+* Auditor - Can only view objects
 
-It's important to note that these are global roles. In the future, we'll likely
-add the concept of teams, which will include their own roles and permission
-system similar to these global permissions.
+It's important to note that these are global roles. Objects are scoped to the
+team a user belongs to (see models/team.go), so an auditor sees exactly the
+campaigns and results of their own team - the role controls what may be done
+with those objects, the team controls which objects are visible at all.
 
 Each role maps to one or more permissions, making it easy to add more granular
 permissions over time.
@@ -33,6 +35,12 @@ const (
 	// RoleUser is used for standard Gophish users. Users with this role can
 	// create, manage, and view Gophish objects and campaigns.
 	RoleUser = "user"
+	// RoleAuditor is used for read-only accounts. Users with this role can
+	// view their team's objects and campaign results, but cannot create or
+	// modify anything. This is enforced globally by the EnforceViewOnly
+	// middleware, which rejects any state-changing API request from an
+	// account without the PermissionModifyObjects permission.
+	RoleAuditor = "auditor"
 
 	// PermissionViewObjects determines if a role can view standard Gophish
 	// objects such as campaigns, groups, landing pages, etc.

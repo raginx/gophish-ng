@@ -192,7 +192,7 @@ function completeCampaign() {
                 'This campaign has been completed!',
                 'success'
             );
-            $('#complete_button')[0].disabled = true;
+            $('#complete_button').prop('disabled', true);
             $('#complete_button').text('Completed!')
             doPoll = false;
         }
@@ -624,7 +624,7 @@ function createStatusLabel(status, send_date, rid) {
     }
     // Let the admin retry a single failed send without recreating the
     // whole campaign
-    if (status == "Error") {
+    if (status == "Error" && canModifyObjects()) {
         statusColumn += " <i role=\"button\" class=\"fa fa-repeat text-muted\" data-toggle=\"tooltip\" title=\"Resend\" onclick=\"resend_mail('" + rid + "', '" + campaign.id + "');\"></i>"
     }
     return statusColumn
@@ -740,7 +740,11 @@ function load() {
                 // Set the title
                 $("#page-title").text("Results for " + c.name)
                 if (c.status == "Completed") {
-                    $('#complete_button')[0].disabled = true;
+                    // .prop() rather than [0].disabled: read-only accounts
+                    // never get a complete button rendered, and indexing an
+                    // empty jQuery set would throw and abort the rest of
+                    // this handler.
+                    $('#complete_button').prop('disabled', true);
                     $('#complete_button').text('Completed!');
                     doPoll = false;
                 }
