@@ -121,6 +121,8 @@ func createTestData(t *testing.T) {
 	c.Page = p
 	c.SMTP = smtp
 	c.Groups = []models.Group{group}
-	models.PostCampaign(&c, c.UserId, 0)
+	if err := models.PostCampaign(&c, c.UserId, 0); err != nil {
+		t.Fatalf("error posting campaign: %v", err)
+	}
 	c.UpdateStatus(models.CampaignEmailsSent)
 }

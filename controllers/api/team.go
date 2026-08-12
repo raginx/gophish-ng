@@ -13,8 +13,8 @@ import (
 // same team assignment happens through the Users endpoints for everyone
 // else
 func (as *Server) Teams(w http.ResponseWriter, r *http.Request) {
-	switch {
-	case r.Method == "GET":
+	switch r.Method {
+	case "GET":
 		ts, err := models.GetTeams()
 		if err != nil {
 			log.Error(err)
@@ -23,7 +23,7 @@ func (as *Server) Teams(w http.ResponseWriter, r *http.Request) {
 		}
 		JSONResponse(w, ts, http.StatusOK)
 
-	case r.Method == "POST":
+	case "POST":
 		t := models.Team{}
 		err := json.NewDecoder(r.Body).Decode(&t)
 		if err != nil {

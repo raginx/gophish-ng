@@ -291,7 +291,10 @@ func setupCampaign(b *testing.B, size int) Campaign {
 	campaign.Page = Page{Name: "Test Page"}
 	campaign.SMTP = SMTP{Name: "Test Page"}
 	campaign.Groups = []Group{Group{Name: "Test Group"}}
-	PostCampaign(&campaign, 1, 0)
+	err := PostCampaign(&campaign, 1, 0)
+	if err != nil {
+		b.Fatalf("error posting campaign: %v", err)
+	}
 	return campaign
 }
 
