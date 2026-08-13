@@ -24,8 +24,8 @@ September 2024**, `go.mod` still requires Go 1.13, and several of its core
 dependencies carry known CVEs — not great for a tool that security teams
 run inside their own networks.
 
-This fork exists to keep that foundation solid without changing what
-Gophish actually does. So far that's meant:
+This fork exists to keep that foundation solid, and to fill the gaps that
+show up when a team runs it. So far that's meant:
 
 - **Dependency & toolchain modernization**: Go 1.13 → 1.25+, a full
   migration off the long-abandoned `jinzhu/gorm` (v1) to `gorm.io/gorm`
@@ -44,6 +44,10 @@ Gophish actually does. So far that's meant:
   with a single `esbuild` script.
 - **CI that actually catches things**: `govulncheck`, linting, and
   automated dependency updates, none of which upstream had.
+- **Features upstream lacks**: teams, so several operators share the same
+  campaigns and assets instead of each working in their own silo; a
+  read-only auditor role for reviewers and clients; OAuth 2.0 for IMAP
+  reporting; SMTP CC and per-profile send rates.
 
 Every change here is tested and verified against a running instance, not
 just "looks right." See [CONTRIBUTING.md](CONTRIBUTING.md) for how this
