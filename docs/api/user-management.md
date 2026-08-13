@@ -287,6 +287,12 @@ Returns a 404 error if no user is found with the provided ID.
 
 `GET /api/teams/` and `POST /api/teams/` are admin-only (`modify_system` permission). There's no dedicated update/delete endpoint - a team is created implicitly the first time a not-yet-seen name is assigned to a user via [Create User](#create-user) or [Modify User](#modify-user).
 
+### Upgrading an existing installation
+
+!!! warning "Existing accounts are merged into a single team"
+    The migration that introduces teams places **every existing user account and every existing object into one shared `Default Team`**. Nothing is lost or hidden by the upgrade, but objects that were previously visible only to the user who created them become visible to all other accounts on the instance.
+
+
 `GET /api/teams/`
 
 Returns a list of all teams.
