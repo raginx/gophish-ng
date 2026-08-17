@@ -480,7 +480,9 @@ func (as *AdminServer) ResetPassword(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		Flash(w, r, "success", "Your password has been changed successfully")
-		session.Save(r, w)
+		if err := session.Save(r, w); err != nil {
+			log.Error(err)
+		}
 		as.nextOrIndex(w, r)
 	}
 }
