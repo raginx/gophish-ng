@@ -364,9 +364,31 @@ $(document).ready(function () {
                 generateTimelineChart(campaigns)
             } else {
                 $("#emptyMessage").show()
+                loadGettingStartedSteps()
             }
         })
         .error(function () {
             errorFlash("Error fetching campaigns")
         })
 })
+
+// loadGettingStartedSteps checks off the getting-started steps
+function loadGettingStartedSteps() {
+    function markStepComplete(step) {
+        $('#gettingStartedSteps li[data-step="' + step + '"] i')
+            .removeClass('fa-circle-o')
+            .addClass('fa-check-circle text-success')
+    }
+    api.SMTP.get().success(function (profiles) {
+        if (profiles.length > 0) markStepComplete('sendingProfile')
+    })
+    api.templates.get().success(function (templates) {
+        if (templates.length > 0) markStepComplete('template')
+    })
+    api.pages.get().success(function (pages) {
+        if (pages.length > 0) markStepComplete('landingPage')
+    })
+    api.groups.get().success(function (groups) {
+        if (groups.length > 0) markStepComplete('group')
+    })
+}

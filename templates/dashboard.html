@@ -8,8 +8,24 @@
     </div>
     {{template "flashes" .Flashes}}
     <div id="emptyMessage" style="display:none;">
-        <div class="alert alert-info">
-            No campaigns created yet.{{if .ModifyObjects}} Let's create one!{{end}}
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Getting Started</h3>
+            </div>
+            <div class="panel-body">
+                {{if .ModifyObjects}}
+                <p>You haven't launched a campaign yet. Here's what you'll need:</p>
+                <ul class="list-unstyled" id="gettingStartedSteps">
+                    <li data-step="sendingProfile"><i class="fa fa-circle-o"></i> <a href="/sending_profiles">Add a sending profile</a></li>
+                    <li data-step="template"><i class="fa fa-circle-o"></i> <a href="/templates">Create an email template</a></li>
+                    <li data-step="landingPage"><i class="fa fa-circle-o"></i> <a href="/landing_pages">Create a landing page</a></li>
+                    <li data-step="group"><i class="fa fa-circle-o"></i> <a href="/groups">Add a group of users</a></li>
+                </ul>
+                <a href="/campaigns" class="btn btn-primary">Launch Your First Campaign</a>
+                {{else}}
+                <p>No campaigns created yet.</p>
+                {{end}}
+            </div>
         </div>
     </div>
     <div id="dashboard" style="display:none;">
