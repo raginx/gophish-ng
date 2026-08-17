@@ -1,6 +1,6 @@
 # Introduction
 
-![Gophish-NG](https://raw.github.com/raginx/gophish-ng/master/static/images/gophish_purple.png)
+![Gophish-NG](https://raw.github.com/raginx/gophish-ng/master/static/images/gophish-ng.png)
 
 ## Welcome to Gophish-NG!
 

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.github.com/raginx/gophish-ng/master/static/images/gophish_purple.png" alt="gophish logo" width="500">
+  <img src="https://raw.github.com/raginx/gophish-ng/master/static/images/gophish-ng.png" alt="gophish-ng — a modernized, hardened fork of Gophish" width="960">
 </p>
 
 <h1 align="center">Gophish-NG</h1>
