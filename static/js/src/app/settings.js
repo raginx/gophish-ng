@@ -290,6 +290,20 @@ $(document).ready(function () {
                 $('#lastlogin').val(moment.utc(imap.last_login).fromNow())
                 $('#imapfreq').val(imap.imap_freq)
 
+                if (imap.last_login_error) {
+                    $('#lastloginerror').val(imap.last_login_error)
+                    $('#lastloginerrordiv').show()
+                } else {
+                    $('#lastloginerrordiv').hide()
+                }
+
+                if (imap.non_campaign_emails_count > 0) {
+                    $('#noncampaigncount').val(imap.non_campaign_emails_count)
+                    $('#noncampaigncountdiv').show()
+                } else {
+                    $('#noncampaigncountdiv').hide()
+                }
+
                 var authType = imap.auth_type || "basic"
                 $("#authtype_basic").prop('checked', authType == "basic")
                 $("#authtype_oauth2").prop('checked', authType == "oauth2")

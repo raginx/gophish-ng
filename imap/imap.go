@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
+	"net/textproto"
 	"regexp"
 	"strconv"
 	"time"
@@ -19,6 +21,9 @@ import (
 
 	"github.com/jordan-wright/email"
 )
+
+// ErrIMAPLogin wraps errors that occur while establishing the IMAP connection
+var ErrIMAPLogin = errors.New("IMAP login failed")
 
 // Client interface for IMAP interactions
 type Client interface {
@@ -52,6 +57,10 @@ type Mailbox struct {
 	Folder     string
 	// Read only mode, false (original logic) if not initialized
 	ReadOnly bool
+	// RestrictDomain, if set, restricts GetUnread to messages whose From
+	// header contains "@"+RestrictDomain. This is enforced server-side as
+	// an IMAP SEARCH HEADER filter rather than a post-fetch check
+	RestrictDomain string
 }
 
 // Validate validates supplied IMAP model by connecting to the server
@@ -139,7 +148,7 @@ func (mbox *Mailbox) GetUnread(markAsRead, delete bool) ([]Email, error) {
 
 	imapClient, err := mbox.newClient()
 	if err != nil {
-		return emails, fmt.Errorf("failed to create IMAP connection: %s", err)
+		return emails, fmt.Errorf("%w: %s", ErrIMAPLogin, err)
 	}
 
 	defer imapClient.Logout()
@@ -147,6 +156,11 @@ func (mbox *Mailbox) GetUnread(markAsRead, delete bool) ([]Email, error) {
 	// Search for unread emails
 	criteria := imap.NewSearchCriteria()
 	criteria.WithoutFlags = []string{imap.SeenFlag}
+	if mbox.RestrictDomain != "" {
+		// Server-side substring filter on the From header, so only emails
+		// from the restricted domain are ever fetched
+		criteria.Header = textproto.MIMEHeader{"From": []string{"@" + mbox.RestrictDomain}}
+	}
 	seqs, err := imapClient.Search(criteria)
 	if err != nil {
 		return emails, err
@@ -161,11 +175,10 @@ func (mbox *Mailbox) GetUnread(markAsRead, delete bool) ([]Email, error) {
 	section := &imap.BodySectionName{}
 	items := []imap.FetchItem{imap.FetchEnvelope, imap.FetchFlags, imap.FetchInternalDate, section.FetchItem()}
 	messages := make(chan *imap.Message)
+	fetchDone := make(chan error, 1)
 
 	go func() {
-		if err := imapClient.Fetch(seqset, items, messages); err != nil {
-			log.Error("Error fetching emails: ", err.Error()) // TODO: How to handle this, need to propogate error out
-		}
+		fetchDone <- imapClient.Fetch(seqset, items, messages)
 	}()
 
 	// Step through each email
@@ -194,6 +207,9 @@ func (mbox *Mailbox) GetUnread(markAsRead, delete bool) ([]Email, error) {
 		emtmp := Email{Email: em, SeqNum: msg.SeqNum} // Not sure why msg.Uid is always 0, so swapped to sequence numbers
 		emails = append(emails, emtmp)
 
+	}
+	if err := <-fetchDone; err != nil {
+		return emails, fmt.Errorf("error fetching emails: %w", err)
 	}
 	return emails, nil
 }

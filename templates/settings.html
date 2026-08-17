@@ -332,6 +332,24 @@
                 <br />
                 <input type="hidden" id="lastloginraw" name="lastloginraw" value="">
 
+                <div class="row" id="lastloginerrordiv" style="display: none;">
+                <label for="lastloginerror" class="col-sm-2 control-label form-label">Last login error:</label>
+                <div class="col-md-6">
+                    <input type="text" id="lastloginerror" disabled
+                        class="form-control border-0 text-danger" />
+                    </div>
+                </div>
+                <br />
+
+                <div class="row" id="noncampaigncountdiv" style="display: none;">
+                <label for="noncampaigncount" class="col-sm-2 control-label form-label" data-toggle="tooltip" title="Emails reported through this mailbox that didn't match a known Gophish campaign - these may be real phishing reports and are worth reviewing.">Non-campaign emails reported:</label>
+                <div class="col-md-6">
+                    <input type="text" id="noncampaigncount" disabled
+                        class="form-control border-0" />
+                    </div>
+                </div>
+                <br />
+
             </div>
 
             <div class="row">

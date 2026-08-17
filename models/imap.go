@@ -6,6 +6,7 @@ import (
 	"time"
 
 	log "github.com/gophish/gophish/logger"
+	"gorm.io/gorm"
 )
 
 const DefaultIMAPFolder = "INBOX"
@@ -47,6 +48,16 @@ type IMAP struct {
 	LastLogin                   time.Time `json:"last_login,omitempty"`
 	ModifiedDate                time.Time `json:"modified_date"`
 	IMAPFreq                    uint32    `json:"imap_freq,string,omitempty"`
+
+	// ConsecutiveLoginErrors counts login attempts that have failed since
+	// the last successful one
+	ConsecutiveLoginErrors uint32 `json:"consecutive_login_errors,omitempty" gorm:"column:consecutive_login_errors"`
+	// LastLoginError holds the error message of the most recent failed
+	// login
+	LastLoginError string `json:"last_login_error,omitempty" gorm:"column:last_login_error"`
+	// NonCampaignEmailsCount counts emails reported through this mailbox
+	// that didnt match a known Gophish campaign
+	NonCampaignEmailsCount uint32 `json:"non_campaign_emails_count,omitempty" gorm:"column:non_campaign_emails_count"`
 
 	// AuthType selects between Basic Auth (the default, existing behavior)
 	// and OAuth2
@@ -243,15 +254,12 @@ func PostIMAP(im *IMAP, uid int64) error {
 		return err
 	}
 
-	// Delete old entry. TODO: Save settings and if fails to Save below replace with original
-	err = DeleteIMAP(uid)
-	if err != nil {
-		log.Error(err)
-		return err
-	}
-
-	// Insert new settings into the DB
-	err = db.Create(im).Error
+	err = db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("user_id=?", uid).Delete(&IMAP{}).Error; err != nil {
+			return err
+		}
+		return tx.Create(im).Error
+	})
 	if err != nil {
 		log.Error("Unable to save to database: ", err.Error())
 	}
@@ -267,8 +275,41 @@ func DeleteIMAP(uid int64) error {
 	return err
 }
 
+// SuccessfulLogin records a successful IMAP login, resetting the
+// consecutive error backoff and clearing any previously recorded error
 func SuccessfulLogin(im *IMAP) error {
-	err := db.Model(&im).Where("user_id = ?", im.UserId).Update("last_login", time.Now().UTC()).Error
+	err := db.Model(&IMAP{}).Where("user_id = ?", im.UserId).Updates(map[string]interface{}{
+		"last_login":               time.Now().UTC(),
+		"consecutive_login_errors": 0,
+		"last_login_error":         "",
+	}).Error
+	if err != nil {
+		log.Error("Unable to update database: ", err.Error())
+	}
+	return err
+}
+
+// RecordLoginError records a failed IMAP login attempt, incrementing the
+// consecutive error count and storing the error message
+func RecordLoginError(im *IMAP, loginErr error) error {
+	err := db.Model(&IMAP{}).Where("user_id = ?", im.UserId).Updates(map[string]interface{}{
+		"consecutive_login_errors": gorm.Expr("consecutive_login_errors + 1"),
+		"last_login_error":         loginErr.Error(),
+	}).Error
+	if err != nil {
+		log.Error("Unable to update database: ", err.Error())
+	}
+	return err
+}
+
+// IncrementNonCampaignEmails adds n to the count of emails reported through
+// this mailbox that did not match a known Gophish campaign
+func IncrementNonCampaignEmails(im *IMAP, n uint32) error {
+	if n == 0 {
+		return nil
+	}
+	err := db.Model(&IMAP{}).Where("user_id = ?", im.UserId).
+		Update("non_campaign_emails_count", gorm.Expr("non_campaign_emails_count + ?", n)).Error
 	if err != nil {
 		log.Error("Unable to update database: ", err.Error())
 	}
