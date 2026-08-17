@@ -1,0 +1,18 @@
+# Keep the build context small
+.git
+node_modules
+site
+
+gophish
+gophish.db*
+gophish_admin.crt
+gophish_admin.key
+*.log
+
+# Prebuilt frontend assets are rebuilt from source during the image build
+static/js/dist
+static/css/dist
+
+*.md
+docs
+ROADMAP.md
