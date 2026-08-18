@@ -24,7 +24,7 @@ type cloneRequest struct {
 
 func (cr *cloneRequest) validate() error {
 	if cr.URL == "" {
-		return errors.New("No URL Specified")
+		return errors.New("no URL specified")
 	}
 	return nil
 }
@@ -127,8 +127,9 @@ func (as *Server) ImportSite(w http.ResponseWriter, r *http.Request) {
 		JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusBadRequest)
 		return
 	}
+	defer resp.Body.Close()
 	// Insert the base href tag to better handle relative resources
-	d, err := goquery.NewDocumentFromResponse(resp)
+	d, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
 		JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusBadRequest)
 		return
