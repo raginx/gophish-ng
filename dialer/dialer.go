@@ -18,8 +18,8 @@ var DefaultDialer = &RestrictedDialer{}
 
 // SetAllowedHosts sets the list of allowed hosts or IP ranges for the default
 // dialer.
-func SetAllowedHosts(allowed []string) {
-	DefaultDialer.SetAllowedHosts(allowed)
+func SetAllowedHosts(allowed []string) error {
+	return DefaultDialer.SetAllowedHosts(allowed)
 }
 
 // AllowedHosts returns the configured hosts that are allowed for the dialer.
@@ -120,14 +120,9 @@ var allInternal = []string{
 
 type dialControl = func(network, address string, c syscall.RawConn) error
 
-type restrictedDialer struct {
-	*net.Dialer
-	allowed []string
-}
-
 func restrictedControl(allowed []*net.IPNet) dialControl {
 	return func(network string, address string, conn syscall.RawConn) error {
-		if !(network == "tcp4" || network == "tcp6") {
+		if network != "tcp4" && network != "tcp6" {
 			return fmt.Errorf("%s is not a safe network type", network)
 		}
 
