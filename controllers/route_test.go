@@ -21,7 +21,8 @@ func attemptLogin(t *testing.T, ctx *testContext, client *http.Client, username,
 		t.Fatalf("invalid status code received. expected %d got %d", expected, got)
 	}
 
-	doc, err := goquery.NewDocumentFromResponse(resp)
+	defer resp.Body.Close()
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
 		t.Fatalf("error parsing /login response body")
 	}

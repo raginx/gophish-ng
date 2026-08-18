@@ -27,7 +27,6 @@ THE SOFTWARE.
 */
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
@@ -60,7 +59,7 @@ var (
 func main() {
 	// Load the version
 
-	version, err := ioutil.ReadFile("./VERSION")
+	version, err := os.ReadFile("./VERSION")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -84,7 +83,9 @@ func main() {
 
 	// Configure our various upstream clients to make sure that we restrict
 	// outbound connections as needed.
-	dialer.SetAllowedHosts(conf.AdminConf.AllowedInternalHosts)
+	if err := dialer.SetAllowedHosts(conf.AdminConf.AllowedInternalHosts); err != nil {
+		log.Fatal(err)
+	}
 	webhook.SetTransport(&http.Transport{
 		DialContext: dialer.Dialer().DialContext,
 	})
@@ -123,7 +124,11 @@ func main() {
 	imapMonitor := imap.NewMonitor()
 	if *mode == "admin" || *mode == "all" {
 		go adminServer.Start()
-		go imapMonitor.Start()
+		go func() {
+			if err := imapMonitor.Start(); err != nil {
+				log.Error(err)
+			}
+		}()
 	}
 	if *mode == "phish" || *mode == "all" {
 		go phishServer.Start()
@@ -135,11 +140,17 @@ func main() {
 	<-c
 	log.Info("CTRL+C Received... Gracefully shutting down servers")
 	if *mode == modeAdmin || *mode == modeAll {
-		adminServer.Shutdown()
-		imapMonitor.Shutdown()
+		if err := adminServer.Shutdown(); err != nil {
+			log.Error(err)
+		}
+		if err := imapMonitor.Shutdown(); err != nil {
+			log.Error(err)
+		}
 	}
 	if *mode == modePhish || *mode == modeAll {
-		phishServer.Shutdown()
+		if err := phishServer.Shutdown(); err != nil {
+			log.Error(err)
+		}
 	}
 
 }

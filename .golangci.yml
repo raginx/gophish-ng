@@ -23,3 +23,7 @@ linters:
         - (*github.com/oschwald/maxminddb-golang.Reader).Close
         - (*mime/multipart.Part).Close
         - (github.com/gophish/gophish/mailer.Sender).Close
+        # Logout() is this library's equivalent of Close() for an IMAP
+        # connection we're already done with - same reasoning as the
+        # Close() entries above, just a different method name.
+        - (*github.com/emersion/go-imap/client.Client).Logout

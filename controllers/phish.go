@@ -24,11 +24,11 @@ import (
 
 // ErrInvalidRequest is thrown when a request with an invalid structure is
 // received
-var ErrInvalidRequest = errors.New("Invalid request")
+var ErrInvalidRequest = errors.New("invalid request")
 
 // ErrCampaignComplete is thrown when an event is received for a campaign that
 // has already been marked as complete.
-var ErrCampaignComplete = errors.New("Event received on completed campaign")
+var ErrCampaignComplete = errors.New("event received on completed campaign")
 
 // TransparencyResponse is the JSON response provided when a third-party
 // makes a request to the transparency handler.
@@ -245,13 +245,13 @@ func (ps *PhishingServer) PhishHandler(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	switch {
-	case r.Method == "GET":
+	switch r.Method {
+	case "GET":
 		err = rs.HandleClickedLink(d)
 		if err != nil {
 			log.Error(err)
 		}
-	case r.Method == "POST":
+	case "POST":
 		err = rs.HandleFormSubmit(d)
 		if err != nil {
 			log.Error(err)
@@ -292,12 +292,13 @@ func renderPhishResponse(w http.ResponseWriter, r *http.Request, ptx models.Phis
 	}
 	// Set the Content-Type explicitly
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write([]byte(html))
+	// Nothing more to do if the client already went away mid-response.
+	_, _ = w.Write([]byte(html))
 }
 
 // RobotsHandler prevents search engines, etc. from indexing phishing materials
 func (ps *PhishingServer) RobotsHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "User-agent: *\nDisallow: /")
+	_, _ = fmt.Fprintln(w, "User-agent: *\nDisallow: /")
 }
 
 // TransparencyHandler returns a TransparencyResponse for the provided result

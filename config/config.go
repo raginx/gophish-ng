@@ -3,7 +3,7 @@ package config
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"os"
 
 	gophishcrypto "github.com/gophish/gophish/crypto"
 	log "github.com/gophish/gophish/logger"
@@ -73,7 +73,7 @@ const ServerName = "gophish"
 // LoadConfig loads the configuration from the specified filepath
 func LoadConfig(filepath string) (*Config, error) {
 	// Get the config file
-	configFile, err := ioutil.ReadFile(filepath)
+	configFile, err := os.ReadFile(filepath)
 	if err != nil {
 		return nil, err
 	}

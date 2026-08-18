@@ -42,18 +42,22 @@ func setupTest(t *testing.T) *testContext {
 	ctx.adminServer.Start()
 	// Get the API key to use for these tests
 	u, err := models.GetUser(1)
-	// Reset the temporary password for the admin user to a value we control
-	hash, err := auth.GeneratePasswordHash("gophish")
-	u.Hash = hash
-	models.PutUser(&u)
 	if err != nil {
 		t.Fatalf("error getting first user from database: %v", err)
+	}
+	// Reset the temporary password for the admin user to a value we control
+	hash, err := auth.GeneratePasswordHash("gophish")
+	if err != nil {
+		t.Fatalf("error hashing password: %v", err)
+	}
+	u.Hash = hash
+	if err := models.PutUser(&u); err != nil {
+		t.Fatalf("error updating first user: %v", err)
 	}
 
 	// Create a second user to test account locked status
 	u2 := models.User{Username: "houdini", Hash: hash, AccountLocked: true}
-	models.PutUser(&u2)
-	if err != nil {
+	if err := models.PutUser(&u2); err != nil {
 		t.Fatalf("error creating new user: %v", err)
 	}
 
@@ -79,7 +83,9 @@ func tearDown(t *testing.T, ctx *testContext) {
 	ctx.adminServer.Close()
 	ctx.phishServer.Close()
 	// Reset the path for the next test
-	os.Chdir(ctx.origPath)
+	if err := os.Chdir(ctx.origPath); err != nil {
+		t.Fatalf("error restoring working directory: %v", err)
+	}
 }
 
 func createTestData(t *testing.T) {
@@ -90,7 +96,9 @@ func createTestData(t *testing.T) {
 		models.Target{BaseRecipient: models.BaseRecipient{Email: "test2@example.com", FirstName: "Second", LastName: "Example"}},
 	}
 	group.UserId = 1
-	models.PostGroup(&group)
+	if err := models.PostGroup(&group); err != nil {
+		t.Fatalf("error posting group: %v", err)
+	}
 
 	// Add a template
 	template := models.Template{Name: "Test Template"}
@@ -98,20 +106,26 @@ func createTestData(t *testing.T) {
 	template.Text = "Text text"
 	template.HTML = "<html>Test</html>"
 	template.UserId = 1
-	models.PostTemplate(&template)
+	if err := models.PostTemplate(&template); err != nil {
+		t.Fatalf("error posting template: %v", err)
+	}
 
 	// Add a landing page
 	p := models.Page{Name: "Test Page"}
 	p.HTML = "<html>Test</html>"
 	p.UserId = 1
-	models.PostPage(&p)
+	if err := models.PostPage(&p); err != nil {
+		t.Fatalf("error posting page: %v", err)
+	}
 
 	// Add a sending profile
 	smtp := models.SMTP{Name: "Test Page"}
 	smtp.UserId = 1
 	smtp.Host = "example.com"
 	smtp.FromAddress = "test@test.com"
-	models.PostSMTP(&smtp)
+	if err := models.PostSMTP(&smtp); err != nil {
+		t.Fatalf("error posting SMTP profile: %v", err)
+	}
 
 	// Setup and "launch" our campaign
 	// Set the status such that no emails are attempted
@@ -124,5 +138,7 @@ func createTestData(t *testing.T) {
 	if err := models.PostCampaign(&c, c.UserId, 0); err != nil {
 		t.Fatalf("error posting campaign: %v", err)
 	}
-	c.UpdateStatus(models.CampaignEmailsSent)
+	if err := c.UpdateStatus(models.CampaignEmailsSent); err != nil {
+		t.Fatalf("error updating campaign status: %v", err)
+	}
 }

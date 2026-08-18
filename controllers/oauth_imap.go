@@ -91,7 +91,9 @@ func (as *AdminServer) OAuthIMAPCallback(w http.ResponseWriter, r *http.Request)
 
 	expectedState, _ := session.Values[oauthStateSessionKey].(string)
 	delete(session.Values, oauthStateSessionKey)
-	session.Save(r, w)
+	if err := session.Save(r, w); err != nil {
+		log.Error(err)
+	}
 
 	if err := r.ParseForm(); err != nil {
 		log.Error(err)
