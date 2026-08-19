@@ -113,7 +113,9 @@ func (mw *MailWorker) Queue(ms []Mail) {
 // in the case that an unrecoverable error occurs.
 func errorMail(err error, ms []Mail) {
 	for _, m := range ms {
-		m.Error(err)
+		if mErr := m.Error(err); mErr != nil {
+			log.Warn(mErr)
+		}
 	}
 }
 
@@ -186,13 +188,17 @@ func sendMail(ctx context.Context, dialer Dialer, ms []Mail) {
 		err = m.Generate(message)
 		if err != nil {
 			log.Warn(err)
-			m.Error(err)
+			if mErr := m.Error(err); mErr != nil {
+				log.Warn(mErr)
+			}
 			continue
 		}
 
 		smtp_from, err := m.GetSmtpFrom()
 		if err != nil {
-			m.Error(err)
+			if mErr := m.Error(err); mErr != nil {
+				log.Warn(mErr)
+			}
 			continue
 		}
 
@@ -208,8 +214,12 @@ func sendMail(ctx context.Context, dialer Dialer, ms []Mail) {
 						"code":  te.Code,
 						"email": message.GetHeader("To")[0],
 					}).Warn(err)
-					m.Backoff(err)
-					sender.Reset()
+					if mErr := m.Backoff(err); mErr != nil {
+						log.Warn(mErr)
+					}
+					if rErr := sender.Reset(); rErr != nil {
+						log.Warn(rErr)
+					}
 					continue
 				// Otherwise, if it's a permanent error, we shouldn't backoff this message,
 				// since the RFC specifies that running the same commands won't work next time.
@@ -219,8 +229,12 @@ func sendMail(ctx context.Context, dialer Dialer, ms []Mail) {
 						"code":  te.Code,
 						"email": message.GetHeader("To")[0],
 					}).Warn(err)
-					m.Error(err)
-					sender.Reset()
+					if mErr := m.Error(err); mErr != nil {
+						log.Warn(mErr)
+					}
+					if rErr := sender.Reset(); rErr != nil {
+						log.Warn(rErr)
+					}
 					continue
 				// If something else happened, let's just error out and reset the
 				// sender
@@ -229,8 +243,12 @@ func sendMail(ctx context.Context, dialer Dialer, ms []Mail) {
 						"code":  "unknown",
 						"email": message.GetHeader("To")[0],
 					}).Warn(err)
-					m.Error(err)
-					sender.Reset()
+					if mErr := m.Error(err); mErr != nil {
+						log.Warn(mErr)
+					}
+					if rErr := sender.Reset(); rErr != nil {
+						log.Warn(rErr)
+					}
 					continue
 				}
 			} else {
@@ -246,7 +264,9 @@ func sendMail(ctx context.Context, dialer Dialer, ms []Mail) {
 					errorMail(err, ms[i:])
 					break
 				}
-				m.Backoff(origErr)
+				if mErr := m.Backoff(origErr); mErr != nil {
+					log.Warn(mErr)
+				}
 				continue
 			}
 		}
@@ -255,6 +275,8 @@ func sendMail(ctx context.Context, dialer Dialer, ms []Mail) {
 			"envelope_from": message.GetHeader("From")[0],
 			"email":         message.GetHeader("To")[0],
 		}).Info("Email sent")
-		m.Success()
+		if mErr := m.Success(); mErr != nil {
+			log.Warn(mErr)
+		}
 	}
 }

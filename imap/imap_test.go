@@ -25,8 +25,9 @@ func startFakeIMAPServer(t *testing.T) (addr string, gotCmd <-chan string, clean
 		if err != nil {
 			return
 		}
-		defer conn.Close()
-		conn.Write([]byte("* OK IMAP4rev1 Service Ready\r\n"))
+		// Best effort fake server
+		defer func() { _ = conn.Close() }()
+		_, _ = conn.Write([]byte("* OK IMAP4rev1 Service Ready\r\n"))
 		scanner := bufio.NewScanner(conn)
 		firstLineTag := func(line string) string {
 			fields := strings.Fields(line)
@@ -44,15 +45,15 @@ func startFakeIMAPServer(t *testing.T) (addr string, gotCmd <-chan string, clean
 			return
 		}
 		capTag := firstLineTag(scanner.Text())
-		conn.Write([]byte("* CAPABILITY IMAP4rev1 AUTH=OAUTHBEARER\r\n"))
-		conn.Write([]byte(capTag + " OK CAPABILITY completed\r\n"))
+		_, _ = conn.Write([]byte("* CAPABILITY IMAP4rev1 AUTH=OAUTHBEARER\r\n"))
+		_, _ = conn.Write([]byte(capTag + " OK CAPABILITY completed\r\n"))
 
 		if !scanner.Scan() {
 			return
 		}
 		line := scanner.Text()
 		cmdCh <- line
-		conn.Write([]byte(firstLineTag(line) + " NO authentication failed (fake server)\r\n"))
+		_, _ = conn.Write([]byte(firstLineTag(line) + " NO authentication failed (fake server)\r\n"))
 	}()
 	return l.Addr().String(), cmdCh, func() { l.Close() }
 }
@@ -65,7 +66,7 @@ func TestNewClientUsesOAuthBearerWhenTokenSet(t *testing.T) {
 	// The fake server always rejects the auth attempt, so we only care
 	// about what command was sent, not whether newClient() ultimately
 	// succeeds.
-	mbox.newClient()
+	_, _ = mbox.newClient()
 
 	select {
 	case cmd := <-gotCmd:
@@ -82,7 +83,7 @@ func TestNewClientUsesLoginWhenNoToken(t *testing.T) {
 	defer cleanup()
 
 	mbox := &Mailbox{Host: addr, User: "user@example.com", Pwd: "secret"}
-	mbox.newClient()
+	_, _ = mbox.newClient()
 
 	select {
 	case cmd := <-gotCmd:

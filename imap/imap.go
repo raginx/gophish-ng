@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"io"
 	"net/textproto"
 	"regexp"
 	"strconv"
@@ -188,7 +189,9 @@ func (mbox *Mailbox) GetUnread(markAsRead, delete bool) ([]Email, error) {
 		var buf []byte
 		for _, value := range msg.Body {
 			buf = make([]byte, value.Len())
-			value.Read(buf)
+			if _, err := io.ReadFull(value, buf); err != nil {
+				return emails, fmt.Errorf("error reading message body: %w", err)
+			}
 			break // There should only ever be one item in this map, but I'm not 100% sure
 		}
 

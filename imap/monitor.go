@@ -18,7 +18,7 @@ import (
 // Pattern for GoPhish emails e.g ?rid=AbC1234
 // We include the optional quoted-printable 3D at the front, just in case decoding fails. e.g ?rid=3DAbC1234
 // We also include alternative URL encoded representations of '=' and '?' to handle Microsoft ATP URLs e.g %3Frid%3DAbC1234
-var goPhishRegex = regexp.MustCompile("((\\?|%3F)rid(=|%3D)(3D)?([A-Za-z0-9]{7}))")
+var goPhishRegex = regexp.MustCompile(`((\?|%3F)rid(=|%3D)(3D)?([A-Za-z0-9]{7}))`)
 
 // backoffMax caps how long the monitor will wait between login attempts
 const backoffMax = 30 * time.Minute
@@ -190,15 +190,15 @@ func checkForNewEmails(im models.IMAP) error {
 			rids, err := matchEmail(m.Email) // Search email Text, HTML, and each attachment for rid parameters
 
 			if err != nil {
-				log.Errorf("Error searching email for rids from user '%s': %s", m.Email.From, err.Error())
+				log.Errorf("Error searching email for rids from user '%s': %s", m.From, err.Error())
 				continue
 			}
 			if len(rids) < 1 {
-				log.Infof("User '%s' reported email with subject '%s'. This is not a GoPhish campaign; you should investigate it.", m.Email.From, m.Email.Subject)
+				log.Infof("User '%s' reported email with subject '%s'. This is not a GoPhish campaign; you should investigate it.", m.From, m.Subject)
 				nonCampaignCount++
 			}
 			for rid := range rids {
-				log.Infof("User '%s' reported email with rid %s", m.Email.From, rid)
+				log.Infof("User '%s' reported email with rid %s", m.From, rid)
 				result, err := models.GetResult(rid)
 				if err != nil {
 					log.Error("Error reporting GoPhish email with rid ", rid, ": ", err.Error())

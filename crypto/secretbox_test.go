@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"bytes"
 	"encoding/base64"
 	"testing"
 )
@@ -90,13 +91,17 @@ func TestDecryptTooShortFails(t *testing.T) {
 }
 
 func TestParseKey(t *testing.T) {
-	valid := base64.StdEncoding.EncodeToString(make([]byte, KeySize))
+	raw := make([]byte, KeySize)
+	for i := range raw {
+		raw[i] = byte(i)
+	}
+	valid := base64.StdEncoding.EncodeToString(raw)
 	key, err := ParseKey(valid)
 	if err != nil {
 		t.Fatalf("ParseKey returned an error for a valid key: %v", err)
 	}
-	if len(key) != KeySize {
-		t.Fatalf("unexpected key length: got %d, want %d", len(key), KeySize)
+	if !bytes.Equal(key[:], raw) {
+		t.Fatalf("decoded key does not match input: got %x, want %x", key, raw)
 	}
 }
 

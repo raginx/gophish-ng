@@ -12,7 +12,7 @@ import (
 )
 
 var successHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("success"))
+	_, _ = w.Write([]byte("success"))
 })
 
 type testContext struct {
