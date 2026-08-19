@@ -22,6 +22,6 @@ func JSONResponse(w http.ResponseWriter, d interface{}, c int) {
 	// shown after switching accounts in the same browser).
 	w.Header().Set("Cache-Control", "no-store")
 	w.WriteHeader(c)
-	
+
 	_, _ = fmt.Fprintf(w, "%s", dj)
 }
