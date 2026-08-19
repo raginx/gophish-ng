@@ -69,7 +69,9 @@ func (m *MailLog) Backoff(reason error) error {
 		return err
 	}
 	if m.SendAttempt == MaxSendAttempts {
-		r.HandleEmailError(ErrMaxSendAttempts)
+		if err := r.HandleEmailError(ErrMaxSendAttempts); err != nil {
+			log.Error(err)
+		}
 		return ErrMaxSendAttempts
 	}
 	// Add an error, since we had to backoff because of a

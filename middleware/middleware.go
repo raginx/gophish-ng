@@ -82,7 +82,7 @@ func RequireAPIKey(handler http.Handler) http.Handler {
 			w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 			return
 		}
-		r.ParseForm()
+		_ = r.ParseForm()
 		ak := r.Form.Get("api_key")
 		// If we can't get the API key, we'll also check for the
 		// Authorization Bearer token
@@ -212,5 +212,6 @@ func JSONError(w http.ResponseWriter, c int, m string) {
 	cj, _ := json.MarshalIndent(models.Response{Success: false, Message: m}, "", "  ")
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(c)
-	fmt.Fprintf(w, "%s", cj)
+	// Nothing more to do if the client already went away
+	_, _ = fmt.Fprintf(w, "%s", cj)
 }

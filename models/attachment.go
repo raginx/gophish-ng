@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"io"
-	"io/ioutil"
 	"net/url"
 	"path/filepath"
 	"regexp"
@@ -52,7 +51,7 @@ func (a *Attachment) ApplyTemplate(ptx PhishingTemplateContext) (io.Reader, erro
 	decodedAttachment := base64.NewDecoder(base64.StdEncoding, strings.NewReader(a.Content))
 
 	// If we've already determined there are no template variables in this attachment return it immediately
-	if a.vanillaFile == true {
+	if a.vanillaFile {
 		return decodedAttachment, nil
 	}
 
@@ -70,7 +69,9 @@ func (a *Attachment) ApplyTemplate(ptx PhishingTemplateContext) (io.Reader, erro
 		// Zip archives require random access for reading, so it's hard to stream bytes. Solution seems to be to use a buffer.
 		// See https://stackoverflow.com/questions/16946978/how-to-unzip-io-readcloser
 		b := new(bytes.Buffer)
-		b.ReadFrom(decodedAttachment)
+		if _, err := b.ReadFrom(decodedAttachment); err != nil {
+			return nil, err
+		}
 		zipReader, err := zip.NewReader(bytes.NewReader(b.Bytes()), int64(b.Len())) // Create a new zip reader from the file
 
 		if err != nil {
@@ -90,7 +91,7 @@ func (a *Attachment) ApplyTemplate(ptx PhishingTemplateContext) (io.Reader, erro
 				return nil, err
 			}
 			defer ff.Close()
-			contents, err := ioutil.ReadAll(ff)
+			contents, err := io.ReadAll(ff)
 			if err != nil {
 				return nil, err
 			}
@@ -148,7 +149,7 @@ func (a *Attachment) ApplyTemplate(ptx PhishingTemplateContext) (io.Reader, erro
 		return bytes.NewReader(newZipArchive.Bytes()), nil
 
 	case ".txt", ".html", ".ics":
-		b, err := ioutil.ReadAll(decodedAttachment)
+		b, err := io.ReadAll(decodedAttachment)
 		if err != nil {
 			return nil, err
 		}

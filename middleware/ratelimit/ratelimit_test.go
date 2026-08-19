@@ -7,7 +7,7 @@ import (
 )
 
 var successHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("ok"))
+	_, _ = w.Write([]byte("ok"))
 })
 
 func reachLimit(t *testing.T, handler http.Handler, limit int) {

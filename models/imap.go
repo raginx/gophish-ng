@@ -87,61 +87,61 @@ type IMAP struct {
 
 // ErrIMAPHostNotSpecified is thrown when there is no Host specified
 // in the IMAP configuration
-var ErrIMAPHostNotSpecified = errors.New("No IMAP Host specified")
+var ErrIMAPHostNotSpecified = errors.New("no IMAP host specified")
 
 // ErrIMAPPortNotSpecified is thrown when there is no Port specified
 // in the IMAP configuration
-var ErrIMAPPortNotSpecified = errors.New("No IMAP Port specified")
+var ErrIMAPPortNotSpecified = errors.New("no IMAP port specified")
 
 // ErrInvalidIMAPHost indicates that the IMAP server string is invalid
-var ErrInvalidIMAPHost = errors.New("Invalid IMAP server address")
+var ErrInvalidIMAPHost = errors.New("invalid IMAP server address")
 
 // ErrInvalidIMAPPort indicates that the IMAP Port is invalid
-var ErrInvalidIMAPPort = errors.New("Invalid IMAP Port")
+var ErrInvalidIMAPPort = errors.New("invalid IMAP port")
 
 // ErrIMAPUsernameNotSpecified is thrown when there is no Username specified
 // in the IMAP configuration
-var ErrIMAPUsernameNotSpecified = errors.New("No Username specified")
+var ErrIMAPUsernameNotSpecified = errors.New("no username specified")
 
 // ErrIMAPPasswordNotSpecified is thrown when there is no Password specified
 // in the IMAP configuration
-var ErrIMAPPasswordNotSpecified = errors.New("No Password specified")
+var ErrIMAPPasswordNotSpecified = errors.New("no password specified")
 
 // ErrInvalidIMAPFreq is thrown when the frequency for polling the
 // IMAP server is invalid
-var ErrInvalidIMAPFreq = errors.New("Invalid polling frequency")
+var ErrInvalidIMAPFreq = errors.New("invalid polling frequency")
 
 // ErrIMAPInvalidAuthType is thrown when AuthType is neither "basic" nor
 // "oauth2"
-var ErrIMAPInvalidAuthType = errors.New("Invalid IMAP authentication type")
+var ErrIMAPInvalidAuthType = errors.New("invalid IMAP authentication type")
 
 // ErrOAuthProviderNotSpecified is thrown when OAuth2 auth is selected
 // without specifying a provider
-var ErrOAuthProviderNotSpecified = errors.New("No OAuth provider specified")
+var ErrOAuthProviderNotSpecified = errors.New("no OAuth provider specified")
 
 // ErrInvalidOAuthProvider is thrown when OAuthProvider isn't one of the
 // supported providers
-var ErrInvalidOAuthProvider = errors.New("Invalid OAuth provider")
+var ErrInvalidOAuthProvider = errors.New("invalid OAuth provider")
 
 // ErrOAuthClientIDNotSpecified is thrown when OAuth2 auth is selected
 // without specifying a client ID
-var ErrOAuthClientIDNotSpecified = errors.New("No OAuth client ID specified")
+var ErrOAuthClientIDNotSpecified = errors.New("no OAuth client ID specified")
 
 // ErrOAuthClientSecretNotSpecified is thrown when OAuth2 auth is selected
 // without specifying a client secret
-var ErrOAuthClientSecretNotSpecified = errors.New("No OAuth client secret specified")
+var ErrOAuthClientSecretNotSpecified = errors.New("no OAuth client secret specified")
 
 // ErrOAuthTenantIDNotSpecified is thrown when the Microsoft OAuth provider
 // is selected without specifying a tenant ID
-var ErrOAuthTenantIDNotSpecified = errors.New("No OAuth tenant ID specified")
+var ErrOAuthTenantIDNotSpecified = errors.New("no OAuth tenant ID specified")
 
 // ErrOAuthEndpointNotSpecified is thrown when the custom OAuth provider is
 // selected without specifying both the authorization and token URLs
-var ErrOAuthEndpointNotSpecified = errors.New("No OAuth authorization/token URL specified")
+var ErrOAuthEndpointNotSpecified = errors.New("no OAuth authorization/token URL specified")
 
 // ErrOAuthScopesNotSpecified is thrown when the custom OAuth provider is
 // selected without specifying the OAuth scopes to request
-var ErrOAuthScopesNotSpecified = errors.New("No OAuth scopes specified")
+var ErrOAuthScopesNotSpecified = errors.New("no OAuth scopes specified")
 
 // ErrOAuthSecretKeyNotConfigured is thrown when OAuth2 auth is selected but
 // the server has no secret_key configured in config.json - OAuth2 tokens

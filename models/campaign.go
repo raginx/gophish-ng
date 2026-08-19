@@ -106,35 +106,35 @@ type EventError struct {
 }
 
 // ErrCampaignNameNotSpecified indicates there was no template given by the user
-var ErrCampaignNameNotSpecified = errors.New("Campaign name not specified")
+var ErrCampaignNameNotSpecified = errors.New("campaign name not specified")
 
 // ErrGroupNotSpecified indicates there was no template given by the user
-var ErrGroupNotSpecified = errors.New("No groups specified")
+var ErrGroupNotSpecified = errors.New("no groups specified")
 
 // ErrTemplateNotSpecified indicates there was no template given by the user
-var ErrTemplateNotSpecified = errors.New("No email template specified")
+var ErrTemplateNotSpecified = errors.New("no email template specified")
 
 // ErrPageNotSpecified indicates a landing page was not provided for the campaign
-var ErrPageNotSpecified = errors.New("No landing page specified")
+var ErrPageNotSpecified = errors.New("no landing page specified")
 
 // ErrSMTPNotSpecified indicates a sending profile was not provided for the campaign
-var ErrSMTPNotSpecified = errors.New("No sending profile specified")
+var ErrSMTPNotSpecified = errors.New("no sending profile specified")
 
 // ErrTemplateNotFound indicates the template specified does not exist in the database
-var ErrTemplateNotFound = errors.New("Template not found")
+var ErrTemplateNotFound = errors.New("template not found")
 
 // ErrGroupNotFound indicates a group specified by the user does not exist in the database
-var ErrGroupNotFound = errors.New("Group not found")
+var ErrGroupNotFound = errors.New("group not found")
 
 // ErrPageNotFound indicates a page specified by the user does not exist in the database
-var ErrPageNotFound = errors.New("Page not found")
+var ErrPageNotFound = errors.New("page not found")
 
 // ErrSMTPNotFound indicates a sending profile specified by the user does not exist in the database
-var ErrSMTPNotFound = errors.New("Sending profile not found")
+var ErrSMTPNotFound = errors.New("sending profile not found")
 
 // ErrInvalidSendByDate indicates that the user specified a send by date that occurs before the
 // launch date
-var ErrInvalidSendByDate = errors.New("The launch date must be before the \"send emails by\" date")
+var ErrInvalidSendByDate = errors.New("the launch date must be before the \"send emails by\" date")
 
 // RecipientParameter is the URL parameter that points to the result ID for a recipient.
 const RecipientParameter = "rid"

@@ -52,7 +52,7 @@ func (s *ModelsSuite) TestPostGroupDuplicateName(c *check.C) {
 
 func (s *ModelsSuite) TestGetGroups(c *check.C) {
 	// Add groups.
-	PostGroup(&Group{
+	c.Assert(PostGroup(&Group{
 		Name: "Test Group 1",
 		Targets: []Target{
 			Target{
@@ -60,8 +60,8 @@ func (s *ModelsSuite) TestGetGroups(c *check.C) {
 			},
 		},
 		UserId: 1,
-	})
-	PostGroup(&Group{
+	}), check.Equals, nil)
+	c.Assert(PostGroup(&Group{
 		Name: "Test Group 2",
 		Targets: []Target{
 			Target{
@@ -69,7 +69,7 @@ func (s *ModelsSuite) TestGetGroups(c *check.C) {
 			},
 		},
 		UserId: 1,
-	})
+	}), check.Equals, nil)
 
 	// Get groups and test result.
 	groups, err := GetGroups(1)
@@ -117,7 +117,7 @@ func (s *ModelsSuite) TestGetGroupNoGroups(c *check.C) {
 
 func (s *ModelsSuite) TestGetGroupByName(c *check.C) {
 	// Add group.
-	PostGroup(&Group{
+	c.Assert(PostGroup(&Group{
 		Name: "Test Group",
 		Targets: []Target{
 			Target{
@@ -125,7 +125,7 @@ func (s *ModelsSuite) TestGetGroupByName(c *check.C) {
 			},
 		},
 		UserId: 1,
-	})
+	}), check.Equals, nil)
 
 	// Get group and test result.
 	group, err := GetGroupByName("Test Group", 1)
@@ -148,7 +148,7 @@ func (s *ModelsSuite) TestPutGroup(c *check.C) {
 		Target{BaseRecipient: BaseRecipient{Email: "test2@example.com", FirstName: "Second", LastName: "Example"}},
 	}
 	group.UserId = 1
-	PostGroup(&group)
+	c.Assert(PostGroup(&group), check.Equals, nil)
 
 	// Update one of group's targets.
 	group.Targets[0].FirstName = "Updated"
@@ -173,7 +173,7 @@ func (s *ModelsSuite) TestPutGroupEmptyAttribute(c *check.C) {
 		Target{BaseRecipient: BaseRecipient{Email: "test2@example.com", FirstName: "Second", LastName: "Example"}},
 	}
 	group.UserId = 1
-	PostGroup(&group)
+	c.Assert(PostGroup(&group), check.Equals, nil)
 
 	// Update one of group's targets.
 	group.Targets[0].FirstName = ""
