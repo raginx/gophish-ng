@@ -72,7 +72,7 @@ func Send(endPoint EndPoint, data interface{}) error {
 func SendAll(endPoints []EndPoint, data interface{}) {
 	for _, e := range endPoints {
 		go func(e EndPoint) {
-			senderInstance.Send(e, data)
+			_ = senderInstance.Send(e, data)
 		}(e)
 	}
 }

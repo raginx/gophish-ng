@@ -54,7 +54,9 @@ func createTestData(t *testing.T, ctx *testContext) {
 				LastName:  "Example"}})
 	}
 	group.UserId = 1
-	models.PostGroup(&group)
+	if err := models.PostGroup(&group); err != nil {
+		t.Fatalf("error posting group: %v", err)
+	}
 
 	// Add a template
 	template := models.Template{Name: "Test Template"}
@@ -62,20 +64,26 @@ func createTestData(t *testing.T, ctx *testContext) {
 	template.Text = "Text text"
 	template.HTML = "<html>Test</html>"
 	template.UserId = 1
-	models.PostTemplate(&template)
+	if err := models.PostTemplate(&template); err != nil {
+		t.Fatalf("error posting template: %v", err)
+	}
 
 	// Add a landing page
 	p := models.Page{Name: "Test Page"}
 	p.HTML = "<html>Test</html>"
 	p.UserId = 1
-	models.PostPage(&p)
+	if err := models.PostPage(&p); err != nil {
+		t.Fatalf("error posting page: %v", err)
+	}
 
 	// Add a sending profile
 	smtp := models.SMTP{Name: "Test Page"}
 	smtp.UserId = 1
 	smtp.Host = "example.com"
 	smtp.FromAddress = "test@test.com"
-	models.PostSMTP(&smtp)
+	if err := models.PostSMTP(&smtp); err != nil {
+		t.Fatalf("error posting SMTP profile: %v", err)
+	}
 }
 
 func setupCampaign(id int) (*models.Campaign, error) {
@@ -129,7 +137,9 @@ func TestMailLogGrouping(t *testing.T) {
 			t.Fatalf("error getting maillogs for campaign: %v", err)
 		}
 		for _, m := range ms {
-			m.Unlock()
+			if err := m.Unlock(); err != nil {
+				t.Fatalf("error unlocking maillog: %v", err)
+			}
 		}
 	}
 
@@ -139,7 +149,9 @@ func TestMailLogGrouping(t *testing.T) {
 
 	// Trigger the worker, generating the maillogs and sending them to the
 	// mailer
-	worker.processCampaigns(time.Now())
+	if err := worker.processCampaigns(time.Now()); err != nil {
+		t.Fatalf("error processing campaigns: %v", err)
+	}
 
 	// Verify that each slice of maillogs received belong to the same campaign
 	for i := 0; i < 10; i++ {

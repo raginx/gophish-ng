@@ -81,7 +81,10 @@ func (w *DefaultWorker) processCampaigns(t time.Time) error {
 			}
 			campaignCache[c.Id] = c
 		}
-		m.CacheCampaign(&c)
+		if err := m.CacheCampaign(&c); err != nil {
+			log.Error(err)
+			continue
+		}
 		msg[m.CampaignId] = append(msg[m.CampaignId], m)
 	}
 	// MailLogs belonging to a campaign whose context failed to load above
@@ -161,7 +164,9 @@ func (w *DefaultWorker) LaunchCampaign(c models.Campaign) {
 		// Only send the emails scheduled to be sent for the past minute to
 		// respect the campaign scheduling options
 		if m.SendDate.After(currentTime) {
-			m.Unlock()
+			if err := m.Unlock(); err != nil {
+				log.Error(err)
+			}
 			continue
 		}
 		err = m.CacheCampaign(&campaignMailCtx)
