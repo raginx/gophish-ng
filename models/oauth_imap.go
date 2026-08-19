@@ -19,7 +19,7 @@ import (
 // config is set to OAuth2 auth but no account has been connected yet (no
 // refresh token stored) - the admin needs to complete the
 // /oauth/imap/authorize flow first.
-var ErrOAuthNotConnected = errors.New("No OAuth2 account connected - complete the OAuth authorization flow first")
+var ErrOAuthNotConnected = errors.New("no OAuth2 account connected - complete the OAuth authorization flow first")
 
 // tokenExpiryMargin is how far ahead of the stored expiry we proactively
 // refresh, so a token doesn't expire mid-request.

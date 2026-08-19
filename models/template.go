@@ -24,10 +24,10 @@ type Template struct {
 }
 
 // ErrTemplateNameNotSpecified is thrown when a template name is not specified
-var ErrTemplateNameNotSpecified = errors.New("Template name not specified")
+var ErrTemplateNameNotSpecified = errors.New("template name not specified")
 
 // ErrTemplateMissingParameter is thrown when a needed parameter is not provided
-var ErrTemplateMissingParameter = errors.New("Need to specify at least plaintext or HTML content")
+var ErrTemplateMissingParameter = errors.New("need to specify at least plaintext or HTML content")
 
 // Validate checks the given template to make sure values are appropriate and complete
 func (t *Template) Validate() error {
@@ -159,9 +159,6 @@ func PutTemplate(t *Template) error {
 	if err != nil && err != gorm.ErrRecordNotFound {
 		log.Error(err)
 		return err
-	}
-	if err == gorm.ErrRecordNotFound {
-		err = nil
 	}
 	for i := range t.Attachments {
 		t.Attachments[i].TemplateId = t.Id

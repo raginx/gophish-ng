@@ -11,7 +11,7 @@ import (
 
 func (s *ModelsSuite) TestGenerateResultId(c *check.C) {
 	r := Result{}
-	r.GenerateId(db)
+	c.Assert(r.GenerateId(db), check.Equals, nil)
 	match, err := regexp.Match("[a-zA-Z0-9]{7}", []byte(r.RId))
 	c.Assert(err, check.Equals, nil)
 	c.Assert(match, check.Equals, true)

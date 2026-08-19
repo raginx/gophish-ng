@@ -91,7 +91,8 @@ func (s *ModelsSuite) TestGetValidAccessTokenCacheHit(c *check.C) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		atomic.AddInt32(&tokenEndpointHits, 1)
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"access_token": "should-not-be-used",
 			"token_type":   "Bearer",
 			"expires_in":   3600,
@@ -140,7 +141,8 @@ func (s *ModelsSuite) TestGetValidAccessTokenRefreshesWhenExpired(c *check.C) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		atomic.AddInt32(&tokenEndpointHits, 1)
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"access_token":  "refreshed-access-token",
 			"token_type":    "Bearer",
 			"expires_in":    3600,

@@ -38,7 +38,7 @@ func (s *ModelsSuite) TestHasPermission(c *check.C) {
 			ApiKey:   fmt.Sprintf("%s-key", r),
 			RoleID:   role.ID,
 		}
-		PutUser(&user)
+		c.Assert(PutUser(&user), check.Equals, nil)
 
 		// Perform the permission checks
 		for permission, expected := range checks {
