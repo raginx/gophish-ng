@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask a question
+    url: https://github.com/raginx/gophish-ng/discussions
+    about: Usage questions and general discussion belong here, not in issues.
+  - name: Report a security vulnerability
+    url: https://github.com/raginx/gophish-ng/security/policy
+    about: Please do not open a public issue for suspected vulnerabilities - see SECURITY.md instead.
