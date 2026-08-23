@@ -24,3 +24,9 @@ Gophish supports the ability to import an email from the raw content. To do this
 
 ![Import Email](https://imgur.com/QAZCrHu.png)
 
+### Example
+
+A well-built template looks and feels like a real corporate email - here's an example built with the HTML editor above:
+
+![Example email template](../assets/screen_mailtemplate.png)
+

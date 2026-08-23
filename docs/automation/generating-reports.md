@@ -6,7 +6,7 @@ Reporting is an important part of any Gophish campaign. To help facilitate gener
 
 The Gophish dashboard gives a quick overview showing the results for a particular campaign:
 
-![](../assets/localhost_3333_campaigns_25-macbook.png)
+![Campaign results overview](../assets/screen_campaign_result.png)
 
 In addition to providing the results in the dashboard, you have the option to export the raw logs from Gophish using the "Export CSV" button at the top of the page. You could then parse these CSV files using other software such as Excel or Google Sheets.
 

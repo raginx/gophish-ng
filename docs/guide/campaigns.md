@@ -35,7 +35,7 @@ After you have the campaign configuration ready to go, click the "Launch Campaig
 
 When a campaign is launched, you are automatically redirected to the campaign results screen:
 
-![](../assets/localhost_3333_campaigns_25-macbook.png)
+![Campaign results overview](../assets/screen_campaign_result.png)
 
 On the results page, you will see overview information on the campaign status as well as detailed results for each target.
 
@@ -69,7 +69,7 @@ Gophish makes it easy to view the campaign results in a timeline format.
 
 To view the timeline for each recipient, expand the row with the recipient's name.
 
-![](../assets/screen-shot-2018-10-08-at-11.17.40-pm.png)
+![Recipient result timeline](../assets/screen_timeline.png)
 
 The results pane shows what a campaign recipient did, such as opening the email, clicking the link, or attempting to submit data from the landing page.
 

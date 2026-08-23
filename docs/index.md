@@ -18,3 +18,5 @@ to get running.
 
 This user guide introduces Gophish-NG and shows how to use the software,
 building a complete campaign from start to finish.
+
+![Gophish-NG dashboard](assets/screen_dashboard.png)

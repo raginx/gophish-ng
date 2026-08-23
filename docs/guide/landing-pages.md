@@ -35,6 +35,12 @@ Gophish makes it easy to redirect users after they submit credentials. To redire
 
 > Note: Make sure to include the full URL (including the scheme such as http:// or https://). Otherwise, browsers may interpret the URL as being relative to the Gophish URL.
 
+## Example
+
+A convincing landing page mirrors the real login page it's impersonating - here's an example built with the HTML editor above:
+
+![Example landing page](../assets/screen_landingpage.png)
+
 ## Static Assets
 
 There may be times that you want to store assets such as HTML pages, CSS/JS resources or other static files. To use these in Gophish, just move them under the `static/endpoint` directory. You can then reference them using the URL `http[s]://phishing_server/static/filename`. For more background, see [this issue.](https://github.com/gophish/gophish/issues/220)

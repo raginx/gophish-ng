@@ -13,6 +13,10 @@
 
 <p align="center"><strong>An actively maintained fork of Gophish, the open-source phishing toolkit.</strong></p>
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/raginx/gophish-ng/master/docs/assets/screen_animation.gif" alt="Gophish-NG walkthrough: dashboard, campaign results, recipient timeline, and template/landing page examples" width="800">
+</p>
+
 ---
 
 ## Why a fork?
