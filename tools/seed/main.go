@@ -441,7 +441,7 @@ func seedCampaign(uid, teamID int64, spec campaignSpec, rng *rand.Rand, rawDB *s
 		log.Fatalf("error fetching created campaign %q: %v", spec.name, err)
 	}
 
-	// A campaign launched in the future hasn't sent anything yet 
+	// A campaign launched in the future hasn't sent anything yet
 	if spec.launchDate.After(time.Now()) {
 		fmt.Printf("created campaign %q (scheduled, launch date in the future)\n", spec.name)
 		return
