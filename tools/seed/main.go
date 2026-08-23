@@ -49,7 +49,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("error opening raw db connection: %v", err)
 	}
-	defer rawDB.Close()
+
+	defer func() { _ = rawDB.Close() }()
 
 	admin, err := models.GetUser(1)
 	if err != nil {
