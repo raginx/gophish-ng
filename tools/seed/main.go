@@ -18,6 +18,7 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"fmt"
 	"log"
@@ -42,6 +43,13 @@ func main() {
 	if err := models.Setup(conf); err != nil {
 		log.Fatalf("error setting up database: %v", err)
 	}
+
+	// db connection for timestamp backdating
+	rawDB, err := openRawDB(conf)
+	if err != nil {
+		log.Fatalf("error opening raw db connection: %v", err)
+	}
+	defer rawDB.Close()
 
 	admin, err := models.GetUser(1)
 	if err != nil {
@@ -166,7 +174,7 @@ func main() {
 		submitRate: 0.40,
 		reportRate: 0.15,
 		complete:   true,
-	}, rng)
+	}, rng, rawDB)
 
 	// Completed campaign, strong defense (finance team reports well)
 	seedCampaign(admin.Id, teamID, campaignSpec{
@@ -181,7 +189,7 @@ func main() {
 		submitRate: 0.10,
 		reportRate: 0.35,
 		complete:   true,
-	}, rng)
+	}, rng, rawDB)
 
 	// In-progress campaign, launched recently, not yet complete
 	seedCampaign(admin.Id, teamID, campaignSpec{
@@ -196,7 +204,7 @@ func main() {
 		submitRate: 0.0,
 		reportRate: 0.10,
 		complete:   false,
-	}, rng)
+	}, rng, rawDB)
 
 	// Scheduled for the future - nothing simulated, shows the "Queued" state
 	seedCampaign(admin.Id, teamID, campaignSpec{
@@ -206,7 +214,7 @@ func main() {
 		page:       portalPage,
 		smtp:       internalRelay,
 		launchDate: time.Now().Add(2 * 24 * time.Hour),
-	}, rng)
+	}, rng, rawDB)
 
 	// Large-scale campaign demonstrate that Gophish holds up
 	// at real organization size
@@ -222,7 +230,7 @@ func main() {
 		submitRate: 0.20,
 		reportRate: 0.20,
 		complete:   true,
-	}, rng)
+	}, rng, rawDB)
 
 	seedCampaign(admin.Id, teamID, campaignSpec{
 		name:       "Engineering Security Refresher",
@@ -236,7 +244,7 @@ func main() {
 		submitRate: 0.05,
 		reportRate: 0.45,
 		complete:   true,
-	}, rng)
+	}, rng, rawDB)
 
 	seedCampaign(admin.Id, teamID, campaignSpec{
 		name:       "Sales Team Social Engineering Test",
@@ -250,7 +258,7 @@ func main() {
 		submitRate: 0.25,
 		reportRate: 0.05,
 		complete:   false,
-	}, rng)
+	}, rng, rawDB)
 
 	seedCampaign(admin.Id, teamID, campaignSpec{
 		name:       "Support Team Phishing Drill",
@@ -264,7 +272,7 @@ func main() {
 		submitRate: 0.10,
 		reportRate: 0.25,
 		complete:   true,
-	}, rng)
+	}, rng, rawDB)
 
 	seedCampaign(admin.Id, teamID, campaignSpec{
 		name:       "HR Onboarding Documents Phish",
@@ -278,7 +286,7 @@ func main() {
 		submitRate: 0.15,
 		reportRate: 0.20,
 		complete:   true,
-	}, rng)
+	}, rng, rawDB)
 
 	fmt.Println("\nDemo data seeded. Log in as the admin user Gophish created on first startup to view it.")
 }
@@ -403,7 +411,7 @@ type campaignSpec struct {
 	complete   bool
 }
 
-func seedCampaign(uid, teamID int64, spec campaignSpec, rng *rand.Rand) {
+func seedCampaign(uid, teamID int64, spec campaignSpec, rng *rand.Rand, rawDB *sql.DB) {
 	existing, err := models.GetCampaigns(teamID)
 	if err != nil {
 		log.Fatalf("error listing campaigns: %v", err)
@@ -438,13 +446,23 @@ func seedCampaign(uid, teamID int64, spec campaignSpec, rng *rand.Rand) {
 		return
 	}
 
+	if err := backdateCampaignCreated(rawDB, full.Id, spec.launchDate); err != nil {
+		log.Fatalf("error backdating campaign %q created_date: %v", spec.name, err)
+	}
+
 	sent, opened, clicked, submitted, reported := 0, 0, 0, 0, 0
 	for i := range full.Results {
 		r := &full.Results[i]
+
+		sentAt := spec.launchDate.Add(randDuration(rng, 0, 3*time.Hour))
 		if err := r.HandleEmailSent(); err != nil {
 			log.Fatalf("error marking result sent: %v", err)
 		}
+		if err := backdateEvent(rawDB, full.Id, r.Email, models.EventSent, sentAt); err != nil {
+			log.Fatalf("error backdating sent event: %v", err)
+		}
 		sent++
+		lastAt := sentAt
 
 		didOpen := rng.Float64() < spec.openRate
 		didClick := didOpen && rng.Float64() < spec.clickRate
@@ -452,15 +470,25 @@ func seedCampaign(uid, teamID int64, spec campaignSpec, rng *rand.Rand) {
 		didReport := !didClick && rng.Float64() < spec.reportRate
 
 		if didOpen {
+			openAt := sentAt.Add(randDuration(rng, 5*time.Minute, 48*time.Hour))
 			if err := r.HandleEmailOpened(models.EventDetails{}); err != nil {
 				log.Fatalf("error marking result opened: %v", err)
 			}
+			if err := backdateEvent(rawDB, full.Id, r.Email, models.EventOpened, openAt); err != nil {
+				log.Fatalf("error backdating opened event: %v", err)
+			}
+			lastAt = openAt
 			opened++
 		}
 		if didClick {
+			clickAt := lastAt.Add(randDuration(rng, 1*time.Minute, 30*time.Minute))
 			if err := r.HandleClickedLink(models.EventDetails{}); err != nil {
 				log.Fatalf("error marking result clicked: %v", err)
 			}
+			if err := backdateEvent(rawDB, full.Id, r.Email, models.EventClicked, clickAt); err != nil {
+				log.Fatalf("error backdating clicked event: %v", err)
+			}
+			lastAt = clickAt
 			clicked++
 		}
 		if didSubmit {
@@ -468,16 +496,32 @@ func seedCampaign(uid, teamID int64, spec campaignSpec, rng *rand.Rand) {
 				"username": {r.Email},
 				"password": {"SummerVacation2026!"},
 			}}
+			submitAt := lastAt.Add(randDuration(rng, 1*time.Minute, 10*time.Minute))
 			if err := r.HandleFormSubmit(details); err != nil {
 				log.Fatalf("error marking result submitted: %v", err)
 			}
+			if err := backdateEvent(rawDB, full.Id, r.Email, models.EventDataSubmit, submitAt); err != nil {
+				log.Fatalf("error backdating submitted event: %v", err)
+			}
+			lastAt = submitAt
 			submitted++
 		}
 		if didReport {
+			reportAt := sentAt.Add(randDuration(rng, 10*time.Minute, 72*time.Hour))
 			if err := r.HandleEmailReport(models.EventDetails{}); err != nil {
 				log.Fatalf("error marking result reported: %v", err)
 			}
+			if err := backdateEvent(rawDB, full.Id, r.Email, models.EventReported, reportAt); err != nil {
+				log.Fatalf("error backdating reported event: %v", err)
+			}
+			if reportAt.After(lastAt) {
+				lastAt = reportAt
+			}
 			reported++
+		}
+
+		if err := backdateResult(rawDB, r.Id, sentAt, lastAt); err != nil {
+			log.Fatalf("error backdating result %d: %v", r.Id, err)
 		}
 	}
 
@@ -485,10 +529,81 @@ func seedCampaign(uid, teamID int64, spec campaignSpec, rng *rand.Rand) {
 		if err := models.CompleteCampaign(full.Id, teamID); err != nil {
 			log.Fatalf("error completing campaign %q: %v", spec.name, err)
 		}
+		completedAt := spec.launchDate.Add(randDuration(rng, 3*24*time.Hour, 8*24*time.Hour))
+		if completedAt.After(time.Now()) {
+			completedAt = time.Now()
+		}
+		if err := backdateCampaignCompleted(rawDB, full.Id, completedAt); err != nil {
+			log.Fatalf("error backdating campaign %q completed_date: %v", spec.name, err)
+		}
 	}
 
 	fmt.Printf("created campaign %q (%d sent, %d opened, %d clicked, %d submitted, %d reported)\n",
 		spec.name, sent, opened, clicked, submitted, reported)
+}
+
+func openRawDB(conf *config.Config) (*sql.DB, error) {
+	driver := "sqlite3"
+	if conf.DBName == "mysql" {
+		driver = "mysql"
+	}
+	return sql.Open(driver, conf.DBPath)
+}
+
+// randDuration returns a random duration in [min, max). Returns min if the
+// range is empty or inverted.
+func randDuration(rng *rand.Rand, min, max time.Duration) time.Duration {
+	if max <= min {
+		return min
+	}
+	return min + time.Duration(rng.Int63n(int64(max-min)))
+}
+
+// backdateEvent rewrites the timestamp of the most recently inserted event
+// matching (campaign, email, message)
+func backdateEvent(rawDB *sql.DB, campaignID int64, email, message string, t time.Time) error {
+	_, err := rawDB.Exec(
+		`UPDATE events SET time = ? WHERE id = (
+			SELECT id FROM (
+				SELECT id FROM events WHERE campaign_id = ? AND email = ? AND message = ? ORDER BY id DESC LIMIT 1
+			) AS latest
+		)`,
+		t.UTC(), campaignID, email, message,
+	)
+	return err
+}
+
+// backdateResult rewrites a result's send_date/modified_date to match the
+// backdated timestamps of its own events
+func backdateResult(rawDB *sql.DB, id int64, sendDate, modifiedDate time.Time) error {
+	_, err := rawDB.Exec(`UPDATE results SET send_date = ?, modified_date = ? WHERE id = ?`,
+		sendDate.UTC(), modifiedDate.UTC(), id)
+	return err
+}
+
+// backdateCampaignCreated rewrites a campaign's created_date (PostCampaign
+// always sets it to time.Now()) along with its auto-generated "Campaign
+// Created" event.
+func backdateCampaignCreated(rawDB *sql.DB, campaignID int64, t time.Time) error {
+	if _, err := rawDB.Exec(`UPDATE campaigns SET created_date = ? WHERE id = ?`, t.UTC(), campaignID); err != nil {
+		return err
+	}
+	_, err := rawDB.Exec(
+		`UPDATE events SET time = ? WHERE id = (
+			SELECT id FROM (
+				SELECT id FROM events WHERE campaign_id = ? AND message = 'Campaign Created' ORDER BY id DESC LIMIT 1
+			) AS latest
+		)`,
+		t.UTC(), campaignID,
+	)
+	return err
+}
+
+// backdateCampaignCompleted rewrites a campaign's completed_date
+// (CompleteCampaign always sets it to time.Now()).
+func backdateCampaignCompleted(rawDB *sql.DB, campaignID int64, t time.Time) error {
+	_, err := rawDB.Exec(`UPDATE campaigns SET completed_date = ? WHERE id = ?`, t.UTC(), campaignID)
+	return err
 }
 
 func landingPageHTML(title, body string) string {
