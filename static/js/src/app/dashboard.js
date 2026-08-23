@@ -220,6 +220,9 @@ function generateTimelineChart(campaigns) {
             y: campaign.y
         })
     })
+    overview_data.sort(function (a, b) {
+        return a.x - b.x
+    })
     Highcharts.chart('overview_chart', {
         chart: {
             zoomType: 'x',

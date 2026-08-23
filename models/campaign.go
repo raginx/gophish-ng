@@ -334,6 +334,7 @@ func GetCampaignSummaries(teamID int64) (CampaignSummaries, error) {
 	// Get the basic campaign information
 	query := db.Table("campaigns").Where("team_id = ?", teamID)
 	query = query.Select("id, name, created_date, launch_date, send_by_date, completed_date, status")
+	query = query.Order("created_date asc")
 	err := query.Scan(&cs).Error
 	if err != nil {
 		log.Error(err)
