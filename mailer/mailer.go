@@ -7,7 +7,7 @@ import (
 	"net/textproto"
 
 	"github.com/gophish/gomail"
-	log "github.com/gophish/gophish/logger"
+	log "github.com/raginx/gophish-ng/logger"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
 )
@@ -208,7 +208,7 @@ func sendMail(ctx context.Context, dialer Dialer, ms []Mail) {
 				switch {
 				// If it's a temporary error, we should backoff and try again later.
 				// We'll reset the connection so future messages don't incur a
-				// different error (see https://github.com/gophish/gophish/issues/787).
+				// different error (see https://github.com/raginx/gophish-ng/issues/787).
 				case te.Code >= 400 && te.Code <= 499:
 					log.WithFields(logrus.Fields{
 						"code":  te.Code,

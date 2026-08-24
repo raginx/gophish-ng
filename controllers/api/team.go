@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	log "github.com/gophish/gophish/logger"
-	"github.com/gophish/gophish/models"
+	log "github.com/raginx/gophish-ng/logger"
+	"github.com/raginx/gophish-ng/models"
 )
 
 // Teams handles requests for the /api/teams/ endpoint. Team management is

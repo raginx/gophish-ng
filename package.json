@@ -1,16 +1,16 @@
 {
-  "name": "gophish",
+  "name": "gophish-ng",
   "version": "0.16.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gophish/gophish.git"
+    "url": "git+https://github.com/raginx/gophish-ng.git"
   },
   "author": "Jordan Wright",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/gophish/gophish/issues"
+    "url": "https://github.com/raginx/gophish-ng/issues"
   },
-  "homepage": "https://getgophish.com",
+  "homepage": "https://raginx.github.io/gophish-ng/",
   "scripts": {
     "build": "node build.js"
   },

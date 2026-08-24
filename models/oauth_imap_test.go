@@ -8,7 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	gophishcrypto "github.com/gophish/gophish/crypto"
+	gophishcrypto "github.com/raginx/gophish-ng/crypto"
 	"golang.org/x/oauth2"
 	check "gopkg.in/check.v1"
 )

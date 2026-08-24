@@ -10,10 +10,10 @@ import (
 	goose "github.com/pressly/goose/v3"
 
 	mysql "github.com/go-sql-driver/mysql"
-	"github.com/gophish/gophish/auth"
-	"github.com/gophish/gophish/config"
+	"github.com/raginx/gophish-ng/auth"
+	"github.com/raginx/gophish-ng/config"
 
-	log "github.com/gophish/gophish/logger"
+	log "github.com/raginx/gophish-ng/logger"
 	gormmysql "gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"

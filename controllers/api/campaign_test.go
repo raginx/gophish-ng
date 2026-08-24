@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gophish/gophish/models"
+	"github.com/raginx/gophish-ng/models"
 )
 
 func getFirstCampaign(t *testing.T) models.Campaign {

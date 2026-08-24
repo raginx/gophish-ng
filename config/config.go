@@ -5,8 +5,8 @@ import (
 	"errors"
 	"os"
 
-	gophishcrypto "github.com/gophish/gophish/crypto"
-	log "github.com/gophish/gophish/logger"
+	gophishcrypto "github.com/raginx/gophish-ng/crypto"
+	log "github.com/raginx/gophish-ng/logger"
 )
 
 // ErrSecretKeyNotConfigured is returned by SecretKeyBytes when secret_key

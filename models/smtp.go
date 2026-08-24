@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/gophish/gomail"
-	"github.com/gophish/gophish/dialer"
-	log "github.com/gophish/gophish/logger"
-	"github.com/gophish/gophish/mailer"
+	"github.com/raginx/gophish-ng/dialer"
+	log "github.com/raginx/gophish-ng/logger"
+	"github.com/raginx/gophish-ng/mailer"
 	"golang.org/x/net/idna"
 	"gorm.io/gorm"
 )

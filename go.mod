@@ -1,4 +1,4 @@
-module github.com/gophish/gophish
+module github.com/raginx/gophish-ng
 
 go 1.25.7
 

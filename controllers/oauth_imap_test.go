@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gophish/gophish/models"
+	"github.com/raginx/gophish-ng/models"
 )
 
 // loginSessionCookie logs in as admin and returns just the session Cookie

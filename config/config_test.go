@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	log "github.com/gophish/gophish/logger"
+	log "github.com/raginx/gophish-ng/logger"
 )
 
 var validConfig = []byte(`{

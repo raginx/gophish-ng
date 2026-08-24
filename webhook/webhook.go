@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"time"
 
-	log "github.com/gophish/gophish/logger"
+	log "github.com/raginx/gophish-ng/logger"
 )
 
 const (

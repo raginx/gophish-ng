@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strings"
 
-	ctx "github.com/gophish/gophish/context"
-	"github.com/gophish/gophish/models"
 	"github.com/gorilla/csrf"
+	ctx "github.com/raginx/gophish-ng/context"
+	"github.com/raginx/gophish-ng/models"
 )
 
 // CSRFExemptPrefixes are a list of routes that are exempt from CSRF protection

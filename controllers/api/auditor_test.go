@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gophish/gophish/models"
+	"github.com/raginx/gophish-ng/models"
 )
 
 // TestAuditorEndToEnd drives the real API server with a real auditor account

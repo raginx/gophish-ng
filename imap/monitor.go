@@ -9,10 +9,10 @@ import (
 	"strconv"
 	"time"
 
-	log "github.com/gophish/gophish/logger"
 	"github.com/jordan-wright/email"
+	log "github.com/raginx/gophish-ng/logger"
 
-	"github.com/gophish/gophish/models"
+	"github.com/raginx/gophish-ng/models"
 )
 
 // Pattern for GoPhish emails e.g ?rid=AbC1234

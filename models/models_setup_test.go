@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/gophish/gophish/config"
+	"github.com/raginx/gophish-ng/config"
 )
 
 // TestSetupSucceedsWhenDefaultAdminRenamed verifies that Setup() doesn't

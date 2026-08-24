@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	gophishcrypto "github.com/gophish/gophish/crypto"
-	"github.com/gophish/gophish/dialer"
-	log "github.com/gophish/gophish/logger"
+	gophishcrypto "github.com/raginx/gophish-ng/crypto"
+	"github.com/raginx/gophish-ng/dialer"
+	log "github.com/raginx/gophish-ng/logger"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/microsoft"

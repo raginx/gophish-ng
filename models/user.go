@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	log "github.com/gophish/gophish/logger"
+	log "github.com/raginx/gophish-ng/logger"
 )
 
 // ErrModifyingOnlyAdmin occurs when there is an attempt to modify the only

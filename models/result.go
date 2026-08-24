@@ -8,8 +8,8 @@ import (
 	"net"
 	"time"
 
-	log "github.com/gophish/gophish/logger"
 	"github.com/oschwald/maxminddb-golang"
+	log "github.com/raginx/gophish-ng/logger"
 	"gorm.io/gorm"
 )
 

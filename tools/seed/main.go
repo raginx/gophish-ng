@@ -26,8 +26,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/gophish/gophish/config"
-	"github.com/gophish/gophish/models"
+	"github.com/raginx/gophish-ng/config"
+	"github.com/raginx/gophish-ng/models"
 )
 
 const demoDomain = "example.com"

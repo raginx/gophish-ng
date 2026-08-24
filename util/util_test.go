@@ -11,7 +11,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gophish/gophish/models"
+	"github.com/raginx/gophish-ng/models"
 )
 
 func buildCSVRequest(csvPayload string) (*http.Request, error) {

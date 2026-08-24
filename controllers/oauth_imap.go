@@ -5,10 +5,10 @@ import (
 	"encoding/base64"
 	"net/http"
 
-	ctx "github.com/gophish/gophish/context"
-	log "github.com/gophish/gophish/logger"
-	"github.com/gophish/gophish/models"
 	"github.com/gorilla/sessions"
+	ctx "github.com/raginx/gophish-ng/context"
+	log "github.com/raginx/gophish-ng/logger"
+	"github.com/raginx/gophish-ng/models"
 	"golang.org/x/oauth2"
 )
 

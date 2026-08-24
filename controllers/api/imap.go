@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	ctx "github.com/gophish/gophish/context"
-	"github.com/gophish/gophish/imap"
-	"github.com/gophish/gophish/models"
+	ctx "github.com/raginx/gophish-ng/context"
+	"github.com/raginx/gophish-ng/imap"
+	"github.com/raginx/gophish-ng/models"
 )
 
 // imapResponse is what GET /api/imap/ actually returns

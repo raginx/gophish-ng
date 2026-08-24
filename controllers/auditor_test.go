@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gophish/gophish/auth"
-	"github.com/gophish/gophish/models"
+	"github.com/raginx/gophish-ng/auth"
+	"github.com/raginx/gophish-ng/models"
 )
 
 // sessionCookieFor logs the given account in and returns its session cookie,
