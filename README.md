@@ -6,8 +6,10 @@
 
 <p align="center">
   <a href="https://github.com/raginx/gophish-ng/actions/workflows/ci.yml"><img src="https://github.com/raginx/gophish-ng/workflows/CI/badge.svg" alt="Build Status"></a>
-  <a href="https://github.com/raginx/gophish-ng/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License"></a>
+  <a href="https://github.com/raginx/gophish-ng/blob/master/LICENSE"><img src="https://img.shields.io/github/license/raginx/gophish-ng" alt="License"></a>
   <img src="https://img.shields.io/github/go-mod/go-version/raginx/gophish-ng" alt="Go Version">
+  <a href="https://github.com/raginx/gophish-ng/releases/latest"><img src="https://img.shields.io/github/v/release/raginx/gophish-ng" alt="Latest Release"></a>
+  <a href="https://github.com/raginx/gophish-ng/pkgs/container/gophish-ng"><img src="https://img.shields.io/badge/container-ghcr.io-blue" alt="Container Image"></a>
   <a href="https://github.com/raginx/gophish-ng/commits/master"><img src="https://img.shields.io/github/last-commit/raginx/gophish-ng" alt="Last Commit"></a>
 </p>
 
