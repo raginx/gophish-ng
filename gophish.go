@@ -30,6 +30,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 
@@ -79,7 +80,7 @@ func main() {
 		log.Warnf("No contact address has been configured.")
 		log.Warnf("Please consider adding a contact_address entry in your config.json")
 	}
-	config.Version = string(version)
+	config.Version = strings.TrimSpace(string(version))
 
 	// Configure our various upstream clients to make sure that we restrict
 	// outbound connections as needed.
