@@ -444,133 +444,127 @@ function renderTimeline(data) {
     return results
 }
 
+var timelineChart = null
+
+// timelineChartData maps the {x, y, email, message, marker} point shape
+// used at call sites
+function timelineChartData(points) {
+    return points.map(function (p) {
+        return {
+            value: [p.x, p.y],
+            email: p.email,
+            message: p.message,
+            itemStyle: {
+                color: p.marker.fillColor
+            }
+        }
+    })
+}
+
 var renderTimelineChart = function (chartopts) {
-    return Highcharts.chart('timeline_chart', {
-        chart: {
-            zoomType: 'x',
-            type: 'line',
-            height: "200px"
-        },
+    timelineChart = echarts.init(document.getElementById('timeline_chart'), null, {
+        height: 200
+    })
+    timelineChart.setOption({
         title: {
             text: 'Campaign Timeline'
         },
+        grid: {
+            left: '1%',
+            right: '2%',
+            containLabel: true
+        },
         xAxis: {
-            type: 'datetime',
-            dateTimeLabelFormats: {
-                second: '%l:%M:%S',
-                minute: '%l:%M',
-                hour: '%l:%M',
-                day: '%b %d, %Y',
-                week: '%b %d, %Y',
-                month: '%b %Y'
-            }
+            type: 'time'
         },
         yAxis: {
             min: 0,
             max: 2,
-            visible: false,
-            tickInterval: 1,
-            labels: {
-                enabled: false
-            },
-            title: {
-                text: ""
-            }
+            show: false
         },
+        dataZoom: [{
+            type: 'inside',
+            filterMode: 'none'
+        }],
         tooltip: {
-            formatter: function () {
-                return Highcharts.dateFormat('%A, %b %d %l:%M:%S %P', new Date(this.x)) +
-                    '<br>Event: ' + this.point.message + '<br>Email: <b>' + this.point.email + '</b>'
+            trigger: 'axis',
+            formatter: function (params) {
+                var point = params[0]
+                return moment(point.value[0]).format('dddd, MMM D h:mm:ss a') +
+                    '<br>Event: ' + point.data.message + '<br>Email: <b>' + point.data.email + '</b>'
             }
         },
         legend: {
-            enabled: false
-        },
-        plotOptions: {
-            series: {
-                marker: {
-                    enabled: true,
-                    symbol: 'circle',
-                    radius: 3
-                },
-                cursor: 'pointer',
-            },
-            line: {
-                states: {
-                    hover: {
-                        lineWidth: 1
-                    }
-                }
-            }
-        },
-        credits: {
-            enabled: false
+            show: false
         },
         series: [{
-            data: chartopts['data'],
-            dashStyle: "shortdash",
-            color: "#cccccc",
-            lineWidth: 1,
-            turboThreshold: 0
+            type: 'line',
+            lineStyle: {
+                type: 'dashed',
+                color: "#cccccc",
+                width: 1
+            },
+            symbol: 'circle',
+            symbolSize: 6,
+            data: timelineChartData(chartopts['data'])
         }]
     })
+    return timelineChart
 }
 
-/* Renders a pie chart using the provided chartops */
+var pieCharts = {}
+
+/* Renders a pie chart using the provided chartopts */
 var renderPieChart = function (chartopts) {
-    return Highcharts.chart(chartopts['elemId'], {
-        chart: {
-            type: 'pie',
-            events: {
-                load: function () {
-                    var chart = this,
-                        rend = chart.renderer,
-                        pie = chart.series[0],
-                        left = chart.plotLeft + pie.center[0],
-                        top = chart.plotTop + pie.center[1];
-                    this.innerText = rend.text(chartopts['data'][0].count, left, top).
-                    attr({
-                        'text-anchor': 'middle',
-                        'font-size': '24px',
-                        'font-weight': 'bold',
-                        'fill': chartopts['colors'][0],
-                        'font-family': 'Helvetica,Arial,sans-serif'
-                    }).add();
-                },
-                render: function () {
-                    this.innerText.attr({
-                        text: chartopts['data'][0].count
-                    })
-                }
+    var chart = echarts.init(document.getElementById(chartopts['elemId']))
+    chart.setOption({
+        title: [{
+            text: chartopts['title'],
+            left: 'center',
+            top: '0%',
+            textStyle: {
+                fontSize: 14
             }
-        },
-        title: {
-            text: chartopts['title']
-        },
-        plotOptions: {
-            pie: {
-                innerSize: '80%',
-                dataLabels: {
-                    enabled: false
-                }
+        }, {
+            text: String(chartopts['data'][0].count),
+            left: 'center',
+            top: '58%',
+            textVerticalAlign: 'middle',
+            textStyle: {
+                fontSize: 24,
+                fontWeight: 'bold',
+                color: chartopts['colors'][0],
+                fontFamily: 'Helvetica,Arial,sans-serif'
             }
-        },
-        credits: {
-            enabled: false
-        },
+        }],
         tooltip: {
-            formatter: function () {
-                if (this.key == undefined) {
-                    return false
+            formatter: function (params) {
+                if (params.name === '') {
+                    return ''
                 }
-                return '<span style="color:' + this.color + '">\u25CF</span>' + this.point.name + ': <b>' + this.y + '%</b><br/>'
+                return '<span style="color:' + params.color + '">\u25CF</span>' + params.name + ': <b>' + params.value + '%</b><br/>'
             }
         },
         series: [{
-            data: chartopts['data'],
-            colors: chartopts['colors'],
+            type: 'pie',
+            center: ['50%', '58%'],
+            radius: ['55%', '78%'],
+            label: {
+                show: false
+            },
+            data: chartopts['data'].map(function (d, i) {
+                return {
+                    name: d.name,
+                    value: d.y,
+                    itemStyle: {
+                        color: chartopts['colors'][i]
+                    }
+                }
+            })
         }]
     })
+    pieCharts[chartopts['elemId']] = chart
+    return chart
 }
 
 /* Updates the bubbles on the map
@@ -656,9 +650,10 @@ function poll() {
                     }
                 })
             })
-            var timeline_chart = $("#timeline_chart").highcharts()
-            timeline_chart.series[0].update({
-                data: timeline_series_data
+            timelineChart.setOption({
+                series: [{
+                    data: timelineChartData(timeline_series_data)
+                }]
             })
             /* Update the results donut chart */
             var email_series_data = {}
@@ -691,9 +686,19 @@ function poll() {
                     name: '',
                     y: 100 - Math.floor((count / campaign.results.length) * 100)
                 })
-                var chart = $("#" + statusMapping[status] + "_chart").highcharts()
-                chart.series[0].update({
-                    data: email_data
+                var chart = pieCharts[statusMapping[status] + '_chart']
+                chart.setOption({
+                    series: [{
+                        data: email_data.map(function (d, i) {
+                            return {
+                                name: d.name,
+                                value: d.y,
+                                itemStyle: {
+                                    color: [statuses[status].color, '#dddddd'][i]
+                                }
+                            }
+                        })
+                    }]
                 })
             })
 
@@ -1046,12 +1051,16 @@ function resend_all_failed(cid) {
     })
 }
 
-$(document).ready(function () {
-    Highcharts.setOptions({
-        global: {
-            useUTC: false
-        }
+$(window).on('resize', function () {
+    if (timelineChart) {
+        timelineChart.resize()
+    }
+    $.each(pieCharts, function (id, chart) {
+        chart.resize()
     })
+})
+
+$(document).ready(function () {
     load();
 
     // Start the polling loop

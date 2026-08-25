@@ -18,6 +18,7 @@
     "esbuild": "^0.28.2"
   },
   "dependencies": {
+    "echarts": "^6.1.0",
     "zxcvbn": "^4.4.2"
   }
 }

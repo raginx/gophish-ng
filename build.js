@@ -37,8 +37,14 @@ const vendorFiles = [
   "sweetalert2.min.js",
   "bootstrap-datetime.js",
   "select2.min.js",
-  "highcharts.js",
   "ua-parser.min.js",
+];
+
+// Libraries pulled from npm (node_modules) instead of manually vendored
+// files under static/js/src/vendor/ - the migration target for the rest of
+// vendorFiles above
+const npmVendorFiles = [
+  path.join("node_modules", "echarts", "dist", "echarts.min.js"),
 ];
 
 // These app scripts don't import anything - they're loaded via plain
@@ -84,6 +90,7 @@ const cssFiles = [
 async function buildVendor() {
   const combined = vendorFiles
     .map((f) => fs.readFileSync(path.join(vendorDir, f), "utf8"))
+    .concat(npmVendorFiles.map((f) => fs.readFileSync(f, "utf8")))
     .join("\n;\n");
   const result = await esbuild.transform(combined, {
     loader: "js",

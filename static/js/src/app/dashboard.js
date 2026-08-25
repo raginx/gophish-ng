@@ -100,61 +100,59 @@ function deleteCampaign(idx) {
     }
 }
 
-/* Renders a pie chart using the provided chartops */
+var pieCharts = {}
+
+/* Renders a pie chart using the provided chartopts */
 function renderPieChart(chartopts) {
-    return Highcharts.chart(chartopts['elemId'], {
-        chart: {
-            type: 'pie',
-            events: {
-                load: function () {
-                    var chart = this,
-                        rend = chart.renderer,
-                        pie = chart.series[0],
-                        left = chart.plotLeft + pie.center[0],
-                        top = chart.plotTop + pie.center[1];
-                    this.innerText = rend.text(chartopts['data'][0].count, left, top).
-                    attr({
-                        'text-anchor': 'middle',
-                        'font-size': '16px',
-                        'font-weight': 'bold',
-                        'fill': chartopts['colors'][0],
-                        'font-family': 'Helvetica,Arial,sans-serif'
-                    }).add();
-                },
-                render: function () {
-                    this.innerText.attr({
-                        text: chartopts['data'][0].count
-                    })
-                }
+    var chart = echarts.init(document.getElementById(chartopts['elemId']))
+    chart.setOption({
+        title: [{
+            text: chartopts['title'],
+            left: 'center',
+            top: '0%',
+            textStyle: {
+                fontSize: 14
             }
-        },
-        title: {
-            text: chartopts['title']
-        },
-        plotOptions: {
-            pie: {
-                innerSize: '80%',
-                dataLabels: {
-                    enabled: false
-                }
+        }, {
+            text: String(chartopts['data'][0].count),
+            left: 'center',
+            top: '58%',
+            textVerticalAlign: 'middle',
+            textStyle: {
+                fontSize: 16,
+                fontWeight: 'bold',
+                color: chartopts['colors'][0],
+                fontFamily: 'Helvetica,Arial,sans-serif'
             }
-        },
-        credits: {
-            enabled: false
-        },
+        }],
         tooltip: {
-            formatter: function () {
-                if (this.key == undefined) {
-                    return false
+            formatter: function (params) {
+                if (params.name === '') {
+                    return ''
                 }
-                return '<span style="color:' + this.color + '">\u25CF</span>' + this.point.name + ': <b>' + this.y + '%</b><br/>'
+                return '<span style="color:' + params.color + '">\u25CF</span>' + params.name + ': <b>' + params.value + '%</b><br/>'
             }
         },
         series: [{
-            data: chartopts['data'],
-            colors: chartopts['colors'],
+            type: 'pie',
+            center: ['50%', '58%'],
+            radius: ['55%', '78%'],
+            label: {
+                show: false
+            },
+            data: chartopts['data'].map(function (d, i) {
+                return {
+                    name: d.name,
+                    value: d.y,
+                    itemStyle: {
+                        color: chartopts['colors'][i]
+                    }
+                }
+            })
         }]
     })
+    pieCharts[chartopts['elemId']] = chart
+    return chart
 }
 
 function generateStatsPieCharts(campaigns) {
@@ -203,6 +201,8 @@ function generateStatsPieCharts(campaigns) {
     });
 }
 
+var overviewChart = null
+
 function generateTimelineChart(campaigns) {
     var overview_data = []
     $.each(campaigns, function (i, campaign) {
@@ -223,75 +223,72 @@ function generateTimelineChart(campaigns) {
     overview_data.sort(function (a, b) {
         return a.x - b.x
     })
-    Highcharts.chart('overview_chart', {
-        chart: {
-            zoomType: 'x',
-            type: 'areaspline'
-        },
+    overviewChart = echarts.init(document.getElementById('overview_chart'))
+    overviewChart.setOption({
         title: {
             text: 'Phishing Success Overview'
         },
+        grid: {
+            left: '1%',
+            right: '2%',
+            containLabel: true
+        },
         xAxis: {
-            type: 'datetime',
-            dateTimeLabelFormats: {
-                second: '%l:%M:%S',
-                minute: '%l:%M',
-                hour: '%l:%M',
-                day: '%b %d, %Y',
-                week: '%b %d, %Y',
-                month: '%b %Y'
-            }
+            type: 'time'
         },
         yAxis: {
             min: 0,
-            max: 100,
-            title: {
-                text: "% of Success"
-            }
+            name: '% of Success'
         },
+        dataZoom: [{
+            type: 'inside',
+            filterMode: 'none'
+        }],
         tooltip: {
-            formatter: function () {
-                return Highcharts.dateFormat('%A, %b %d %l:%M:%S %P', new Date(this.x)) +
-                    '<br>' + this.point.name + '<br>% Success: <b>' + this.y + '%</b>'
+            trigger: 'axis',
+            formatter: function (params) {
+                var point = params[0]
+                return moment(point.value[0]).format('dddd, MMM D h:mm:ss a') +
+                    '<br>' + point.data.name + '<br>% Success: <b>' + point.value[1] + '%</b>'
             }
         },
         legend: {
-            enabled: false
-        },
-        plotOptions: {
-            series: {
-                marker: {
-                    enabled: true,
-                    symbol: 'circle',
-                    radius: 3
-                },
-                cursor: 'pointer',
-                point: {
-                    events: {
-                        click: function (e) {
-                            window.location.href = "/campaigns/" + this.campaign_id
-                        }
-                    }
-                }
-            }
-        },
-        credits: {
-            enabled: false
+            show: false
         },
         series: [{
-            data: overview_data,
+            type: 'line',
+            areaStyle: {
+                opacity: 0.5
+            },
             color: "#f05b4f",
-            fillOpacity: 0.5
+            symbol: 'circle',
+            symbolSize: 6,
+            data: overview_data.map(function (d) {
+                return {
+                    value: [d.x, d.y],
+                    name: d.name,
+                    campaign_id: d.campaign_id
+                }
+            })
         }]
+    })
+    overviewChart.on('click', function (params) {
+        if (params.componentType === 'series') {
+            window.location.href = "/campaigns/" + params.data.campaign_id
+        }
     })
 }
 
-$(document).ready(function () {
-    Highcharts.setOptions({
-        global: {
-            useUTC: false
-        }
+$(window).on('resize', function () {
+    if (overviewChart) {
+        overviewChart.resize()
+    }
+    $.each(pieCharts, function (id, chart) {
+        chart.resize()
     })
+})
+
+$(document).ready(function () {
     api.campaigns.summary()
         .success(function (data) {
             $("#loading").hide()
