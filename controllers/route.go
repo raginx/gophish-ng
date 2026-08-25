@@ -122,6 +122,11 @@ func (as *AdminServer) Shutdown() error {
 // This function returns an http.Handler to be used in http.ListenAndServe().
 func (as *AdminServer) registerRoutes() {
 	router := mux.NewRouter()
+	// Kubernetes-style health endpoints. Intentionally unauthenticated so
+	// probes don't need credentials, and only on the admin server
+	router.HandleFunc("/healthz", as.Healthz).Methods("GET")
+	router.HandleFunc("/readyz", as.Readyz).Methods("GET")
+	router.HandleFunc("/version", as.Version).Methods("GET")
 	// Base Front-end routes
 	router.HandleFunc("/", mid.Use(as.Base, mid.RequireLogin))
 	router.HandleFunc("/login", mid.Use(as.Login, as.limiter.Limit))
@@ -209,6 +214,28 @@ func newTemplateParams(r *http.Request) templateParams {
 		Version:       config.Version,
 		Flashes:       session.Flashes(),
 	}
+}
+
+// Healthz handles liveness probes. It only confirms the HTTP server itself
+// is responding - no external dependencies are checked.
+func (as *AdminServer) Healthz(w http.ResponseWriter, r *http.Request) {
+	api.JSONResponse(w, map[string]string{"status": "ok"}, http.StatusOK)
+}
+
+// Readyz handles readiness probes, verifying the database is reachable
+// before reporting the instance ready to serve traffic.
+func (as *AdminServer) Readyz(w http.ResponseWriter, r *http.Request) {
+	if err := models.Ping(); err != nil {
+		log.Error(err)
+		api.JSONResponse(w, map[string]string{"status": "unavailable"}, http.StatusServiceUnavailable)
+		return
+	}
+	api.JSONResponse(w, map[string]string{"status": "ok"}, http.StatusOK)
+}
+
+// Version returns the running Gophish version as JSON.
+func (as *AdminServer) Version(w http.ResponseWriter, r *http.Request) {
+	api.JSONResponse(w, map[string]string{"version": config.Version}, http.StatusOK)
 }
 
 // Base handles the default path and template execution

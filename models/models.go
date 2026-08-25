@@ -139,6 +139,16 @@ func createTemporaryPassword(u *User) error {
 	return nil
 }
 
+// Ping verifies that the database connection is alive. Used by the
+// /readyz endpoint for Kubernetes-style readiness probes.
+func Ping() error {
+	sqlDB, err := db.DB()
+	if err != nil {
+		return err
+	}
+	return sqlDB.Ping()
+}
+
 // Setup initializes the database and runs any needed migrations.
 //
 // First, it establishes a connection to the database, then runs any migrations
