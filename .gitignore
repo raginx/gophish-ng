@@ -28,7 +28,7 @@ gophish_admin.key
 
 *.exe
 gophish.db*
-gophish
+gophish-ng
 ROADMAP.md
 
 # MkDocs build output
