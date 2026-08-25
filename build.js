@@ -37,7 +37,6 @@ const vendorFiles = [
   "sweetalert2.min.js",
   "bootstrap-datetime.js",
   "select2.min.js",
-  "core.min.js",
   "highcharts.js",
   "ua-parser.min.js",
 ];
@@ -75,7 +74,6 @@ const cssFiles = [
   "flat-ui.css",
   "dataTables.bootstrap.css",
   "font-awesome.min.css",
-  "chartist.min.css",
   "bootstrap-datetime.css",
   "checkbox.css",
   "sweetalert2.min.css",
