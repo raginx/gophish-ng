@@ -55,7 +55,7 @@ func startFakeIMAPServer(t *testing.T) (addr string, gotCmd <-chan string, clean
 		cmdCh <- line
 		_, _ = conn.Write([]byte(firstLineTag(line) + " NO authentication failed (fake server)\r\n"))
 	}()
-	return l.Addr().String(), cmdCh, func() { l.Close() }
+	return l.Addr().String(), cmdCh, func() { _ = l.Close() }
 }
 
 func TestNewClientUsesOAuthBearerWhenTokenSet(t *testing.T) {

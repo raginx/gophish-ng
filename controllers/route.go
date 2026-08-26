@@ -42,7 +42,6 @@ type AdminServer struct {
 }
 
 var defaultTLSConfig = &tls.Config{
-	PreferServerCipherSuites: true,
 	CurvePreferences: []tls.CurveID{
 		tls.X25519,
 		tls.CurveP256,
@@ -496,15 +495,15 @@ func (as *AdminServer) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 	params := newTemplateParams(r)
 	params.Title = "Reset Password"
-	switch {
-	case r.Method == http.MethodGet:
+	switch r.Method {
+	case http.MethodGet:
 		params.Flashes = session.Flashes()
 		if err := session.Save(r, w); err != nil {
 			log.Error(err)
 		}
 		getTemplate(w, "reset_password", params)
 		return
-	case r.Method == http.MethodPost:
+	case http.MethodPost:
 		newPassword := r.FormValue("password")
 		confirmPassword := r.FormValue("confirm_password")
 		newHash, err := auth.ValidatePasswordChange(u.Hash, newPassword, confirmPassword)

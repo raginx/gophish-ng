@@ -18,15 +18,15 @@ import (
 // Campaigns returns a list of campaigns if requested via GET.
 // If requested via POST, APICampaigns creates a new campaign and returns a reference to it.
 func (as *Server) Campaigns(w http.ResponseWriter, r *http.Request) {
-	switch {
-	case r.Method == "GET":
+	switch r.Method {
+	case "GET":
 		cs, err := models.GetCampaigns(ctx.Get(r, "team_id").(int64))
 		if err != nil {
 			log.Error(err)
 		}
 		JSONResponse(w, cs, http.StatusOK)
 	//POST: Create a new campaign and return it as JSON
-	case r.Method == "POST":
+	case "POST":
 		c := models.Campaign{}
 		// Put the request into a campaign
 		err := json.NewDecoder(r.Body).Decode(&c)
@@ -50,8 +50,8 @@ func (as *Server) Campaigns(w http.ResponseWriter, r *http.Request) {
 
 // CampaignsSummary returns the summary for the current user's campaigns
 func (as *Server) CampaignsSummary(w http.ResponseWriter, r *http.Request) {
-	switch {
-	case r.Method == "GET":
+	switch r.Method {
+	case "GET":
 		cs, err := models.GetCampaignSummaries(ctx.Get(r, "team_id").(int64))
 		if err != nil {
 			log.Error(err)
