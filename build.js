@@ -20,10 +20,11 @@ const cssDir = path.join("static", "css");
 const jsDistDir = path.join("static", "js", "dist");
 const cssDistDir = path.join("static", "css", "dist");
 
+// A single ordered list, since load order matters
 const vendorFiles = [
   "jquery.js",
   "bootstrap.min.js",
-  "moment.min.js",
+  path.join("node_modules", "moment", "min", "moment.min.js"),
   "d3.min.js",
   "topojson.min.js",
   "datamaps.min.js",
@@ -35,18 +36,15 @@ const vendorFiles = [
   "jquery.iframe-transport.js",
   "sweetalert2.min.js",
   "bootstrap-datetime.js",
-];
-
-// Libraries pulled from npm (node_modules) instead of manually vendored
-// files under static/js/src/vendor/ - the migration target for the rest of
-// vendorFiles above. Order matters where a library expects a global (e.g.
-// jQuery) to already exist - these all load after vendorFiles above.
-const npmVendorFiles = [
   path.join("node_modules", "echarts", "dist", "echarts.min.js"),
   path.join("node_modules", "select2", "dist", "js", "select2.min.js"),
   path.join("node_modules", "papaparse", "papaparse.min.js"),
   path.join("node_modules", "bowser", "es5.js"),
 ];
+
+function resolveVendorFile(f) {
+  return f.startsWith("node_modules" + path.sep) ? f : path.join(vendorDir, f);
+}
 
 // These app scripts don't import anything - they're loaded via plain
 // <script> tags (no type="module") and rely on defining top-level `var`s
@@ -94,8 +92,7 @@ const npmCssFiles = [
 
 async function buildVendor() {
   const combined = vendorFiles
-    .map((f) => fs.readFileSync(path.join(vendorDir, f), "utf8"))
-    .concat(npmVendorFiles.map((f) => fs.readFileSync(f, "utf8")))
+    .map((f) => fs.readFileSync(resolveVendorFile(f), "utf8"))
     .join("\n;\n");
   const result = await esbuild.transform(combined, {
     loader: "js",
