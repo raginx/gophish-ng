@@ -302,32 +302,32 @@ function replay(event_idx) {
  * 
  */
 var renderDevice = function (event_details) {
-    var ua = UAParser(details.browser['user-agent'])
+    var ua = bowser.parse(details.browser['user-agent'])
     var detailsString = '<div class="timeline-device-details">'
 
     var deviceIcon = 'laptop'
-    if (ua.device.type) {
-        if (ua.device.type == 'tablet' || ua.device.type == 'mobile') {
-            deviceIcon = ua.device.type
+    if (ua.platform.type) {
+        if (ua.platform.type == 'tablet' || ua.platform.type == 'mobile') {
+            deviceIcon = ua.platform.type
         }
     }
 
     var deviceVendor = ''
-    if (ua.device.vendor) {
-        deviceVendor = ua.device.vendor.toLowerCase()
+    if (ua.platform.vendor) {
+        deviceVendor = ua.platform.vendor.toLowerCase()
         if (deviceVendor == 'microsoft') deviceVendor = 'windows'
     }
 
     var deviceName = 'Unknown'
     if (ua.os.name) {
         deviceName = ua.os.name
-        if (deviceName == "Mac OS") {
+        if (deviceName == "macOS") {
             deviceVendor = 'apple'
         } else if (deviceName == "Windows") {
             deviceVendor = 'windows'
         }
-        if (ua.device.vendor && ua.device.model) {
-            deviceName = ua.device.vendor + ' ' + ua.device.model
+        if (ua.platform.vendor && ua.platform.model) {
+            deviceName = ua.platform.vendor + ' ' + ua.platform.model
         }
     }
 

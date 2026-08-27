@@ -24,7 +24,6 @@ const vendorFiles = [
   "jquery.js",
   "bootstrap.min.js",
   "moment.min.js",
-  "papaparse.min.js",
   "d3.min.js",
   "topojson.min.js",
   "datamaps.min.js",
@@ -36,15 +35,17 @@ const vendorFiles = [
   "jquery.iframe-transport.js",
   "sweetalert2.min.js",
   "bootstrap-datetime.js",
-  "select2.min.js",
-  "ua-parser.min.js",
 ];
 
 // Libraries pulled from npm (node_modules) instead of manually vendored
 // files under static/js/src/vendor/ - the migration target for the rest of
-// vendorFiles above
+// vendorFiles above. Order matters where a library expects a global (e.g.
+// jQuery) to already exist - these all load after vendorFiles above.
 const npmVendorFiles = [
   path.join("node_modules", "echarts", "dist", "echarts.min.js"),
+  path.join("node_modules", "select2", "dist", "js", "select2.min.js"),
+  path.join("node_modules", "papaparse", "papaparse.min.js"),
+  path.join("node_modules", "bowser", "es5.js"),
 ];
 
 // These app scripts don't import anything - they're loaded via plain
@@ -83,8 +84,12 @@ const cssFiles = [
   "bootstrap-datetime.css",
   "checkbox.css",
   "sweetalert2.min.css",
-  "select2.min.css",
   "select2-bootstrap.min.css",
+];
+
+// CSS pulled from npm (node_modules) instead of manually vendored files
+const npmCssFiles = [
+  path.join("node_modules", "select2", "dist", "css", "select2.min.css"),
 ];
 
 async function buildVendor() {
@@ -132,6 +137,7 @@ async function buildApp() {
 async function buildCSS() {
   const combined = cssFiles
     .map((f) => fs.readFileSync(path.join(cssDir, f), "utf8"))
+    .concat(npmCssFiles.map((f) => fs.readFileSync(f, "utf8")))
     .join("\n");
   const result = await esbuild.transform(combined, {
     loader: "css",

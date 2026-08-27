@@ -18,7 +18,10 @@
     "esbuild": "^0.28.2"
   },
   "dependencies": {
+    "bowser": "^2.14.1",
     "echarts": "^6.1.0",
+    "papaparse": "^5.7.0",
+    "select2": "^4.1.0",
     "zxcvbn": "^4.4.2"
   }
 }
