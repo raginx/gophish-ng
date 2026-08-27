@@ -139,6 +139,22 @@ gophish@gophish.dev:~/src/github.com/raginx/gophish-ng$ ./gophish
  time="2020-06-30T08:04:33-05:00" level=info msg="Starting new IMAP monitor for user admin"
 ```
 
+## Health & Version Endpoints
+
+The admin server exposes three unauthenticated `GET` endpoints, useful for
+container orchestrators (e.g. Kubernetes liveness/readiness probes) or load
+balancer health checks. They're only available on the admin server, not the
+phishing server.
+
+| Endpoint | Purpose | Response |
+| :--- | :--- | :--- |
+| `/healthz` | Liveness probe. Confirms the HTTP server itself is responding - no external dependencies are checked. | `200 OK` — `{"status": "ok"}` |
+| `/readyz` | Readiness probe. Verifies the database is reachable before reporting the instance ready to serve traffic. | `200 OK` — `{"status": "ok"}`, or `503 Service Unavailable` — `{"status": "unavailable"}` if the database can't be reached |
+| `/version` | Returns the running Gophish-NG version. | `200 OK` — `{"version": "<version>"}` |
+
+!!! note
+    These endpoints are intentionally unauthenticated so probes don't need credentials.
+
 ## Running Gophish as a Service
 
 ### Linux Distributions

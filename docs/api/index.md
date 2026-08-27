@@ -32,6 +32,9 @@ GET /api/campaigns/?api_key=12345678901234567890123456789012
 | :--- | :--- | :--- |
 | `api_key` | `string` | **Required**. Your Gophish API key |
 
+!!! note
+    Looking for health checks or version info instead of campaign automation? `/healthz`, `/readyz`, and `/version` are separate, unauthenticated endpoints outside this API - see [Health & Version Endpoints](../getting-started/installation.md#health-version-endpoints).
+
 ## Responses
 
 Many API endpoints return the JSON representation of the resources created or edited. However, if an invalid request is submitted, or some other error occurs, Gophish returns a JSON response in the following format:
