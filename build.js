@@ -34,12 +34,12 @@ const vendorFiles = [
   "jquery.ui.widget.js",
   "jquery.fileupload.js",
   "jquery.iframe-transport.js",
-  "sweetalert2.min.js",
   "bootstrap-datetime.js",
   path.join("node_modules", "echarts", "dist", "echarts.min.js"),
   path.join("node_modules", "select2", "dist", "js", "select2.min.js"),
   path.join("node_modules", "papaparse", "papaparse.min.js"),
   path.join("node_modules", "bowser", "es5.js"),
+  path.join("node_modules", "sweetalert2", "dist", "sweetalert2.min.js"),
 ];
 
 function resolveVendorFile(f) {
@@ -81,13 +81,13 @@ const cssFiles = [
   "font-awesome.min.css",
   "bootstrap-datetime.css",
   "checkbox.css",
-  "sweetalert2.min.css",
   "select2-bootstrap.min.css",
 ];
 
 // CSS pulled from npm (node_modules) instead of manually vendored files
 const npmCssFiles = [
   path.join("node_modules", "select2", "dist", "css", "select2.min.css"),
+  path.join("node_modules", "sweetalert2", "dist", "sweetalert2.min.css"),
 ];
 
 async function buildVendor() {
