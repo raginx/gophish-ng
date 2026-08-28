@@ -88,32 +88,48 @@ function edit(id) {
             })
     }
     // Handle file uploads
-    $("#csvupload").fileupload({
-        url: "/api/import/group",
-        dataType: "json",
-        beforeSend: function (xhr) {
-            xhr.setRequestHeader('Authorization', 'Bearer ' + user.api_key);
-        },
-        add: function (e, data) {
-            $("#modal\\.flashes").empty()
-            var acceptFileTypes = /(csv|txt)$/i;
-            var filename = data.originalFiles[0]['name']
-            if (filename && !acceptFileTypes.test(filename.split(".").pop())) {
+    $("#csvupload").on('change', function (e) {
+        $("#modal\\.flashes").empty()
+        var acceptFileTypes = /(csv|txt)$/i
+        var files = e.target.files
+        $.each(files, function (i, file) {
+            if (!acceptFileTypes.test(file.name.split(".").pop())) {
                 modalError("Unsupported file extension (use .csv or .txt)")
-                return false;
+                return
             }
-            data.submit();
-        },
-        done: function (e, data) {
-            $.each(data.result, function (i, record) {
-                addTarget(
-                    record.first_name,
-                    record.last_name,
-                    record.email,
-                    record.position);
-            });
-            targets.DataTable().draw();
-        }
+            var formData = new FormData()
+            formData.append('file', file)
+            fetch("/api/import/group", {
+                method: "POST",
+                headers: {
+                    'Authorization': 'Bearer ' + user.api_key
+                },
+                body: formData
+            })
+                .then(function (response) {
+                    return response.json().then(function (data) {
+                        if (!response.ok) {
+                            throw new Error(data.message || "Error importing group")
+                        }
+                        return data
+                    })
+                })
+                .then(function (result) {
+                    $.each(result, function (i, record) {
+                        addTarget(
+                            record.first_name,
+                            record.last_name,
+                            record.email,
+                            record.position);
+                    });
+                    targets.DataTable().draw();
+                })
+                .catch(function (err) {
+                    modalError(err.message)
+                })
+        })
+        // Allow re-selecting the same file(s) without a page reload
+        e.target.value = ''
     })
 }
 
