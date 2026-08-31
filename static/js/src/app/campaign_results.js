@@ -139,10 +139,10 @@ function deleteCampaign() {
         preConfirm: function () {
             return new Promise(function (resolve, reject) {
                 api.campaignId.delete(campaign.id)
-                    .success(function (msg) {
+                    .done(function (msg) {
                         resolve()
                     })
-                    .error(function (data) {
+                    .fail(function (data) {
                         reject(data.responseJSON.message)
                     })
             })
@@ -177,10 +177,10 @@ function completeCampaign() {
         preConfirm: function () {
             return new Promise(function (resolve, reject) {
                 api.campaignId.complete(campaign.id)
-                    .success(function (msg) {
+                    .done(function (msg) {
                         resolve()
                     })
-                    .error(function (data) {
+                    .fail(function (data) {
                         reject(data.responseJSON.message)
                     })
             })
@@ -634,7 +634,7 @@ function createStatusLabel(status, send_date, rid) {
  */
 function poll() {
     api.campaignId.results(campaign.id)
-        .success(function (c) {
+        .done(function (c) {
             campaign = c
             /* Update the timeline */
             var timeline_series_data = []
@@ -736,7 +736,7 @@ function load() {
     campaign.id = window.location.pathname.split('/').slice(-1)[0]
     var use_map = JSON.parse(localStorage.getItem('gophish.use_map'))
     api.campaignId.results(campaign.id)
-        .success(function (c) {
+        .done(function (c) {
             campaign = c
             if (campaign) {
                 $("title").text(c.name + " - Gophish")
@@ -916,7 +916,7 @@ function load() {
                 updateMap(campaign.results)
             }
         })
-        .error(function () {
+        .fail(function () {
             $("#loading").hide()
             errorFlash(" Campaign not found!")
         })
@@ -973,10 +973,10 @@ function report_mail(rid, cid) {
     }).then(function (result) {
         if (result.value) {
             api.campaignId.report(cid, rid, result.value)
-                .success(function () {
+                .done(function () {
                     refresh()
                 })
-                .error(function (data) {
+                .fail(function (data) {
                     Swal.fire({
                         title: 'Error',
                         text: data.responseJSON.message,
@@ -1003,11 +1003,11 @@ function resend_mail(rid, cid) {
     }).then(function (result) {
         if (result.value) {
             api.campaignId.resend(cid, rid)
-                .success(function () {
+                .done(function () {
                     successFlash("Result queued for resending")
                     refresh()
                 })
-                .error(function (data) {
+                .fail(function (data) {
                     Swal.fire({
                         title: 'Error',
                         text: data.responseJSON.message,
@@ -1035,11 +1035,11 @@ function resend_all_failed(cid) {
     }).then(function (result) {
         if (result.value) {
             api.campaignId.resendFailed(cid)
-                .success(function (data) {
+                .done(function (data) {
                     successFlash(data.message)
                     refresh()
                 })
-                .error(function (data) {
+                .fail(function (data) {
                     Swal.fire({
                         title: 'Error',
                         text: data.responseJSON.message,

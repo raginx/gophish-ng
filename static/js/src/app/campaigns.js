@@ -55,11 +55,11 @@ function launch() {
                 }
                 // Submit the campaign
                 api.campaigns.post(campaign)
-                    .success(function (data) {
+                    .done(function (data) {
                         resolve()
                         campaign = data
                     })
-                    .error(function (data) {
+                    .fail(function (data) {
                         $("#modal\\.flashes").empty().append("<div style=\"text-align:center\" class=\"alert alert-danger\">\
             <i class=\"fa fa-exclamation-circle\"></i> " + data.responseJSON.message + "</div>")
                         Swal.close()
@@ -102,12 +102,12 @@ function sendTestEmail() {
     $("#sendTestModalSubmit").html('<i class="fa fa-spinner fa-spin"></i> Sending')
     // Send the test email
     api.send_test_email(test_email_request)
-        .success(function (data) {
+        .done(function (data) {
             $("#sendTestEmailModal\\.flashes").empty().append("<div style=\"text-align:center\" class=\"alert alert-success\">\
             <i class=\"fa fa-check-circle\"></i> Email Sent!</div>")
             $("#sendTestModalSubmit").html(btnHtml)
         })
-        .error(function (data) {
+        .fail(function (data) {
             $("#sendTestEmailModal\\.flashes").empty().append("<div style=\"text-align:center\" class=\"alert alert-danger\">\
             <i class=\"fa fa-exclamation-circle\"></i> " + data.responseJSON.message + "</div>")
             $("#sendTestModalSubmit").html(btnHtml)
@@ -139,10 +139,10 @@ function deleteCampaign(idx) {
         preConfirm: function () {
             return new Promise(function (resolve, reject) {
                 api.campaignId.delete(campaigns[idx].id)
-                    .success(function (msg) {
+                    .done(function (msg) {
                         resolve()
                     })
-                    .error(function (data) {
+                    .fail(function (data) {
                         reject(data.responseJSON.message)
                     })
             })
@@ -163,7 +163,7 @@ function deleteCampaign(idx) {
 
 function setupOptions() {
     api.groups.summary()
-        .success(function (summaries) {
+        .done(function (summaries) {
             groups = summaries.groups
             if (groups.length == 0) {
                 modalError("No groups found!")
@@ -182,7 +182,7 @@ function setupOptions() {
             }
         });
     api.templates.get()
-        .success(function (templates) {
+        .done(function (templates) {
             if (templates.length == 0) {
                 modalError("No templates found!")
                 return false
@@ -203,7 +203,7 @@ function setupOptions() {
             }
         });
     api.pages.get()
-        .success(function (pages) {
+        .done(function (pages) {
             if (pages.length == 0) {
                 modalError("No pages found!")
                 return false
@@ -224,7 +224,7 @@ function setupOptions() {
             }
         });
     api.SMTP.get()
-        .success(function (profiles) {
+        .done(function (profiles) {
             if (profiles.length == 0) {
                 modalError("No profiles found!")
                 return false
@@ -254,7 +254,7 @@ function copy(idx) {
     setupOptions();
     // Set our initial values
     api.campaignId.get(campaigns[idx].id)
-        .success(function (campaign) {
+        .done(function (campaign) {
             $("#name").val("Copy of " + campaign.name)
             if (!campaign.template.id) {
                 $("#template").val("").change();
@@ -285,7 +285,7 @@ function copy(idx) {
             }
             $("#url").val(campaign.url)
         })
-        .error(function (data) {
+        .fail(function (data) {
             $("#modal\\.flashes").empty().append("<div style=\"text-align:center\" class=\"alert alert-danger\">\
             <i class=\"fa fa-exclamation-circle\"></i> " + data.responseJSON.message + "</div>")
         })
@@ -339,7 +339,7 @@ $(document).ready(function () {
         dismiss()
     });
     api.campaigns.summary()
-        .success(function (data) {
+        .done(function (data) {
             campaigns = data.campaigns
             $("#loading").hide()
             if (campaigns.length > 0) {
@@ -408,7 +408,7 @@ $(document).ready(function () {
                 $("#emptyMessage").show()
             }
         })
-        .error(function () {
+        .fail(function () {
             $("#loading").hide()
             errorFlash("Error fetching campaigns")
         })

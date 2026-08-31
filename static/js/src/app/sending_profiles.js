@@ -30,12 +30,12 @@ function sendTestEmail() {
     $("#sendTestModalSubmit").html('<i class="fa fa-spinner fa-spin"></i> Sending')
     // Send the test email
     api.send_test_email(test_email_request)
-        .success(function (data) {
+        .done(function (data) {
             $("#sendTestEmailModal\\.flashes").empty().append("<div style=\"text-align:center\" class=\"alert alert-success\">\
 	    <i class=\"fa fa-check-circle\"></i> Email Sent!</div>")
             $("#sendTestModalSubmit").html(btnHtml)
         })
-        .error(function (data) {
+        .fail(function (data) {
             $("#sendTestEmailModal\\.flashes").empty().append("<div style=\"text-align:center\" class=\"alert alert-danger\">\
 	    <i class=\"fa fa-exclamation-circle\"></i> " + escapeHtml(data.responseJSON.message) + "</div>")
             $("#sendTestModalSubmit").html(btnHtml)
@@ -65,23 +65,23 @@ function save(idx) {
     if (idx != -1) {
         profile.id = profiles[idx].id
         api.SMTPId.put(profile)
-            .success(function (data) {
+            .done(function (data) {
                 successFlash("Profile edited successfully!")
                 load()
                 dismiss()
             })
-            .error(function (data) {
+            .fail(function (data) {
                 modalError(data.responseJSON.message)
             })
     } else {
         // Submit the profile
         api.SMTP.post(profile)
-            .success(function (data) {
+            .done(function (data) {
                 successFlash("Profile added successfully!")
                 load()
                 dismiss()
             })
-            .error(function (data) {
+            .fail(function (data) {
                 modalError(data.responseJSON.message)
             })
     }
@@ -122,10 +122,10 @@ var deleteProfile = function (idx) {
         preConfirm: function () {
             return new Promise(function (resolve, reject) {
                 api.SMTPId.delete(profiles[idx].id)
-                    .success(function (msg) {
+                    .done(function (msg) {
                         resolve()
                     })
-                    .error(function (data) {
+                    .fail(function (data) {
                         reject(data.responseJSON.message)
                     })
             })
@@ -199,7 +199,7 @@ function load() {
     $("#emptyMessage").hide()
     $("#loading").show()
     api.SMTP.get()
-        .success(function (ss) {
+        .done(function (ss) {
             profiles = ss
             $("#loading").hide()
             if (profiles.length > 0) {
@@ -235,7 +235,7 @@ function load() {
                 $("#emptyMessage").show()
             }
         })
-        .error(function () {
+        .fail(function () {
             $("#loading").hide()
             errorFlash("Error fetching profiles")
         })

@@ -47,23 +47,23 @@ function save(idx) {
     if (idx != -1) {
         template.id = templates[idx].id
         api.templateId.put(template)
-            .success(function (data) {
+            .done(function (data) {
                 successFlash("Template edited successfully!")
                 load()
                 dismiss()
             })
-            .error(function (data) {
+            .fail(function (data) {
                 modalError(data.responseJSON.message)
             })
     } else {
         // Submit the template
         api.templates.post(template)
-            .success(function (data) {
+            .done(function (data) {
                 successFlash("Template added successfully!")
                 load()
                 dismiss()
             })
-            .error(function (data) {
+            .fail(function (data) {
                 modalError(data.responseJSON.message)
             })
     }
@@ -93,10 +93,10 @@ var deleteTemplate = function (idx) {
         preConfirm: function () {
             return new Promise(function (resolve, reject) {
                 api.templateId.delete(templates[idx].id)
-                    .success(function (msg) {
+                    .done(function (msg) {
                         resolve()
                     })
-                    .error(function (data) {
+                    .fail(function (data) {
                         reject(data.responseJSON.message)
                     })
             })
@@ -118,7 +118,7 @@ var deleteTemplate = function (idx) {
 function deleteTemplate(idx) {
     if (confirm("Delete " + templates[idx].name + "?")) {
         api.templateId.delete(templates[idx].id)
-            .success(function (data) {
+            .done(function (data) {
                 successFlash(data.message)
                 load()
             })
@@ -289,7 +289,7 @@ function importEmail() {
                 content: raw,
                 convert_links: convert_links
             })
-            .success(function (data) {
+            .done(function (data) {
                 $("#text_editor").val(data.text)
                 $("#html_editor").val(data.html)
                 $("#subject").val(data.subject)
@@ -300,7 +300,7 @@ function importEmail() {
                 }
                 $("#importEmailModal").modal("hide")
             })
-            .error(function (data) {
+            .fail(function (data) {
                 modalError(data.responseJSON.message)
             })
     }
@@ -311,7 +311,7 @@ function load() {
     $("#emptyMessage").hide()
     $("#loading").show()
     api.templates.get()
-        .success(function (ts) {
+        .done(function (ts) {
             templates = ts
             $("#loading").hide()
             if (templates.length > 0) {
@@ -346,7 +346,7 @@ function load() {
                 $("#emptyMessage").show()
             }
         })
-        .error(function () {
+        .fail(function () {
             $("#loading").hide()
             errorFlash("Error fetching templates")
         })

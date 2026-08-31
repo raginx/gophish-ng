@@ -20,6 +20,7 @@
   "dependencies": {
     "bowser": "^2.14.1",
     "echarts": "^6.1.0",
+    "jquery": "^3.7.1",
     "moment": "^2.30.1",
     "papaparse": "^5.7.0",
     "select2": "^4.1.0",

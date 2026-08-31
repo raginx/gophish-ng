@@ -21,26 +21,26 @@ function save(id) {
         // we need to PUT /groups/:id
         group.id = id
         api.groupId.put(group)
-            .success(function (data) {
+            .done(function (data) {
                 successFlash("Group updated successfully!")
                 load()
                 dismiss()
                 $("#modal").modal('hide')
             })
-            .error(function (data) {
+            .fail(function (data) {
                 modalError(data.responseJSON.message)
             })
     } else {
         // Else, if this is a new group, POST it
         // to /groups
         api.groups.post(group)
-            .success(function (data) {
+            .done(function (data) {
                 successFlash("Group added successfully!")
                 load()
                 dismiss()
                 $("#modal").modal('hide')
             })
-            .error(function (data) {
+            .fail(function (data) {
                 modalError(data.responseJSON.message)
             })
     }
@@ -69,7 +69,7 @@ function edit(id) {
     } else {
         $("#groupModalLabel").text("Edit Group");
         api.groupId.get(id)
-            .success(function (group) {
+            .done(function (group) {
                 $("#name").val(group.name)
                 targetRows = []
                 $.each(group.targets, function (i, record) {
@@ -83,7 +83,7 @@ function edit(id) {
                 });
                 targets.DataTable().rows.add(targetRows).draw()
             })
-            .error(function () {
+            .fail(function () {
                 errorFlash("Error fetching group")
             })
     }
@@ -181,10 +181,10 @@ var deleteGroup = function (id) {
         preConfirm: function () {
             return new Promise(function (resolve, reject) {
                 api.groupId.delete(id)
-                    .success(function (msg) {
+                    .done(function (msg) {
                         resolve()
                     })
-                    .error(function (data) {
+                    .fail(function (data) {
                         reject(data.responseJSON.message)
                     })
             })
@@ -239,7 +239,7 @@ function load() {
     $("#emptyMessage").hide()
     $("#loading").show()
     api.groups.summary()
-        .success(function (response) {
+        .done(function (response) {
             $("#loading").hide()
             if (response.total > 0) {
                 groups = response.groups
@@ -272,7 +272,7 @@ function load() {
                 $("#emptyMessage").show()
             }
         })
-        .error(function () {
+        .fail(function () {
             errorFlash("Error fetching groups")
         })
 }

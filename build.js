@@ -22,7 +22,7 @@ const cssDistDir = path.join("static", "css", "dist");
 
 // A single ordered list, since load order matters
 const vendorFiles = [
-  "jquery.js",
+  path.join("node_modules", "jquery", "dist", "jquery.min.js"),
   "bootstrap.min.js",
   path.join("node_modules", "moment", "min", "moment.min.js"),
   "d3.min.js",

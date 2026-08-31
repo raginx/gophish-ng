@@ -18,24 +18,24 @@ const saveWebhook = (id) => {
     if (id != -1) {
         wh.id = parseInt(id);
         api.webhookId.put(wh)
-            .success(function(data) {
+            .done(function(data) {
                 dismiss();
                 load();
                 $("#modal").modal("hide");
                 successFlash(`Webhook "${escapeHtml(wh.name)}" has been updated successfully!`);
             })
-            .error(function(data) {
+            .fail(function(data) {
                 modalError(data.responseJSON.message)
             })
     } else {
         api.webhooks.post(wh)
-            .success(function(data) {
+            .done(function(data) {
                 load();
                 dismiss();
                 $("#modal").modal("hide");
                 successFlash(`Webhook "${escapeHtml(wh.name)}" has been created successfully!`);
             })
-            .error(function(data) {
+            .fail(function(data) {
                 modalError(data.responseJSON.message)
             })
     }
@@ -45,7 +45,7 @@ const load = () => {
     $("#webhookTable").hide();
     $("#loading").show();
     api.webhooks.get()
-        .success((whs) => {
+        .done((whs) => {
             webhooks = whs;
             $("#loading").hide()
             $("#webhookTable").show()
@@ -78,7 +78,7 @@ const load = () => {
                 ]).draw()
             })
         })
-        .error(() => {
+        .fail(() => {
             errorFlash("Error fetching webhooks")
         })
 };
@@ -90,13 +90,13 @@ const editWebhook = (id) => {
     if (id !== -1) {
         $("#webhookModalLabel").text("Edit Webhook")
         api.webhookId.get(id)
-          .success(function(wh) {
+          .done(function(wh) {
               $("#name").val(wh.name);
               $("#url").val(wh.url);
               $("#secret").val(wh.secret);
               $("#is_active").prop("checked", wh.is_active);
           })
-          .error(function () {
+          .fail(function () {
               errorFlash("Error fetching webhook")
           });
     } else {
@@ -122,10 +122,10 @@ const deleteWebhook = (id) => {
         preConfirm: function () {
             return new Promise((resolve, reject) => {
                 api.webhookId.delete(id)
-                    .success((msg) => {
+                    .done((msg) => {
                         resolve()
                     })
-                    .error((data) => {
+                    .fail((data) => {
                         reject(data.responseJSON.message)
                     })
             })
@@ -151,11 +151,11 @@ const pingUrl = (btn, whId) => {
     dismiss();
     btn.disabled = true;
     api.webhookId.ping(whId)
-        .success(function(wh) {
+        .done(function(wh) {
             btn.disabled = false;
             successFlash(`Ping of "${escapeHtml(wh.name)}" webhook succeeded.`);
         })
-        .error(function(data) {
+        .fail(function(data) {
             btn.disabled = false;
             var wh = webhooks.find(x => x.id == whId);
             if (!wh) {

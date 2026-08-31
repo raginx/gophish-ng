@@ -31,7 +31,7 @@ var statuses = {
     "Email Reported": {
         color: "#45d6ef",
         label: "label-warning",
-        icon: "fa-bullhorne",
+        icon: "fa-bullhorn",
         point: "ct-point-reported"
     },
     "Clicked Link": {
@@ -93,7 +93,7 @@ var statsMapping = {
 function deleteCampaign(idx) {
     if (confirm("Delete " + campaigns[idx].name + "?")) {
         api.campaignId.delete(campaigns[idx].id)
-            .success(function (data) {
+            .done(function (data) {
                 successFlash(data.message)
                 location.reload()
             })
@@ -290,7 +290,7 @@ $(window).on('resize', function () {
 
 $(document).ready(function () {
     api.campaigns.summary()
-        .success(function (data) {
+        .done(function (data) {
             $("#loading").hide()
             campaigns = data.campaigns
             if (campaigns.length > 0) {
@@ -367,7 +367,7 @@ $(document).ready(function () {
                 loadGettingStartedSteps()
             }
         })
-        .error(function () {
+        .fail(function () {
             errorFlash("Error fetching campaigns")
         })
 })
@@ -379,16 +379,16 @@ function loadGettingStartedSteps() {
             .removeClass('fa-circle-o')
             .addClass('fa-check-circle text-success')
     }
-    api.SMTP.get().success(function (profiles) {
+    api.SMTP.get().done(function (profiles) {
         if (profiles.length > 0) markStepComplete('sendingProfile')
     })
-    api.templates.get().success(function (templates) {
+    api.templates.get().done(function (templates) {
         if (templates.length > 0) markStepComplete('template')
     })
-    api.pages.get().success(function (pages) {
+    api.pages.get().done(function (pages) {
         if (pages.length > 0) markStepComplete('landingPage')
     })
-    api.groups.get().success(function (groups) {
+    api.groups.get().done(function (groups) {
         if (groups.length > 0) markStepComplete('group')
     })
 }
