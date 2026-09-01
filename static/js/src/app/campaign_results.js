@@ -302,7 +302,7 @@ function replay(event_idx) {
  * 
  */
 var renderDevice = function (event_details) {
-    var ua = bowser.parse(details.browser['user-agent'])
+    var ua = bowser.parse(event_details.browser['user-agent'])
     var detailsString = '<div class="timeline-device-details">'
 
     var deviceIcon = 'laptop'
@@ -362,6 +362,19 @@ var renderDevice = function (event_details) {
         deviceBrowser + ' ' + browserVersion + '</div>'
 
     detailsString += browserString
+
+    var addressString = '<div class="timeline-device-address"><span class="fa fa-stack">' +
+        '<i class="fa fa-map-marker fa-stack-1x"></i></span> ' +
+        escapeHtml(event_details.browser['address'] || 'Unknown') + '</div>'
+
+    detailsString += addressString
+
+    var userAgentString = '<div class="timeline-device-useragent"><span class="fa fa-stack">' +
+        '<i class="fa fa-terminal fa-stack-1x"></i></span> ' +
+        escapeHtml(event_details.browser['user-agent'] || 'Unknown') + '</div>'
+
+    detailsString += userAgentString
+
     detailsString += '</div>'
     return detailsString
 }

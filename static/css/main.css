@@ -602,6 +602,20 @@ td.details-control {
     font-size: 1.5em;
 }
 
+.timeline-device-address>span.fa-stack,
+.timeline-device-useragent>span.fa-stack {
+    font-size: .8em;
+}
+
+.timeline-device-address>span.fa-stack>i.fa-stack-1x,
+.timeline-device-useragent>span.fa-stack>i.fa-stack-1x {
+    font-size: 1.5em;
+}
+
+.timeline-device-useragent {
+    word-break: break-all;
+}
+
 i.fa-vendor-icon {
     font-size: .6em;
 }
