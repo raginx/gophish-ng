@@ -83,7 +83,7 @@ var deleteTemplate = function (idx) {
     Swal.fire({
         title: "Are you sure?",
         text: "This will delete the template. This can't be undone!",
-        type: "warning",
+        icon: "warning",
         animation: false,
         showCancelButton: true,
         confirmButtonText: "Delete " + escapeHtml(templates[idx].name),

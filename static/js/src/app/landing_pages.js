@@ -53,7 +53,7 @@ var deletePage = function (idx) {
     Swal.fire({
         title: "Are you sure?",
         text: "This will delete the landing page. This can't be undone!",
-        type: "warning",
+        icon: "warning",
         animation: false,
         showCancelButton: true,
         confirmButtonText: "Delete " + escapeHtml(pages[idx].name),

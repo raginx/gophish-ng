@@ -16,7 +16,7 @@ function launch() {
     Swal.fire({
         title: "Are you sure?",
         text: "This will schedule the campaign to be launched.",
-        type: "question",
+        icon: "question",
         animation: false,
         showCancelButton: true,
         confirmButtonText: "Launch",
@@ -129,7 +129,7 @@ function deleteCampaign(idx) {
     Swal.fire({
         title: "Are you sure?",
         text: "This will delete the campaign. This can't be undone!",
-        type: "warning",
+        icon: "warning",
         animation: false,
         showCancelButton: true,
         confirmButtonText: "Delete " + escapeHtml(campaigns[idx].name),

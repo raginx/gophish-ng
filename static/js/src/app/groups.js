@@ -171,7 +171,7 @@ var deleteGroup = function (id) {
     Swal.fire({
         title: "Are you sure?",
         text: "This will delete the group. This can't be undone!",
-        type: "warning",
+        icon: "warning",
         animation: false,
         showCancelButton: true,
         confirmButtonText: "Delete " + escapeHtml(group.name),

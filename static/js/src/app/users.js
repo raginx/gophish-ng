@@ -97,14 +97,14 @@ const deleteUser = (id) => {
         Swal.fire({
             title: "Unable to Delete User",
             text: "The user account " + escapeHtml(user.username) + " cannot be deleted.",
-            type: "info"
+            icon: "info"
         });
         return
     }
     Swal.fire({
         title: "Are you sure?",
         text: "This will delete the account for " + escapeHtml(user.username) + ". Campaigns, templates, and other objects they created stay with their team.\n\nThis can't be undone!",
-        type: "warning",
+        icon: "warning",
         animation: false,
         showCancelButton: true,
         confirmButtonText: "Delete",
@@ -147,7 +147,7 @@ const impersonate = (id) => {
     Swal.fire({
         title: "Are you sure?",
         html: "You will be logged out of your account and logged in as <strong>" + escapeHtml(user.username) + "</strong>",
-        type: "warning",
+        icon: "warning",
         animation: false,
         showCancelButton: true,
         confirmButtonText: "Swap User",
@@ -168,7 +168,7 @@ const impersonate = (id) => {
                     Swal.fire({
                         title: "Success!",
                         html: "Successfully changed to user <strong>" + escapeHtml(user.username) + "</strong>.",
-                        type: "success",
+                        icon: "success",
                         showCancelButton: false,
                         confirmButtonText: "Home",
                         allowOutsideClick: false,
@@ -179,7 +179,7 @@ const impersonate = (id) => {
                 } else {
                     Swal.fire({
                         title: "Error!",
-                        type: "error",
+                        icon: "error",
                         html: "Failed to change to user <strong>" + escapeHtml(user.username) + "</strong>.",
                         showCancelButton: false,
                     })

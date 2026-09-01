@@ -128,7 +128,7 @@ function deleteCampaign() {
     Swal.fire({
         title: "Are you sure?",
         text: "This will delete the campaign. This can't be undone!",
-        type: "warning",
+        icon: "warning",
         animation: false,
         showCancelButton: true,
         confirmButtonText: "Delete Campaign",
@@ -166,7 +166,7 @@ function completeCampaign() {
     Swal.fire({
         title: "Are you sure?",
         text: "Gophish will stop processing events for this campaign",
-        type: "warning",
+        icon: "warning",
         animation: false,
         showCancelButton: true,
         confirmButtonText: "Complete Campaign",
@@ -949,7 +949,7 @@ function report_mail(rid, cid) {
         html: "This result will be flagged as reported (RID: " + rid + ")<br><br>" +
             "<label for='reportedDate'>Reported at:</label><br>" +
             "<input type='datetime-local' id='reportedDate' class='swal2-input' value='" + nowValue + "' max='" + nowValue + "'>",
-        type: "question",
+        icon: "question",
         animation: false,
         showCancelButton: true,
         confirmButtonText: "Continue",
@@ -980,7 +980,7 @@ function report_mail(rid, cid) {
                     Swal.fire({
                         title: 'Error',
                         text: data.responseJSON.message,
-                        type: 'error',
+                        icon: 'error',
                         confirmButtonText: 'Close'
                     });
                 })
@@ -993,7 +993,7 @@ function resend_mail(rid, cid) {
     Swal.fire({
         title: "Are you sure?",
         text: "This will attempt to resend the email for this result (RID: " + rid + ")",
-        type: "question",
+        icon: "question",
         animation: false,
         showCancelButton: true,
         confirmButtonText: "Resend",
@@ -1011,7 +1011,7 @@ function resend_mail(rid, cid) {
                     Swal.fire({
                         title: 'Error',
                         text: data.responseJSON.message,
-                        type: 'error',
+                        icon: 'error',
                         confirmButtonText: 'Close'
                     });
                 })
@@ -1025,7 +1025,7 @@ function resend_all_failed(cid) {
     Swal.fire({
         title: "Are you sure?",
         text: "This will attempt to resend every failed email in this campaign.",
-        type: "question",
+        icon: "question",
         animation: false,
         showCancelButton: true,
         confirmButtonText: "Resend All Failed",
@@ -1043,7 +1043,7 @@ function resend_all_failed(cid) {
                     Swal.fire({
                         title: 'Error',
                         text: data.responseJSON.message,
-                        type: 'error',
+                        icon: 'error',
                         confirmButtonText: 'Close'
                     });
                 })

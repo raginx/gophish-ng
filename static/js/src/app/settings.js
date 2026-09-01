@@ -175,13 +175,13 @@ $(document).ready(function () {
                 Swal.fire({
                     title: "Success",
                     html: "Logged into <b>" + escapeHtml($("#imaphost").val()) + "</b>",
-                    type: "success",
+                    icon: "success",
                 })
             } else {
                 Swal.fire({
                     title: "Failed!",
                     html: "Unable to login to <b>" + escapeHtml($("#imaphost").val()) + "</b>.",
-                    type: "error",
+                    icon: "error",
                     showCancelButton: true,
                     cancelButtonText: "Close",
                     confirmButtonText: "More Info",
@@ -202,7 +202,7 @@ $(document).ready(function () {
             Swal.fire({
                 title: "Failed!",
                 text: "An unecpected error occured.",
-                type: "error",
+                icon: "error",
             })
           })
           .always(function() {
