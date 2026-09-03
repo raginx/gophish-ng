@@ -104,8 +104,5 @@ if [ -n "${LOGGING_LEVEL+set}" ] ; then
         cat config.json.tmp > config.json
 fi
 
-echo "Runtime configuration: "
-cat config.json
-
 # start gophish
 ./gophish
