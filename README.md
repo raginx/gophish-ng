@@ -113,9 +113,17 @@ npm run build
 
 ## Docker
 
-You can also use upstream Gophish via the official Docker container
-[here](https://hub.docker.com/r/gophish/gophish/). This fork does not
-currently publish its own Docker images.
+This fork publishes its own Docker images to the GitHub Container
+Registry on every release:
+
+```sh
+docker pull ghcr.io/raginx/gophish-ng:latest
+```
+
+Configuration can be supplied via environment variables instead of
+mounting a `config.json` - see the
+[Docker installation docs](https://raginx.github.io/gophish-ng/getting-started/installation/#installing-gophish-ng-using-docker)
+for the full list of supported variables. 
 
 ## Setup
 
