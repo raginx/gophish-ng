@@ -418,6 +418,10 @@ function renderTimeline(data) {
                     results += '<i class="fa fa-refresh"></i> Replay Credentials</button></div>'
                     results += '<div class="timeline-event-details"><i class="fa fa-caret-right"></i> View Details</div>'
                 }
+                if (event.message == "Clicked Link" && details.payload &&
+                    Object.keys(details.payload).some(function (param) { return param != "rid" })) {
+                    results += '<div class="timeline-event-details"><i class="fa fa-caret-right"></i> View Details</div>'
+                }
                 if (details.payload) {
                     results += '<div class="timeline-event-results">'
                     results += '    <table class="table table-condensed table-bordered table-striped">'
