@@ -293,7 +293,7 @@ func renderPhishResponse(w http.ResponseWriter, r *http.Request, ptx models.Phis
 				http.NotFound(w, r)
 				return
 			}
-			w.Write([]byte(html))
+			_, _ = w.Write([]byte(html))
 			return
 		}
 	}
