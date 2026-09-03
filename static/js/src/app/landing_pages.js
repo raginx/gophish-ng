@@ -15,6 +15,8 @@ function save(idx) {
     page.capture_credentials = $("#capture_credentials_checkbox").prop("checked")
     page.capture_passwords = $("#capture_passwords_checkbox").prop("checked")
     page.redirect_url = $("#redirect_url_input").val()
+    page.redirect_mode = $("input[name=redirect_choice]:checked").val()
+    page.redirect_html = CKEDITOR.instances["redirect_html_editor"].getData()
     if (idx != -1) {
         page.id = pages[idx].id
         api.pageId.put(page)
@@ -43,9 +45,13 @@ function dismiss() {
     $("#html_editor").val("")
     $("#url").val("")
     $("#redirect_url_input").val("")
+    $("#redirect_html_editor").val("")
     $("#modal").find("input[type='checkbox']").prop("checked", false)
+    $("#redirect_url_radio").prop("checked", true)
     $("#capture_passwords").hide()
-    $("#redirect_url").hide()
+    $("#after-submit").hide()
+    $("#redirect_url").show()
+    $("#redirect_html").hide()
     $("#modal").modal('hide')
 }
 
@@ -111,18 +117,30 @@ function edit(idx) {
     })
     $("#html_editor").ckeditor()
     setupAutocomplete(CKEDITOR.instances["html_editor"])
+    $("#redirect_html_editor").ckeditor()
+    setupAutocomplete(CKEDITOR.instances["redirect_html_editor"])
     var page = {}
     if (idx != -1) {
         $("#modalLabel").text("Edit Landing Page")
         page = pages[idx]
         $("#name").val(page.name)
         $("#html_editor").val(page.html)
+        $("#redirect_html_editor").val(page.redirect_html)
         $("#capture_credentials_checkbox").prop("checked", page.capture_credentials)
         $("#capture_passwords_checkbox").prop("checked", page.capture_passwords)
         $("#redirect_url_input").val(page.redirect_url)
         if (page.capture_credentials) {
             $("#capture_passwords").show()
-            $("#redirect_url").show()
+            $("#after-submit").show()
+            if (page.redirect_mode == "html") {
+                $("#redirect_html_radio").prop("checked", true)
+                $("#redirect_url").hide()
+                $("#redirect_html").show()
+            } else {
+                $("#redirect_url_radio").prop("checked", true)
+                $("#redirect_url").show()
+                $("#redirect_html").hide()
+            }
         }
     } else {
         $("#modalLabel").text("New Landing Page")
@@ -134,9 +152,27 @@ function copy(idx) {
         save(-1)
     })
     $("#html_editor").ckeditor()
+    $("#redirect_html_editor").ckeditor()
     var page = pages[idx]
     $("#name").val("Copy of " + page.name)
     $("#html_editor").val(page.html)
+    $("#redirect_html_editor").val(page.redirect_html)
+    $("#capture_credentials_checkbox").prop("checked", page.capture_credentials)
+    $("#capture_passwords_checkbox").prop("checked", page.capture_passwords)
+    $("#redirect_url_input").val(page.redirect_url)
+    if (page.capture_credentials) {
+        $("#capture_passwords").show()
+        $("#after-submit").show()
+        if (page.redirect_mode == "html") {
+            $("#redirect_html_radio").prop("checked", true)
+            $("#redirect_url").hide()
+            $("#redirect_html").show()
+        } else {
+            $("#redirect_url_radio").prop("checked", true)
+            $("#redirect_url").show()
+            $("#redirect_html").hide()
+        }
+    }
 }
 
 function load() {
@@ -236,7 +272,11 @@ $(document).ready(function () {
     });
     $("#capture_credentials_checkbox").change(function () {
         $("#capture_passwords").toggle()
+        $("#after-submit").toggle()
+    })
+    $("input[name=redirect_choice]").change(function () {
         $("#redirect_url").toggle()
+        $("#redirect_html").toggle()
     })
     CKEDITOR.on('dialogDefinition', function (ev) {
         // Take the dialog name and its definition from the event data.

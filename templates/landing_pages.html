@@ -78,11 +78,26 @@
                         Be careful with this!
                     </div>
                 </div>
-                <div id="redirect_url">
-                    <label class="control-label" for="redirect_url_input">Redirect to: <i class="fa fa-question-circle"
-                            data-toggle="tooltip" data-placement="right" title="This option lets you redirect the user to a page after credentials are submitted."></i></label>
-                    <div class="form-group">
-                        <input id="redirect_url_input" class="form-control" placeholder="http://example.com" />
+                <div id="after-submit" style="display: none">
+                    <div class="radio radio-primary">
+                        <input type="radio" name="redirect_choice" id="redirect_url_radio" value="url" checked>
+                        <label for="redirect_url_radio">Redirect to URL</label>
+                    </div>
+                    <div class="radio radio-primary">
+                        <input type="radio" name="redirect_choice" id="redirect_html_radio" value="html">
+                        <label for="redirect_html_radio">Redirect to HTML</label>
+                    </div>
+                    <div id="redirect_url">
+                        <label class="control-label" for="redirect_url_input">Redirect to: <i class="fa fa-question-circle"
+                                data-toggle="tooltip" data-placement="right" title="This option lets you redirect the user to a page after credentials are submitted."></i></label>
+                        <div class="form-group">
+                            <input id="redirect_url_input" class="form-control" placeholder="http://example.com" />
+                        </div>
+                    </div>
+                    <div id="redirect_html" style="display: none">
+                        <label class="control-label" for="redirect_html_editor">Redirect HTML: <i class="fa fa-question-circle"
+                                data-toggle="tooltip" data-placement="right" title="This option lets you show a templated HTML page after credentials are submitted."></i></label>
+                        <textarea id="redirect_html_editor"></textarea>
                     </div>
                 </div>
             </div>
