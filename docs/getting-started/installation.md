@@ -27,6 +27,49 @@ npm install
 npm run build
 ```
 
+## Installing Gophish-NG Using Docker
+
+This fork publishes multi-arch Docker images (`linux/amd64`, `linux/arm64`) to the GitHub Container Registry on every release:
+
+```sh
+docker pull ghcr.io/raginx/gophish-ng:latest
+```
+
+The image exposes the admin server on `3333`/`3443` and the phishing server on `80`/`8080`/`8443` (adjust to whichever ports you configure). Rather than mounting a `config.json`, the container's entrypoint ([docker/run.sh](https://github.com/raginx/gophish-ng/blob/master/docker/run.sh)) lets you configure it entirely through environment variables:
+
+| Environment Variable | `config.json` Key |
+| :--- | :--- |
+| `ADMIN_SERVER_LISTEN_URL` | admin\_server.listen\_url |
+| `ADMIN_SERVER_USE_TLS` | admin\_server.use\_tls |
+| `ADMIN_SERVER_CERT_PATH` | admin\_server.cert\_path |
+| `ADMIN_SERVER_KEY_PATH` | admin\_server.key\_path |
+| `ADMIN_SERVER_TRUSTED_ORIGINS` | admin\_server.trusted\_origins (comma-separated) |
+| `PHISH_SERVER_LISTEN_URL` | phish\_server.listen\_url |
+| `PHISH_SERVER_USE_TLS` | phish\_server.use\_tls |
+| `PHISH_SERVER_CERT_PATH` | phish\_server.cert\_path |
+| `PHISH_SERVER_KEY_PATH` | phish\_server.key\_path |
+| `DB_NAME` | db\_name |
+| `DB_PATH` | db\_path |
+| `SECRET_KEY` | secret\_key |
+| `MIGRATIONS_PREFIX` | migrations\_prefix |
+| `CONTACT_ADDRESS` | contact\_address |
+| `LOGGING_FILENAME` | logging.filename |
+| `LOGGING_LEVEL` | logging.level |
+
+Example:
+
+```sh
+docker run -d \
+  -p 3333:3333 -p 8080:8080 \
+  -e ADMIN_SERVER_LISTEN_URL=0.0.0.0:3333 \
+  -e PHISH_SERVER_LISTEN_URL=0.0.0.0:8080 \
+  -e SECRET_KEY=$(openssl rand -base64 32) \
+  ghcr.io/raginx/gophish-ng:latest
+```
+
+!!! note
+    Only the variables you set are applied - anything left unset keeps the default from the image's built-in `config.json`.
+
 ## Understanding the `config.json`
 
 There are some settings that are configurable via a file called config.json, located in the gophish root directory. Here are some of the options that you can set to your preferences:
