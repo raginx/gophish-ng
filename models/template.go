@@ -84,7 +84,9 @@ func GetTemplate(id int64, teamID int64) (Template, error) {
 	t := Template{}
 	err := db.Where("team_id=? and id=?", teamID, id).First(&t).Error
 	if err != nil {
-		log.Error(err)
+		if err != gorm.ErrRecordNotFound {
+			log.Error(err)
+		}
 		return t, err
 	}
 
@@ -105,7 +107,9 @@ func GetTemplateByName(n string, teamID int64) (Template, error) {
 	t := Template{}
 	err := db.Where("team_id=? and name=?", teamID, n).First(&t).Error
 	if err != nil {
-		log.Error(err)
+		if err != gorm.ErrRecordNotFound {
+			log.Error(err)
+		}
 		return t, err
 	}
 

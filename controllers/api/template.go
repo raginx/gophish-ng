@@ -57,7 +57,7 @@ func (as *Server) Templates(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err != nil {
-			JSONResponse(w, models.Response{Success: false, Message: "Error inserting template into database"}, http.StatusInternalServerError)
+			JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusInternalServerError)
 			log.Error(err)
 			return
 		}

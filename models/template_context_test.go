@@ -47,6 +47,33 @@ func (s *ModelsSuite) TestNewTemplateContext(c *check.C) {
 	c.Assert(got, check.DeepEquals, expected)
 }
 
+func (s *ModelsSuite) TestValidateTemplateMissingDot(c *check.C) {
+	// {{URL}} without the leading dot parses as a call to an undefined
+	// function named "URL" - the error should point users at {{.URL}}.
+	err := ValidateTemplate("Click here: {{URL}}")
+	c.Assert(err, check.NotNil)
+	c.Assert(err.Error(), check.Matches, `.*\{\{\.URL\}\}.*`)
+	c.Assert(err.Error(), check.Matches, `.*\{\{URL\}\}.*`)
+}
+
+func (s *ModelsSuite) TestValidateTemplateUnknownField(c *check.C) {
+	err := ValidateTemplate("Click here: {{.Url}}")
+	c.Assert(err, check.NotNil)
+	c.Assert(err.Error(), check.Matches, `.*"Url".*`)
+	c.Assert(err.Error(), check.Matches, `.*\.URL.*`)
+}
+
+func (s *ModelsSuite) TestValidateTemplateUnclosedAction(c *check.C) {
+	err := ValidateTemplate("Click here: {{.URL")
+	c.Assert(err, check.NotNil)
+	c.Assert(err.Error(), check.Matches, `.*unclosed.*\{\{.*`)
+}
+
+func (s *ModelsSuite) TestValidateTemplateValid(c *check.C) {
+	err := ValidateTemplate("Click here: {{.URL}}")
+	c.Assert(err, check.IsNil)
+}
+
 func (s *ModelsSuite) TestNewTemplateContextDomainNoAtSign(c *check.C) {
 	r := Result{
 		BaseRecipient: BaseRecipient{

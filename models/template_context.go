@@ -2,9 +2,11 @@ package models
 
 import (
 	"bytes"
+	"fmt"
 	"net/mail"
 	"net/url"
 	"path"
+	"regexp"
 	"strings"
 	"text/template"
 )
@@ -130,7 +132,45 @@ func ValidateTemplate(text string) error {
 	}
 	_, err = ExecuteTemplate(text, ptx)
 	if err != nil {
-		return err
+		return humanizeTemplateError(err)
 	}
 	return nil
+}
+
+var (
+	// templateErrFunctionNotDefined matches the parse-time error text/template
+	// produces for e.g. {{URL}}: without the leading dot, "URL" is parsed as
+	// a call to an undefined function rather than a field access.
+	templateErrFunctionNotDefined = regexp.MustCompile(`function "(\w+)" not defined`)
+	// templateErrFieldNotFound matches the execution-time error for a
+	// dotted reference to a field that doesn't exist, e.g. {{.Url}}.
+	templateErrFieldNotFound = regexp.MustCompile(`can't evaluate field (\w+) in type`)
+	// templateErrUnclosedAction matches a template with a missing "}}".
+	templateErrUnclosedAction = regexp.MustCompile(`unclosed action`)
+)
+
+// availableTemplateFields lists the variables ValidateTemplate's error hints
+// point users at when a field name doesn't resolve. Keep in sync with
+// PhishingTemplateContext and BaseRecipient.
+const availableTemplateFields = ".URL, .TrackingURL, .BaseURL, .Tracker, .From, .RId, .Domain, " +
+	".FirstName, .LastName, .Position, .Email"
+
+// humanizeTemplateError rewrites the most common Go text/template syntax
+// errors into messages a user without Go template knowledge can act on.
+// Errors that don't match a known pattern are returned unchanged.
+func humanizeTemplateError(err error) error {
+	msg := err.Error()
+	switch {
+	case templateErrFunctionNotDefined.MatchString(msg):
+		field := templateErrFunctionNotDefined.FindStringSubmatch(msg)[1]
+		return fmt.Errorf("unknown template variable %q - template fields need a leading dot, e.g. use {{.%s}} instead of {{%s}} (available fields: %s)",
+			field, field, field, availableTemplateFields)
+	case templateErrFieldNotFound.MatchString(msg):
+		field := templateErrFieldNotFound.FindStringSubmatch(msg)[1]
+		return fmt.Errorf("unknown template variable %q - check the spelling and capitalization (available fields: %s)",
+			field, availableTemplateFields)
+	case templateErrUnclosedAction.MatchString(msg):
+		return fmt.Errorf("template has an unclosed {{ tag - check for a missing }}")
+	}
+	return err
 }
