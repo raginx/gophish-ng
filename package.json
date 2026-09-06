@@ -18,7 +18,10 @@
     "esbuild": "^0.28.2"
   },
   "dependencies": {
+    "bootstrap": "^3.4.1",
     "bowser": "^2.14.1",
+    "datatables.net": "1.13.11",
+    "datatables.net-bs": "1.13.11",
     "echarts": "^6.1.0",
     "jquery": "^3.7.1",
     "moment": "^2.30.1",

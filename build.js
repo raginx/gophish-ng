@@ -23,13 +23,13 @@ const cssDistDir = path.join("static", "css", "dist");
 // A single ordered list, since load order matters
 const vendorFiles = [
   path.join("node_modules", "jquery", "dist", "jquery.min.js"),
-  "bootstrap.min.js",
+  path.join("node_modules", "bootstrap", "dist", "js", "bootstrap.min.js"),
   path.join("node_modules", "moment", "min", "moment.min.js"),
   "d3.min.js",
   "topojson.min.js",
   "datamaps.min.js",
-  "jquery.dataTables.min.js",
-  "dataTables.bootstrap.js",
+  path.join("node_modules", "datatables.net", "js", "jquery.dataTables.min.js"),
+  path.join("node_modules", "datatables.net-bs", "js", "dataTables.bootstrap.min.js"),
   "datetime-moment.js",
   "bootstrap-datetime.js",
   path.join("node_modules", "echarts", "dist", "echarts.min.js"),
@@ -69,23 +69,36 @@ const appFiles = [
 // node_modules), so it genuinely needs bundling to resolve that.
 const bundledAppFiles = ["passwords.js"];
 
+// A single ordered list, since cascade order matters (e.g. main.css must
+// follow bootstrap.min.css to override it)
 const cssFiles = [
-  "bootstrap.min.css",
+  path.join("node_modules", "bootstrap", "dist", "css", "bootstrap.min.css"),
   "main.css",
   "dashboard.css",
   "flat-ui.css",
-  "dataTables.bootstrap.css",
+  path.join("node_modules", "datatables.net-bs", "css", "dataTables.bootstrap.min.css"),
   "font-awesome.min.css",
   "bootstrap-datetime.css",
   "checkbox.css",
   "select2-bootstrap.min.css",
-];
-
-// CSS pulled from npm (node_modules) instead of manually vendored files
-const npmCssFiles = [
   path.join("node_modules", "select2", "dist", "css", "select2.min.css"),
   path.join("node_modules", "sweetalert2", "dist", "sweetalert2.min.css"),
 ];
+
+function resolveCssFile(f) {
+  return f.startsWith("node_modules" + path.sep) ? f : path.join(cssDir, f);
+}
+
+// The npm bootstrap package's CSS references its glyphicon fonts as
+// "../fonts/..." (relative to dist/css/), assuming it's deployed as its own
+// dist/ tree. We serve everything under static/ from one root instead, with
+// the fonts already in static/font/ (singular) alongside font-awesome's, so
+// rewrite the reference to match once the file is pulled out of that tree.
+function fixBootstrapFontPaths(content, file) {
+  return file.includes("bootstrap")
+    ? content.replace(/\.\.\/fonts\//g, "/font/")
+    : content;
+}
 
 async function buildVendor() {
   const combined = vendorFiles
@@ -130,8 +143,7 @@ async function buildApp() {
 
 async function buildCSS() {
   const combined = cssFiles
-    .map((f) => fs.readFileSync(path.join(cssDir, f), "utf8"))
-    .concat(npmCssFiles.map((f) => fs.readFileSync(f, "utf8")))
+    .map((f) => fixBootstrapFontPaths(fs.readFileSync(resolveCssFile(f), "utf8"), f))
     .join("\n");
   const result = await esbuild.transform(combined, {
     loader: "css",
