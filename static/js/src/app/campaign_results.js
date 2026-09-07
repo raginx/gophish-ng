@@ -602,21 +602,27 @@ var updateMap = function (results) {
         $.each(bubbles, function (i, bubble) {
             if (bubble.ip == result.ip) {
                 bubbles[i].radius += 1
+                bubbles[i].symbolSize = 8 + (bubbles[i].radius - 2) * 4
                 newIP = false
                 return false
             }
         })
         if (newIP) {
             bubbles.push({
-                latitude: result.latitude,
-                longitude: result.longitude,
+                ip: result.ip,
                 name: result.ip,
-                fillKey: "point",
-                radius: 2
+                radius: 2,
+                symbolSize: 8,
+                value: [result.longitude, result.latitude]
             })
         }
     })
-    map.bubbles(bubbles)
+    map.setOption({
+        series: [{
+            name: 'targets',
+            data: bubbles
+        }]
+    })
 }
 
 /**
@@ -914,21 +920,40 @@ function load() {
 
                 if (use_map) {
                     $("#resultsMapContainer").show()
-                    map = new Datamap({
-                        element: document.getElementById("resultsMap"),
-                        responsive: true,
-                        fills: {
-                            defaultFill: "#ffffff",
-                            point: "#283F50"
+                    echarts.registerMap('world', window.GophishWorldMap)
+                    map = echarts.init(document.getElementById("resultsMap"), null, {
+                        height: 400
+                    })
+                    map.setOption({
+                        tooltip: {
+                            trigger: 'item',
+                            formatter: function (params) {
+                                return params.name
+                            }
                         },
-                        geographyConfig: {
-                            highlightFillColor: "#1abc9c",
-                            borderColor: "#283F50"
+                        geo: {
+                            map: 'world',
+                            roam: false,
+                            itemStyle: {
+                                areaColor: '#ffffff',
+                                borderColor: '#283F50'
+                            },
+                            emphasis: {
+                                itemStyle: {
+                                    areaColor: '#1abc9c'
+                                }
+                            }
                         },
-                        bubblesConfig: {
-                            borderColor: "#283F50"
-                        }
-                    });
+                        series: [{
+                            name: 'targets',
+                            type: 'scatter',
+                            coordinateSystem: 'geo',
+                            data: [],
+                            itemStyle: {
+                                color: '#283F50'
+                            }
+                        }]
+                    })
                 }
                 updateMap(campaign.results)
             }
@@ -1071,6 +1096,9 @@ function resend_all_failed(cid) {
 $(window).on('resize', function () {
     if (timelineChart) {
         timelineChart.resize()
+    }
+    if (map) {
+        map.resize()
     }
     $.each(pieCharts, function (id, chart) {
         chart.resize()

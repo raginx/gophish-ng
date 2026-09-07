@@ -25,9 +25,6 @@ const vendorFiles = [
   path.join("node_modules", "jquery", "dist", "jquery.min.js"),
   path.join("node_modules", "bootstrap", "dist", "js", "bootstrap.min.js"),
   path.join("node_modules", "moment", "min", "moment.min.js"),
-  "d3.min.js",
-  "topojson.min.js",
-  "datamaps.min.js",
   path.join("node_modules", "datatables.net", "js", "jquery.dataTables.min.js"),
   path.join("node_modules", "datatables.net-bs", "js", "dataTables.bootstrap.min.js"),
   "datetime-moment.js",
@@ -141,6 +138,21 @@ async function buildApp() {
   }
 }
 
+// world-atlas's TopoJSON (converted via topojson-client) stores landmasses
+// like Russia/Fiji/Antarctica as rings that cross the antimeridian
+// unsplit, relying on d3's projection step to clip them - ECharts' `geo`
+// component does no such clipping and renders those as stripes straight
+// across the map. world-map-geojson ships pre-split, ready-to-use GeoJSON
+// instead (verified: no antimeridian-crossing rings, no empty geometries).
+async function buildWorldMap() {
+  const geoJson = require("world-map-geojson");
+  fs.mkdirSync(jsDistDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(jsDistDir, "world-map.js"),
+    "window.GophishWorldMap = " + JSON.stringify(geoJson) + ";"
+  );
+}
+
 async function buildCSS() {
   const combined = cssFiles
     .map((f) => fixBootstrapFontPaths(fs.readFileSync(resolveCssFile(f), "utf8"), f))
@@ -156,6 +168,7 @@ async function buildCSS() {
 async function main() {
   await buildVendor();
   await buildApp();
+  await buildWorldMap();
   await buildCSS();
   console.log("Build complete.");
 }
