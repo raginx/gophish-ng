@@ -66,6 +66,14 @@ jobs:
         needs: build
         steps:
             - uses: actions/checkout@v7
+            - name: Set up Node.js
+              uses: actions/setup-node@v5
+              with:
+                node-version: "22"
+            - name: Install JS dependencies
+              run: npm ci
+            - name: Build frontend assets
+              run: node build.js
             - uses: actions/download-artifact@v8
               with:
                 path: bin

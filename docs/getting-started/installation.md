@@ -17,10 +17,9 @@ cd gophish-ng
 go build
 ```
 
-This builds a `gophish` binary in the current directory. The built frontend
-assets (`static/js/dist/`, `static/css/dist/`) are checked into git, so this
-is all you need for a normal build. If you change anything under
-`static/js/src/` or `static/css/`, rebuild them with:
+This builds a `gophish` binary in the current directory. The frontend assets
+(`static/js/dist/`, `static/css/dist/`) are not checked into git - build them
+separately with:
 
 ```sh
 npm install
