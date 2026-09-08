@@ -19,7 +19,7 @@
     "world-map-geojson": "^1.0.2"
   },
   "dependencies": {
-    "bootstrap": "^3.4.1",
+    "bootstrap": "^5.3.8",
     "bowser": "^2.14.1",
     "datatables.net": "1.13.11",
     "datatables.net-bs": "1.13.11",
