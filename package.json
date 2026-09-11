@@ -22,7 +22,7 @@
     "bootstrap": "^5.3.8",
     "bowser": "^2.14.1",
     "ckeditor5": "^48.5.0",
-    "datatables.net": "1.13.11",
+    "datatables.net": "3.0.3",
     "datatables.net-bs5": "^1.13.11",
     "echarts": "^6.1.0",
     "jquery": "^3.7.1",
