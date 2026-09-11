@@ -12,7 +12,6 @@
 
 .navbar-logo {
     margin: 4px 0px;
-    float: left;
 }
 
 #navbar-login {
@@ -37,12 +36,6 @@
     max-width: 400px;
     padding: 15px;
     margin: 40px auto 0px auto;
-}
-
-ul .dropdown-menu .ng-isolate-scope {
-    visibility: visible;
-    display: block;
-    opacity: 1;
 }
 
 #login-button {
@@ -162,12 +155,6 @@ p {
 
 .pagination {
     margin: 0px;
-}
-
-@media (min-width: 992px) {
-    .modal-dialog {
-        width: 700px;
-    }
 }
 
 .dropdown-menu>li>a {
@@ -419,27 +406,6 @@ p {
     margin-top: -30px;
 }
 
-/* Handle the navbar collapse at < 1300px */
-
-@media (min-width: 768px) and (max-width: 1300px) {
-    .navbar-collapse.collapse {
-        display: none !important;
-    }
-
-    .navbar-collapse.collapse.in {
-        display: block !important;
-    }
-
-    .navbar-header .collapse,
-    .navbar-toggle {
-        display: block !important;
-    }
-
-    .navbar-header {
-        float: none !important;
-    }
-}
-
 /* Table Styling */
 
 .modal-content table {
@@ -493,6 +459,9 @@ td.details-control {
 .timeline {
     text-align: left;
     background-color: #ffffff;
+    padding: 24px;
+    border: 1px solid #e7e7e7;
+    border-radius: 4px;
 }
 
 .timeline-graph {
@@ -648,12 +617,6 @@ i.fa-laptop+i.fa-vendor-icon {
     display: none;
 }
 
-@media (max-width: 767px) {
-    .navbar-header {
-        margin-left: 10px !important;
-    }
-}
-
 table.dataTable {
     width: 100% !important;
 }
@@ -668,17 +631,13 @@ table.dataTable {
     background-color: #64a1d6;
 }
 
-.select2-container--bootstrap .select2-selection--single .select2-selection__rendered {
+.select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
     font-size: 15px !important;
 }
 
-.select2-container--bootstrap .select2-selection--single {
+.select2-container--bootstrap-5 .select2-selection--single {
     height: 42px !important;
     padding: 8px 12px !important;
-}
-
-.input-group-btn .btn {
-    line-height: 20px !important;
 }
 
 .highcharts-title {
@@ -686,33 +645,29 @@ table.dataTable {
     font-size: 16px !important;
 }
 
-.color-success {
+td.color-success {
     font-weight: bold;
     color: #f05b4f;
 }
 
-.color-sent {
+td.color-sent {
     font-weight: bold;
     color: #1abc9c;
 }
 
-.color-opened {
+td.color-opened {
     font-weight: bold;
     color: #f9bf3b;
 }
 
-.color-clicked {
+td.color-clicked {
     font-weight: bold;
     color: #f39c12;
 }
 
-.color-reported {
+td.color-reported {
     font-weight: bold;
     color: #45d6ef;
-}
-
-.color-success {
-    color: #f05b4f;
 }
 
 .nav-sidebar>li.active>a:focus,
@@ -733,16 +688,41 @@ table.dataTable {
     cursor: pointer;
 }
 
-.cke_chrome {
-    border-top: 0 !important;
+/* Dropdown for the custom "{{.Var}}" autocomplete plugin in
+   static/js/src/app/ckeditor-setup.js - CKEditor 5's own class naming
+*/
+.ck-template-var-panel {
+    position: absolute;
+    z-index: 1060;
+    width: 320px;
+    max-height: 240px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.cke_autocomplete_panel {
-    width: 400px !important;
+.ck-template-var-panel-item {
+    padding: 8px 12px;
+    cursor: pointer;
 }
 
-.cke_autocomplete_panel>li {
-    padding: 10px 5px !important;
+.ck-template-var-panel-item strong {
+    display: block;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 13px;
+}
+
+.ck-template-var-panel-item span {
+    display: block;
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.ck-template-var-panel-item:hover,
+.ck-template-var-panel-item.is-active {
+    background-color: #f0f7ff;
 }
 
 #password-strength {

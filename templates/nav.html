@@ -1,44 +1,40 @@
 {{define "nav"}}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm-3 col-md-2 sidebar">
-            <ul class="nav nav-sidebar">
-                <li>
-                    <a href="/">Dashboard</a>
-                </li>
-                <li>
-                    <a href="/campaigns">Campaigns</a>
-                </li>
-                <li>
-                    <a href="/groups">Users &amp; Groups</a>
-                </li>
-                <li> <a href="/templates">Email Templates</a>
-                </li>
-                <li>
-                    <a href="/landing_pages">Landing Pages</a>
-                </li>
-                <li>
-                    <a href="/sending_profiles">Sending Profiles</a>
-                </li>
-                <li>
-                    <a href="/settings">Account Settings</a>
-                </li>
-                {{if .ModifySystem}}
-                <li>
-                    <a href="/users">User Management<span class="nav-badge badge pull-right">Admin</span></a>
-                </li>
-                <li>
-                    <a href="/webhooks">Webhooks<span class="nav-badge badge pull-right">Admin</span></a>
-                </li>
-                {{end}}
-                <li>
-                    <hr>
-                </li>
-                <li>
-                    <a href="https://raginx.github.io/gophish-ng/" target="_blank" rel="noopener noreferrer">Documentation <i class="fa fa-external-link" style="opacity:0.6; font-size:0.85em;" aria-hidden="true"></i></a>
-                </li>
-            </ul>
-        </div>
-    </div>
+<div class="sidebar">
+    <ul class="nav nav-sidebar">
+        <li>
+            <a class="nav-link" href="/">Dashboard</a>
+        </li>
+        <li>
+            <a class="nav-link" href="/campaigns">Campaigns</a>
+        </li>
+        <li>
+            <a class="nav-link" href="/groups">Users &amp; Groups</a>
+        </li>
+        <li> <a class="nav-link" href="/templates">Email Templates</a>
+        </li>
+        <li>
+            <a class="nav-link" href="/landing_pages">Landing Pages</a>
+        </li>
+        <li>
+            <a class="nav-link" href="/sending_profiles">Sending Profiles</a>
+        </li>
+        <li>
+            <a class="nav-link" href="/settings">Account Settings</a>
+        </li>
+        {{if .ModifySystem}}
+        <li>
+            <a class="nav-link" href="/users">User Management<span class="nav-badge badge text-bg-secondary pull-right">Admin</span></a>
+        </li>
+        <li>
+            <a class="nav-link" href="/webhooks">Webhooks<span class="nav-badge badge text-bg-secondary pull-right">Admin</span></a>
+        </li>
+        {{end}}
+        <li>
+            <hr>
+        </li>
+        <li>
+            <a class="nav-link" href="https://raginx.github.io/gophish-ng/" target="_blank" rel="noopener noreferrer">Documentation <i class="fa fa-external-link" style="opacity:0.6; font-size:0.85em;" aria-hidden="true"></i></a>
+        </li>
+    </ul>
 </div>
 {{end}}

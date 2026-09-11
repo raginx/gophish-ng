@@ -99,7 +99,7 @@ function dismiss() {
     $("#ignore_cert_errors").prop("checked", true)
     $("#send_rate").val("0")
     $("#headersTable").dataTable().DataTable().clear().draw()
-    $("#modal").modal('hide')
+    hideModal()
 }
 
 var dismissSendTestEmailModal = function () {
@@ -217,20 +217,20 @@ function load() {
                     profileRows.push([
                         escapeHtml(profile.name),
                         profile.interface_type,
-                        moment(profile.modified_date).format('MMMM Do YYYY, h:mm:ss a'),
-                        (canModifyObjects() ? "<div class='pull-right'><span data-toggle='modal' data-backdrop='static' data-target='#modal'><button class='btn btn-primary' data-toggle='tooltip' data-placement='left' title='Edit Profile' onclick='edit(" + i + ")'>\
+                        moment(profile.modified_date).format('MMM D, YYYY h:mm a'),
+                        (canModifyObjects() ? "<div class='pull-right'><span data-bs-toggle='modal' data-bs-backdrop='static' data-bs-target='#modal'><button class='btn btn-sm btn-primary' data-bs-toggle='tooltip' data-bs-placement='left' title='Edit Profile' onclick='edit(" + i + ")'>\
                     <i class='fa fa-pencil'></i>\
                     </button></span>\
-		    <span data-toggle='modal' data-target='#modal'><button class='btn btn-primary' data-toggle='tooltip' data-placement='left' title='Copy Profile' onclick='copy(" + i + ")'>\
+		    <span data-bs-toggle='modal' data-bs-target='#modal'><button class='btn btn-sm btn-primary' data-bs-toggle='tooltip' data-bs-placement='left' title='Copy Profile' onclick='copy(" + i + ")'>\
                     <i class='fa fa-copy'></i>\
                     </button></span>\
-                    <button class='btn btn-danger' data-toggle='tooltip' data-placement='left' title='Delete Profile' onclick='deleteProfile(" + i + ")'>\
+                    <button class='btn btn-sm btn-danger' data-bs-toggle='tooltip' data-bs-placement='left' title='Delete Profile' onclick='deleteProfile(" + i + ")'>\
                     <i class='fa fa-trash-o'></i>\
                     </button></div>" : "")
                     ])
                 })
                 profileTable.rows.add(profileRows).draw()
-                $('[data-toggle="tooltip"]').tooltip()
+                initTooltips()
             } else {
                 $("#emptyMessage").show()
             }

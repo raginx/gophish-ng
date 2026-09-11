@@ -19,15 +19,17 @@
     "world-map-geojson": "^1.0.2"
   },
   "dependencies": {
-    "bootstrap": "^3.4.1",
+    "bootstrap": "^5.3.8",
     "bowser": "^2.14.1",
+    "ckeditor5": "^48.5.0",
     "datatables.net": "1.13.11",
-    "datatables.net-bs": "1.13.11",
+    "datatables.net-bs5": "^1.13.11",
     "echarts": "^6.1.0",
     "jquery": "^3.7.1",
     "moment": "^2.30.1",
     "papaparse": "^5.7.0",
     "select2": "^4.1.0",
+    "select2-bootstrap-5-theme": "^1.3.0",
     "sweetalert2": "^11.26.25",
     "zxcvbn": "^4.4.2"
   }

@@ -25,7 +25,7 @@ function save(id) {
                 successFlash("Group updated successfully!")
                 load()
                 dismiss()
-                $("#modal").modal('hide')
+                hideModal()
             })
             .fail(function (data) {
                 modalError(data.responseJSON.message)
@@ -38,7 +38,7 @@ function save(id) {
                 successFlash("Group added successfully!")
                 load()
                 dismiss()
-                $("#modal").modal('hide')
+                hideModal()
             })
             .fail(function (data) {
                 modalError(data.responseJSON.message)
@@ -258,11 +258,11 @@ function load() {
                     groupRows.push([
                         escapeHtml(group.name),
                         escapeHtml(group.num_targets),
-                        moment(group.modified_date).format('MMMM Do YYYY, h:mm:ss a'),
-                        (canModifyObjects() ? "<div class='pull-right'><button class='btn btn-primary' data-toggle='modal' data-backdrop='static' data-target='#modal' onclick='edit(" + group.id + ")'>\
+                        moment(group.modified_date).format('MMM D, YYYY h:mm a'),
+                        (canModifyObjects() ? "<div class='pull-right'><button class='btn btn-sm btn-primary' data-bs-toggle='modal' data-bs-backdrop='static' data-bs-target='#modal' onclick='edit(" + group.id + ")'>\
                     <i class='fa fa-pencil'></i>\
                     </button>\
-                    <button class='btn btn-danger' onclick='deleteGroup(" + group.id + ")'>\
+                    <button class='btn btn-sm btn-danger' onclick='deleteGroup(" + group.id + ")'>\
                     <i class='fa fa-trash-o'></i>\
                     </button></div>" : "")
                     ])

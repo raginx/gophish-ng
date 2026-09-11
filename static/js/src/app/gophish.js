@@ -68,6 +68,33 @@ function canModifyObjects() {
 }
 window.canModifyObjects = canModifyObjects
 
+// Bootstrap 5 dropped the jQuery plugin API ($(...).tooltip()/.modal()/.tab()) -
+// these wrap the vanilla bootstrap.* API for the handful of call patterns used
+// across the app.
+function initTooltips() {
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+        bootstrap.Tooltip.getOrCreateInstance(el)
+    })
+}
+window.initTooltips = initTooltips
+
+function hideModal(selector) {
+    var el = document.querySelector(selector || "#modal")
+    var modal = el && bootstrap.Modal.getInstance(el)
+    if (modal) {
+        modal.hide()
+    }
+}
+window.hideModal = hideModal
+
+function showTab(selector) {
+    var el = document.querySelector(selector)
+    if (el) {
+        bootstrap.Tab.getOrCreateInstance(el).show()
+    }
+}
+window.showTab = showTab
+
 function unescapeHtml(html) {
     return $("<div/>").html(html).text()
 }
@@ -343,7 +370,7 @@ $(document).ready(function () {
             $this.addClass('active');
         }
     })
-    $.fn.dataTable.moment('MMMM Do YYYY, h:mm:ss a');
+    $.fn.dataTable.moment('MMM D, YYYY h:mm a');
     // Setup tooltips
-    $('[data-toggle="tooltip"]').tooltip()
+    initTooltips()
 });

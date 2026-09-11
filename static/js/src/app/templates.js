@@ -21,7 +21,7 @@ function save(idx) {
     template.name = $("#name").val()
     template.subject = $("#subject").val()
     template.envelope_sender = $("#envelope-sender").val()
-    template.html = CKEDITOR.instances["html_editor"].getData();
+    template.html = editors["html_editor"].getData();
     // Fix the URL Scheme added by CKEditor (until we can remove it from the plugin)
     template.html = template.html.replace(/https?:\/\/{{\.URL}}/gi, "{{.URL}}")
     // If the "Add Tracker Image" checkbox is checked, add the tracker
@@ -75,8 +75,12 @@ function dismiss() {
     $("#name").val("")
     $("#subject").val("")
     $("#text_editor").val("")
-    $("#html_editor").val("")
-    $("#modal").modal('hide')
+    if (editors["html_editor"]) {
+        // Force back to WYSIWYG first
+        ensureWysiwyg(editors["html_editor"])
+        editors["html_editor"].setData(EMPTY_FULL_PAGE_HTML)
+    }
+    hideModal()
 }
 
 var deleteTemplate = function (idx) {
@@ -167,60 +171,62 @@ function edit(idx) {
     $("#attachmentUpload").unbind('click').click(function () {
         this.value = null
     })
-    $("#html_editor").ckeditor()
-    setupAutocomplete(CKEDITOR.instances["html_editor"])
-    $("#attachmentsTable").show()
-    attachmentsTable = $('#attachmentsTable').DataTable({
-        destroy: true,
-        "order": [
-            [1, "asc"]
-        ],
-        columnDefs: [{
-            orderable: false,
-            targets: "no-sort"
-        }, {
-            sClass: "datatable_hidden",
-            targets: [3, 4]
-        }]
-    });
-    var template = {
-        attachments: []
-    }
-    if (idx != -1) {
-        $("#templateModalLabel").text("Edit Template")
-        template = templates[idx]
-        $("#name").val(template.name)
-        $("#subject").val(template.subject)
-        $("#envelope-sender").val(template.envelope_sender)
-        $("#html_editor").val(template.html)
-        $("#text_editor").val(template.text)
-        attachmentRows = []
-        $.each(template.attachments, function (i, file) {
-            var icon = icons[file.type] || "fa-file-o"
-            // Add the record to the modal
-            attachmentRows.push([
-                '<i class="fa ' + icon + '"></i>',
-                escapeHtml(file.name),
-                '<span class="remove-row"><i class="fa fa-trash-o"></i></span>',
-                file.content,
-                file.type || "application/octet-stream"
-            ])
-        })
-        attachmentsTable.rows.add(attachmentRows).draw()
-        if (template.html.indexOf("{{.Tracker}}") != -1) {
-            $("#use_tracker_checkbox").prop("checked", true)
-        } else {
-            $("#use_tracker_checkbox").prop("checked", false)
+    createEditor("html_editor", function (editor) {
+        $("#attachmentsTable").show()
+        attachmentsTable = $('#attachmentsTable').DataTable({
+            destroy: true,
+            "order": [
+                [1, "asc"]
+            ],
+            columnDefs: [{
+                orderable: false,
+                targets: "no-sort"
+            }, {
+                sClass: "datatable_hidden",
+                targets: [3, 4]
+            }]
+        });
+        var template = {
+            attachments: []
         }
+        if (idx != -1) {
+            $("#templateModalLabel").text("Edit Template")
+            template = templates[idx]
+            $("#name").val(template.name)
+            $("#subject").val(template.subject)
+            $("#envelope-sender").val(template.envelope_sender)
+            editor.setData(template.html)
+            $("#text_editor").val(template.text)
+            attachmentRows = []
+            $.each(template.attachments, function (i, file) {
+                var icon = icons[file.type] || "fa-file-o"
+                // Add the record to the modal
+                attachmentRows.push([
+                    '<i class="fa ' + icon + '"></i>',
+                    escapeHtml(file.name),
+                    '<span class="remove-row"><i class="fa fa-trash-o"></i></span>',
+                    file.content,
+                    file.type || "application/octet-stream"
+                ])
+            })
+            attachmentsTable.rows.add(attachmentRows).draw()
+            if (template.html.indexOf("{{.Tracker}}") != -1) {
+                $("#use_tracker_checkbox").prop("checked", true)
+            } else {
+                $("#use_tracker_checkbox").prop("checked", false)
+            }
 
-    } else {
-        $("#templateModalLabel").text("New Template")
-    }
-    // Handle Deletion
-    $("#attachmentsTable").unbind('click').on("click", "span>i.fa-trash-o", function () {
-        attachmentsTable.row($(this).parents('tr'))
-            .remove()
-            .draw();
+        } else {
+            $("#templateModalLabel").text("New Template")
+
+            editor.setData(EMPTY_FULL_PAGE_HTML)
+        }
+        // Handle Deletion
+        $("#attachmentsTable").unbind('click').on("click", "span>i.fa-trash-o", function () {
+            attachmentsTable.row($(this).parents('tr'))
+                .remove()
+                .draw();
+        })
     })
 }
 
@@ -231,52 +237,53 @@ function copy(idx) {
     $("#attachmentUpload").unbind('click').click(function () {
         this.value = null
     })
-    $("#html_editor").ckeditor()
-    $("#attachmentsTable").show()
-    attachmentsTable = $('#attachmentsTable').DataTable({
-        destroy: true,
-        "order": [
-            [1, "asc"]
-        ],
-        columnDefs: [{
-            orderable: false,
-            targets: "no-sort"
-        }, {
-            sClass: "datatable_hidden",
-            targets: [3, 4]
-        }]
-    });
-    var template = {
-        attachments: []
-    }
-    template = templates[idx]
-    $("#name").val("Copy of " + template.name)
-    $("#subject").val(template.subject)
-    $("#envelope-sender").val(template.envelope_sender)
-    $("#html_editor").val(template.html)
-    $("#text_editor").val(template.text)
-    $.each(template.attachments, function (i, file) {
-        var icon = icons[file.type] || "fa-file-o"
-        // Add the record to the modal
-        attachmentsTable.row.add([
-            '<i class="fa ' + icon + '"></i>',
-            escapeHtml(file.name),
-            '<span class="remove-row"><i class="fa fa-trash-o"></i></span>',
-            file.content,
-            file.type || "application/octet-stream"
-        ]).draw()
+    createEditor("html_editor", function (editor) {
+        $("#attachmentsTable").show()
+        attachmentsTable = $('#attachmentsTable').DataTable({
+            destroy: true,
+            "order": [
+                [1, "asc"]
+            ],
+            columnDefs: [{
+                orderable: false,
+                targets: "no-sort"
+            }, {
+                sClass: "datatable_hidden",
+                targets: [3, 4]
+            }]
+        });
+        var template = {
+            attachments: []
+        }
+        template = templates[idx]
+        $("#name").val("Copy of " + template.name)
+        $("#subject").val(template.subject)
+        $("#envelope-sender").val(template.envelope_sender)
+        editor.setData(template.html)
+        $("#text_editor").val(template.text)
+        $.each(template.attachments, function (i, file) {
+            var icon = icons[file.type] || "fa-file-o"
+            // Add the record to the modal
+            attachmentsTable.row.add([
+                '<i class="fa ' + icon + '"></i>',
+                escapeHtml(file.name),
+                '<span class="remove-row"><i class="fa fa-trash-o"></i></span>',
+                file.content,
+                file.type || "application/octet-stream"
+            ]).draw()
+        })
+        // Handle Deletion
+        $("#attachmentsTable").unbind('click').on("click", "span>i.fa-trash-o", function () {
+            attachmentsTable.row($(this).parents('tr'))
+                .remove()
+                .draw();
+        })
+        if (template.html.indexOf("{{.Tracker}}") != -1) {
+            $("#use_tracker_checkbox").prop("checked", true)
+        } else {
+            $("#use_tracker_checkbox").prop("checked", false)
+        }
     })
-    // Handle Deletion
-    $("#attachmentsTable").unbind('click').on("click", "span>i.fa-trash-o", function () {
-        attachmentsTable.row($(this).parents('tr'))
-            .remove()
-            .draw();
-    })
-    if (template.html.indexOf("{{.Tracker}}") != -1) {
-        $("#use_tracker_checkbox").prop("checked", true)
-    } else {
-        $("#use_tracker_checkbox").prop("checked", false)
-    }
 }
 
 function importEmail() {
@@ -291,14 +298,14 @@ function importEmail() {
             })
             .done(function (data) {
                 $("#text_editor").val(data.text)
-                $("#html_editor").val(data.html)
+                editors["html_editor"].setData(data.html)
                 $("#subject").val(data.subject)
                 // If the HTML is provided, let's open that view in the editor
                 if (data.html) {
-                    CKEDITOR.instances["html_editor"].setMode('wysiwyg')
+                    ensureWysiwyg(editors["html_editor"])
                     $('.nav-tabs a[href="#html"]').click()
                 }
-                $("#importEmailModal").modal("hide")
+                hideModal("#importEmailModal")
             })
             .fail(function (data) {
                 modalError(data.responseJSON.message)
@@ -328,20 +335,20 @@ function load() {
                 $.each(templates, function (i, template) {
                     templateRows.push([
                         escapeHtml(template.name),
-                        moment(template.modified_date).format('MMMM Do YYYY, h:mm:ss a'),
-                        (canModifyObjects() ? "<div class='pull-right'><span data-toggle='modal' data-backdrop='static' data-target='#modal'><button class='btn btn-primary' data-toggle='tooltip' data-placement='left' title='Edit Template' onclick='edit(" + i + ")'>\
+                        moment(template.modified_date).format('MMM D, YYYY h:mm a'),
+                        (canModifyObjects() ? "<div class='pull-right'><span data-bs-toggle='modal' data-bs-backdrop='static' data-bs-target='#modal'><button class='btn btn-sm btn-primary' data-bs-toggle='tooltip' data-bs-placement='left' title='Edit Template' onclick='edit(" + i + ")'>\
                     <i class='fa fa-pencil'></i>\
                     </button></span>\
-		    <span data-toggle='modal' data-target='#modal'><button class='btn btn-primary' data-toggle='tooltip' data-placement='left' title='Copy Template' onclick='copy(" + i + ")'>\
+		    <span data-bs-toggle='modal' data-bs-target='#modal'><button class='btn btn-sm btn-primary' data-bs-toggle='tooltip' data-bs-placement='left' title='Copy Template' onclick='copy(" + i + ")'>\
                     <i class='fa fa-copy'></i>\
                     </button></span>\
-                    <button class='btn btn-danger' data-toggle='tooltip' data-placement='left' title='Delete Template' onclick='deleteTemplate(" + i + ")'>\
+                    <button class='btn btn-sm btn-danger' data-bs-toggle='tooltip' data-bs-placement='left' title='Delete Template' onclick='deleteTemplate(" + i + ")'>\
                     <i class='fa fa-trash-o'></i>\
                     </button></div>" : "")
                     ])
                 })
                 templateTable.rows.add(templateRows).draw()
-                $('[data-toggle="tooltip"]').tooltip()
+                initTooltips()
             } else {
                 $("#emptyMessage").show()
             }
@@ -401,21 +408,6 @@ $(document).ready(function () {
     $("#importEmailModal").on('hidden.bs.modal', function (event) {
         $("#email_content").val("")
     })
-    CKEDITOR.on('dialogDefinition', function (ev) {
-        // Take the dialog name and its definition from the event data.
-        var dialogName = ev.data.name;
-        var dialogDefinition = ev.data.definition;
-
-        // Check if the definition is from the dialog window you are interested in (the "Link" dialog window).
-        if (dialogName == 'link') {
-            dialogDefinition.minWidth = 500
-            dialogDefinition.minHeight = 100
-
-            // Remove the linkType field
-            var infoTab = dialogDefinition.getContents('info');
-            infoTab.get('linkType').hidden = true;
-        }
-    });
     load()
 
 })

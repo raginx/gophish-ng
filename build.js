@@ -23,17 +23,17 @@ const cssDistDir = path.join("static", "css", "dist");
 // A single ordered list, since load order matters
 const vendorFiles = [
   path.join("node_modules", "jquery", "dist", "jquery.min.js"),
-  path.join("node_modules", "bootstrap", "dist", "js", "bootstrap.min.js"),
+  path.join("node_modules", "bootstrap", "dist", "js", "bootstrap.bundle.min.js"),
   path.join("node_modules", "moment", "min", "moment.min.js"),
   path.join("node_modules", "datatables.net", "js", "jquery.dataTables.min.js"),
-  path.join("node_modules", "datatables.net-bs", "js", "dataTables.bootstrap.min.js"),
+  path.join("node_modules", "datatables.net-bs5", "js", "dataTables.bootstrap5.min.js"),
   "datetime-moment.js",
-  "bootstrap-datetime.js",
   path.join("node_modules", "echarts", "dist", "echarts.min.js"),
   path.join("node_modules", "select2", "dist", "js", "select2.min.js"),
   path.join("node_modules", "papaparse", "papaparse.min.js"),
   path.join("node_modules", "bowser", "es5.js"),
   path.join("node_modules", "sweetalert2", "dist", "sweetalert2.min.js"),
+  path.join("node_modules", "ckeditor5", "dist", "browser", "ckeditor5.umd.js"),
 ];
 
 function resolveVendorFile(f) {
@@ -48,7 +48,7 @@ function resolveVendorFile(f) {
 // used from within the file itself, which silently guts files like
 // autocomplete.js down to nothing.
 const appFiles = [
-  "autocomplete.js",
+  "ckeditor-setup.js",
   "campaign_results.js",
   "campaigns.js",
   "dashboard.js",
@@ -72,29 +72,18 @@ const cssFiles = [
   path.join("node_modules", "bootstrap", "dist", "css", "bootstrap.min.css"),
   "main.css",
   "dashboard.css",
-  "flat-ui.css",
-  path.join("node_modules", "datatables.net-bs", "css", "dataTables.bootstrap.min.css"),
+  path.join("node_modules", "datatables.net-bs5", "css", "dataTables.bootstrap5.min.css"),
   "font-awesome.min.css",
-  "bootstrap-datetime.css",
   "checkbox.css",
-  "select2-bootstrap.min.css",
+  path.join("node_modules", "select2-bootstrap-5-theme", "dist", "select2-bootstrap-5-theme.min.css"),
   path.join("node_modules", "select2", "dist", "css", "select2.min.css"),
   path.join("node_modules", "sweetalert2", "dist", "sweetalert2.min.css"),
+  path.join("node_modules", "ckeditor5", "dist", "browser", "ckeditor5.css"),
+  "theme.css",
 ];
 
 function resolveCssFile(f) {
   return f.startsWith("node_modules" + path.sep) ? f : path.join(cssDir, f);
-}
-
-// The npm bootstrap package's CSS references its glyphicon fonts as
-// "../fonts/..." (relative to dist/css/), assuming it's deployed as its own
-// dist/ tree. We serve everything under static/ from one root instead, with
-// the fonts already in static/font/ (singular) alongside font-awesome's, so
-// rewrite the reference to match once the file is pulled out of that tree.
-function fixBootstrapFontPaths(content, file) {
-  return file.includes("bootstrap")
-    ? content.replace(/\.\.\/fonts\//g, "/font/")
-    : content;
 }
 
 async function buildVendor() {
@@ -154,9 +143,7 @@ async function buildWorldMap() {
 }
 
 async function buildCSS() {
-  const combined = cssFiles
-    .map((f) => fixBootstrapFontPaths(fs.readFileSync(resolveCssFile(f), "utf8"), f))
-    .join("\n");
+  const combined = cssFiles.map((f) => fs.readFileSync(resolveCssFile(f), "utf8")).join("\n");
   const result = await esbuild.transform(combined, {
     loader: "css",
     minify: true,

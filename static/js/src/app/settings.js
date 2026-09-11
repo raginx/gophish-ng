@@ -1,5 +1,5 @@
 $(document).ready(function () {
-    $('[data-toggle="tooltip"]').tooltip();
+    initTooltips();
     $("#apiResetForm").submit(function (e) {
         api.reset()
             .done(function (response) {
@@ -237,7 +237,7 @@ $(document).ready(function () {
     // user was on Reporting Settings. The backend appends this hash to its
     // redirect back to /settings so the right tab re-opens.
     if (location.hash === "#reportingSettings") {
-        $('.nav-tabs a[href="#reportingSettings"]').tab('show')
+        showTab('.nav-tabs a[href="#reportingSettings"]')
     }
 
     $("#advanced").click(function() {
@@ -314,10 +314,10 @@ $(document).ready(function () {
                 $("#oauthtokenurl").val(imap.oauth_token_url)
                 $("#oauthscopes").val(imap.oauth_scopes)
                 if (imap.oauth_connected) {
-                    $("#oauthstatus").text("Connected").removeClass("label-default label-danger").addClass("label-success")
+                    $("#oauthstatus").text("Connected").removeClass("text-bg-secondary text-bg-danger").addClass("text-bg-success")
                     $("#oauthconnect").text("Reconnect Account")
                 } else {
-                    $("#oauthstatus").text("Not Connected").removeClass("label-success").addClass("label-default")
+                    $("#oauthstatus").text("Not Connected").removeClass("text-bg-success").addClass("text-bg-secondary")
                     $("#oauthconnect").text("Connect Account")
                 }
                 updateAuthTypeFields()

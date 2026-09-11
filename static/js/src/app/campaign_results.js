@@ -5,28 +5,28 @@ var doPoll = true;
 var statuses = {
     "Email Sent": {
         color: "#1abc9c",
-        label: "label-success",
+        label: "text-bg-success",
         icon: "fa-envelope",
         point: "ct-point-sent"
     },
     "Emails Sent": {
         color: "#1abc9c",
-        label: "label-success",
+        label: "text-bg-success",
         icon: "fa-envelope",
         point: "ct-point-sent"
     },
     "In progress": {
-        label: "label-primary"
+        label: "text-bg-primary"
     },
     "Queued": {
-        label: "label-info"
+        label: "text-bg-info"
     },
     "Completed": {
-        label: "label-success"
+        label: "text-bg-success"
     },
     "Email Opened": {
         color: "#f9bf3b",
-        label: "label-warning",
+        label: "text-bg-warning",
         icon: "fa-envelope-open",
         point: "ct-point-opened"
     },
@@ -38,61 +38,61 @@ var statuses = {
     },
     "Success": {
         color: "#f05b4f",
-        label: "label-danger",
+        label: "text-bg-danger",
         icon: "fa-exclamation",
         point: "ct-point-clicked"
     },
     //not a status, but is used for the campaign timeline and user timeline
     "Email Reported": {
         color: "#45d6ef",
-        label: "label-info",
+        label: "text-bg-info",
         icon: "fa-bullhorn",
         point: "ct-point-reported"
     },
     "Error": {
         color: "#6c7a89",
-        label: "label-default",
+        label: "text-bg-secondary",
         icon: "fa-times",
         point: "ct-point-error"
     },
     "Error Sending Email": {
         color: "#6c7a89",
-        label: "label-default",
+        label: "text-bg-secondary",
         icon: "fa-times",
         point: "ct-point-error"
     },
     "Submitted Data": {
         color: "#f05b4f",
-        label: "label-danger",
+        label: "text-bg-danger",
         icon: "fa-exclamation",
         point: "ct-point-clicked"
     },
     "Unknown": {
         color: "#6c7a89",
-        label: "label-default",
+        label: "text-bg-secondary",
         icon: "fa-question",
         point: "ct-point-error"
     },
     "Sending": {
         color: "#428bca",
-        label: "label-primary",
+        label: "text-bg-primary",
         icon: "fa-spinner",
         point: "ct-point-sending"
     },
     "Retrying": {
         color: "#6c7a89",
-        label: "label-default",
+        label: "text-bg-secondary",
         icon: "fa-clock-o",
         point: "ct-point-error"
     },
     "Scheduled": {
         color: "#428bca",
-        label: "label-primary",
+        label: "text-bg-primary",
         icon: "fa-clock-o",
         point: "ct-point-sending"
     },
     "Campaign Created": {
-        label: "label-success",
+        label: "text-bg-success",
         icon: "fa-rocket"
     }
 }
@@ -119,7 +119,7 @@ var bubbles = []
 
 function dismiss() {
     $("#modal\\.flashes").empty()
-    $("#modal").modal('hide')
+    hideModal()
     $("#resultsTable").dataTable().DataTable().clear().draw()
 }
 
@@ -390,7 +390,7 @@ function renderTimeline(data) {
         "reported": data[7],
         "send_date": data[8]
     }
-    results = '<div class="timeline col-sm-12 well well-lg">' +
+    results = '<div class="timeline col-sm-12">' +
         '<h6>Timeline for ' + escapeHtml(record.first_name) + ' ' + escapeHtml(record.last_name) +
         '</h6><span class="subtitle">Email: ' + escapeHtml(record.email) +
         '<br>Result ID: ' + escapeHtml(record.id) + '</span>' +
@@ -441,7 +441,7 @@ function renderTimeline(data) {
                 if (details.error) {
                     results += '<div class="timeline-event-details"><i class="fa fa-caret-right"></i> View Details</div>'
                     results += '<div class="timeline-event-results">'
-                    results += '<span class="label label-default">Error</span> ' + details.error
+                    results += '<span class="badge text-bg-secondary">Error</span> ' + details.error
                     results += '</div>'
                 }
             }
@@ -463,8 +463,21 @@ function renderTimeline(data) {
 
 var timelineChart = null
 
+// One lane per event type (roughly chronological, bottom to top) instead of
+// stacking every event from every recipient onto a single row - on a large
+// campaign that single row was an unreadable wall of overlapping dots.
+var timelineCategories = [
+    "Email Sent",
+    "Error Sending Email",
+    "Email Opened",
+    "Clicked Link",
+    "Submitted Data",
+    "Email Reported"
+]
+
 // timelineChartData maps the {x, y, email, message, marker} point shape
-// used at call sites
+// used at call sites. y is the event message string, matched against
+// timelineCategories to place the point in its lane.
 function timelineChartData(points) {
     return points.map(function (p) {
         return {
@@ -480,13 +493,15 @@ function timelineChartData(points) {
 
 var renderTimelineChart = function (chartopts) {
     timelineChart = echarts.init(document.getElementById('timeline_chart'), null, {
-        height: 200
+        height: 280
     })
     timelineChart.setOption({
         title: {
             text: 'Campaign Timeline'
         },
         grid: {
+            top: 40,
+            bottom: 60,
             left: '1%',
             right: '2%',
             containLabel: true
@@ -495,34 +510,44 @@ var renderTimelineChart = function (chartopts) {
             type: 'time'
         },
         yAxis: {
-            min: 0,
-            max: 2,
-            show: false
+            type: 'category',
+            data: timelineCategories
         },
         dataZoom: [{
             type: 'inside',
             filterMode: 'none'
+        }, {
+            type: 'slider',
+            filterMode: 'none',
+            height: 20,
+            bottom: 10,
+            showDataShadow: false
         }],
         tooltip: {
-            trigger: 'axis',
+            trigger: 'item',
             formatter: function (params) {
-                var point = params[0]
-                return moment(point.value[0]).format('dddd, MMM D h:mm:ss a') +
-                    '<br>Event: ' + point.data.message + '<br>Email: <b>' + point.data.email + '</b>'
+                return moment(params.value[0]).format('dddd, MMM D h:mm:ss a') +
+                    '<br>Event: ' + params.data.message + '<br>Email: <b>' + params.data.email + '</b>'
             }
         },
         legend: {
             show: false
         },
         series: [{
-            type: 'line',
-            lineStyle: {
-                type: 'dashed',
-                color: "#cccccc",
-                width: 1
-            },
+            type: 'scatter',
             symbol: 'circle',
-            symbolSize: 6,
+            symbolSize: 10,
+            itemStyle: {
+                opacity: 0.85,
+                borderColor: '#fff',
+                borderWidth: 1
+            },
+            emphasis: {
+                itemStyle: {
+                    opacity: 1,
+                    borderWidth: 2
+                }
+            },
             data: timelineChartData(chartopts['data'])
         }]
     })
@@ -632,17 +657,17 @@ var updateMap = function (results) {
  * @param {string} rid
  */
 function createStatusLabel(status, send_date, rid) {
-    var label = statuses[status].label || "label-default";
-    var statusColumn = "<span class=\"label " + label + "\">" + status + "</span>"
+    var label = statuses[status].label || "text-bg-secondary";
+    var statusColumn = "<span class=\"badge " + label + "\">" + status + "</span>"
     // Add the tooltip if the email is scheduled to be sent
     if (status == "Scheduled" || status == "Retrying") {
         var sendDateMessage = "Scheduled to send at " + send_date
-        statusColumn = "<span class=\"label " + label + "\" data-toggle=\"tooltip\" data-placement=\"top\" data-html=\"true\" title=\"" + sendDateMessage + "\">" + status + "</span>"
+        statusColumn = "<span class=\"badge " + label + "\" data-bs-toggle=\"tooltip\" data-bs-placement=\"top\" data-bs-html=\"true\" title=\"" + sendDateMessage + "\">" + status + "</span>"
     }
     // Let the admin retry a single failed send without recreating the
     // whole campaign
     if (status == "Error" && canModifyObjects()) {
-        statusColumn += " <i role=\"button\" class=\"fa fa-repeat text-muted\" data-toggle=\"tooltip\" title=\"Resend\" onclick=\"resend_mail('" + rid + "', '" + campaign.id + "');\"></i>"
+        statusColumn += " <i role=\"button\" class=\"fa fa-repeat text-muted\" data-bs-toggle=\"tooltip\" title=\"Resend\" onclick=\"resend_mail('" + rid + "', '" + campaign.id + "');\"></i>"
     }
     return statusColumn
 }
@@ -667,7 +692,7 @@ function poll() {
                     email: event.email,
                     message: event.message,
                     x: event_date.valueOf(),
-                    y: 1,
+                    y: event.message,
                     marker: {
                         fillColor: statuses[event.message].color
                     }
@@ -749,7 +774,7 @@ function poll() {
             resultsTable.draw(false)
             /* Update the map information */
             updateMap(campaign.results)
-            $('[data-toggle="tooltip"]').tooltip()
+            initTooltips()
             $("#refresh_message").hide()
             $("#refresh_btn").show()
         })
@@ -857,7 +882,7 @@ function load() {
                 })
                 resultsTable.draw();
                 // Setup tooltips
-                $('[data-toggle="tooltip"]').tooltip()
+                initTooltips()
                 // Setup the individual timelines
                 $('#resultsTable tbody').on('click', 'td.details-control', function () {
                     var tr = $(this).closest('tr');
@@ -886,7 +911,7 @@ function load() {
                         email: event.email,
                         message: event.message,
                         x: event_date.valueOf(),
-                        y: 1,
+                        y: event.message,
                         marker: {
                             fillColor: statuses[event.message].color
                         }

@@ -25,7 +25,7 @@ const save = (id) => {
                 successFlash("User " + escapeHtml(user.username) + " updated successfully!")
                 load()
                 dismiss()
-                $("#modal").modal('hide')
+                hideModal()
             })
             .fail((data) => {
                 modalError(data.responseJSON.message)
@@ -38,7 +38,7 @@ const save = (id) => {
                 successFlash("User " + escapeHtml(user.username) + " registered successfully!")
                 load()
                 dismiss()
-                $("#modal").modal('hide')
+                hideModal()
             })
             .fail((data) => {
                 modalError(data.responseJSON.message)
@@ -209,7 +209,7 @@ const load = () => {
             $.each(users, (i, user) => {
                 lastlogin = ""
                 if (user.last_login != "0001-01-01T00:00:00Z") {
-                    lastlogin = moment(user.last_login).format('MMMM Do YYYY, h:mm:ss a')
+                    lastlogin = moment(user.last_login).format('MMM D, YYYY h:mm a')
                 }
                 userRows.push([
                     escapeHtml(user.username),
@@ -220,10 +220,10 @@ const load = () => {
                     <button class='btn btn-warning impersonate_button' data-user-id='" + user.id + "'>\
                     <i class='fa fa-retweet'></i>\
                     </button>\
-                    <button class='btn btn-primary edit_button' data-toggle='modal' data-backdrop='static' data-target='#modal' data-user-id='" + user.id + "'>\
+                    <button class='btn btn-sm btn-primary edit_button' data-bs-toggle='modal' data-bs-backdrop='static' data-bs-target='#modal' data-user-id='" + user.id + "'>\
                     <i class='fa fa-pencil'></i>\
                     </button>\
-                    <button class='btn btn-danger delete_button' data-user-id='" + user.id + "'>\
+                    <button class='btn btn-sm btn-danger delete_button' data-user-id='" + user.id + "'>\
                     <i class='fa fa-trash-o'></i>\
                     </button></div>"
                 ])
@@ -250,7 +250,7 @@ $(document).ready(function () {
     // Select2 Defaults
     $.fn.select2.defaults.set("width", "100%");
     $.fn.select2.defaults.set("dropdownParent", $("#role-select"));
-    $.fn.select2.defaults.set("theme", "bootstrap");
+    $.fn.select2.defaults.set("theme", "bootstrap-5");
     $.fn.select2.defaults.set("sorter", function (data) {
         return data.sort(function (a, b) {
             if (a.text.toLowerCase() > b.text.toLowerCase()) {

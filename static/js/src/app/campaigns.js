@@ -1,11 +1,11 @@
 // labels is a map of campaign statuses to
 // CSS classes
 var labels = {
-    "In progress": "label-primary",
-    "Queued": "label-info",
-    "Completed": "label-success",
-    "Emails Sent": "label-success",
-    "Error": "label-danger"
+    "In progress": "text-bg-primary",
+    "Queued": "text-bg-info",
+    "Completed": "text-bg-success",
+    "Emails Sent": "text-bg-success",
+    "Error": "text-bg-danger"
 }
 
 var campaigns = []
@@ -35,7 +35,7 @@ function launch() {
                 // Validate our fields
                 var send_by_date = $("#send_by_date").val()
                 if (send_by_date != "") {
-                    send_by_date = moment(send_by_date, "MMMM Do YYYY, h:mm a").utc().format()
+                    send_by_date = moment(send_by_date).utc().format()
                 }
                 campaign = {
                     name: $("#name").val(),
@@ -49,7 +49,7 @@ function launch() {
                     smtp: {
                         name: $("#profile").select2("data")[0].text
                     },
-                    launch_date: moment($("#launch_date").val(), "MMMM Do YYYY, h:mm a").utc().format(),
+                    launch_date: moment($("#launch_date").val()).utc().format(),
                     send_by_date: send_by_date || null,
                     groups: groups,
                 }
@@ -122,7 +122,7 @@ function dismiss() {
     $("#url").val("");
     $("#profile").val("").change();
     $("#users").val("").change();
-    $("#modal").modal('hide');
+    hideModal();
 }
 
 function deleteCampaign(idx) {
@@ -292,22 +292,6 @@ function copy(idx) {
 }
 
 $(document).ready(function () {
-    $("#launch_date").datetimepicker({
-        "widgetPositioning": {
-            "vertical": "bottom"
-        },
-        "showTodayButton": true,
-        "defaultDate": moment(),
-        "format": "MMMM Do YYYY, h:mm a"
-    })
-    $("#send_by_date").datetimepicker({
-        "widgetPositioning": {
-            "vertical": "bottom"
-        },
-        "showTodayButton": true,
-        "useCurrent": false,
-        "format": "MMMM Do YYYY, h:mm a"
-    })
     // Setup multiple modals
     // Code based on http://miles-by-motorcycle.com/static/bootstrap-modal/index.html
     $('.modal').on('hidden.bs.modal', function (event) {
@@ -369,7 +353,7 @@ $(document).ready(function () {
                     'archived': []
                 }
                 $.each(campaigns, function (i, campaign) {
-                    label = labels[campaign.status] || "label-default";
+                    label = labels[campaign.status] || "text-bg-secondary";
 
                     //section for tooltips on the status of a campaign to show some quick stats
                     var launchDate;
@@ -383,15 +367,15 @@ $(document).ready(function () {
 
                     var row = [
                         escapeHtml(campaign.name),
-                        moment(campaign.created_date).format('MMMM Do YYYY, h:mm:ss a'),
-                        "<span class=\"label " + label + "\" data-toggle=\"tooltip\" data-placement=\"right\" data-html=\"true\" title=\"" + quickStats + "\">" + campaign.status + "</span>",
-                        "<div class='pull-right'><a class='btn btn-primary' href='/campaigns/" + campaign.id + "' data-toggle='tooltip' data-placement='left' title='View Results'>\
+                        moment(campaign.created_date).format('MMM D, YYYY h:mm a'),
+                        "<span class=\"badge " + label + "\" data-bs-toggle=\"tooltip\" data-bs-placement=\"right\" data-bs-html=\"true\" title=\"" + quickStats + "\">" + campaign.status + "</span>",
+                        "<div class='pull-right'><a class='btn btn-sm btn-primary' href='/campaigns/" + campaign.id + "' data-bs-toggle='tooltip' data-bs-placement='left' title='View Results'>\
                     <i class='fa fa-bar-chart'></i>\
                     </a>" + (canModifyObjects() ? "\
-            <span data-toggle='modal' data-backdrop='static' data-target='#modal'><button class='btn btn-primary' data-toggle='tooltip' data-placement='left' title='Copy Campaign' onclick='copy(" + i + ")'>\
+            <span data-bs-toggle='modal' data-bs-backdrop='static' data-bs-target='#modal'><button class='btn btn-sm btn-primary' data-bs-toggle='tooltip' data-bs-placement='left' title='Copy Campaign' onclick='copy(" + i + ")'>\
                     <i class='fa fa-copy'></i>\
                     </button></span>\
-                    <button class='btn btn-danger' onclick='deleteCampaign(" + i + ")' data-toggle='tooltip' data-placement='left' title='Delete Campaign'>\
+                    <button class='btn btn-sm btn-danger' onclick='deleteCampaign(" + i + ")' data-bs-toggle='tooltip' data-bs-placement='left' title='Delete Campaign'>\
                     <i class='fa fa-trash-o'></i>\
                     </button>" : "") + "</div>"
                     ]
@@ -403,7 +387,7 @@ $(document).ready(function () {
                 })
                 activeCampaignsTable.rows.add(rows['active']).draw()
                 archivedCampaignsTable.rows.add(rows['archived']).draw()
-                $('[data-toggle="tooltip"]').tooltip()
+                initTooltips()
             } else {
                 $("#emptyMessage").show()
             }
@@ -415,7 +399,7 @@ $(document).ready(function () {
     // Select2 Defaults
     $.fn.select2.defaults.set("width", "100%");
     $.fn.select2.defaults.set("dropdownParent", $("#modal_body"));
-    $.fn.select2.defaults.set("theme", "bootstrap");
+    $.fn.select2.defaults.set("theme", "bootstrap-5");
     $.fn.select2.defaults.set("sorter", function (data) {
         return data.sort(function (a, b) {
             if (a.text.toLowerCase() > b.text.toLowerCase()) {

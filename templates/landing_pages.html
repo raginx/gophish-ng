@@ -1,15 +1,13 @@
 {{define "body"}}
-<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-    <h1 class="page-header">
-        Landing Pages
-    </h1>
-    <div id="flashes" class="row"></div>
-    {{if .ModifyObjects}}
-    <div class="row">
-        <button type="button" class="btn btn-primary" onclick="edit(-1)" data-toggle="modal" data-backdrop="static"
-            data-target="#modal"><i class="fa fa-plus"></i> New Page</button>
+<div class="main">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h1 class="page-header mb-0">Landing Pages</h1>
+        {{if .ModifyObjects}}
+        <button type="button" class="btn btn-primary" onclick="edit(-1)" data-bs-toggle="modal" data-bs-backdrop="static"
+            data-bs-target="#modal"><i class="fa fa-plus"></i> New Page</button>
+        {{end}}
     </div>
-    {{end}}
+    <div id="flashes" class="row"></div>
     &nbsp;
     <div id="loading">
         <i class="fa fa-spinner fa-spin fa-4x"></i>
@@ -19,18 +17,20 @@
             No pages created yet.{{if .ModifyObjects}} Let's create one!{{end}}
         </div>
     </div>
-    <div class="row">
-        <table id="pagesTable" class="table" style="display:none;">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Last Modified Date</th>
-                    <th class="col-md-2 no-sort"></th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
+    <div class="card">
+        <div class="card-body">
+            <table id="pagesTable" class="table" style="display:none;">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Last Modified Date</th>
+                        <th class="col-md-2 no-sort"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 <!-- Modal -->
@@ -39,24 +39,23 @@
         <div class="modal-content">
             <!-- New Template Modal -->
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="dismiss()"><span
-                        aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="modalLabel">New Landing Page</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="dismiss()"></button>
             </div>
             <div class="modal-body">
                 <div class="row" id="modal.flashes"></div>
-                <label class="control-label" for="name">Name:</label>
+                <label class="col-form-label" for="name">Name:</label>
                 <div class="form-group">
                     <input type="text" class="form-control" placeholder="Page name" id="name" autofocus />
                 </div>
                 <div class="form-group">
-                    <button class="btn btn-danger" data-toggle="modal" data-backdrop="static" data-target="#importSiteModal"><i
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-backdrop="static" data-bs-target="#importSiteModal"><i
                             class="fa fa-globe"></i>
                         Import Site</button>
                 </div>
                 <!-- Nav tabs -->
                 <ul class="nav nav-tabs" role="tablist">
-                    <li class="active" role="html"><a href="#html" aria-controls="html" role="tab" data-toggle="tab">HTML</a></li>
+                    <li class="nav-item" role="html"><a class="nav-link active" href="#html" aria-controls="html" role="tab" data-bs-toggle="tab">HTML</a></li>
                 </ul>
                 <!-- Tab panes -->
                 <div class="tab-content">
@@ -67,7 +66,7 @@
                 <div class="checkbox checkbox-primary">
                     <input id="capture_credentials_checkbox" type="checkbox">
                     <label for="capture_credentials_checkbox">Capture Submitted Data <i class="fa fa-question-circle"
-                            data-toggle="tooltip" data-placement="right" title="If the landing page contains a form, submitted input (except passwords!) will be captured."></i></label>
+                            data-bs-toggle="tooltip" data-bs-placement="right" title="If the landing page contains a form, submitted input (except passwords!) will be captured."></i></label>
                 </div>
                 <div class="checkbox checkbox-primary" id="capture_passwords">
                     <input id="capture_passwords_checkbox" type="checkbox">
@@ -88,21 +87,21 @@
                         <label for="redirect_html_radio">Redirect to HTML</label>
                     </div>
                     <div id="redirect_url">
-                        <label class="control-label" for="redirect_url_input">Redirect to: <i class="fa fa-question-circle"
-                                data-toggle="tooltip" data-placement="right" title="This option lets you redirect the user to a page after credentials are submitted."></i></label>
+                        <label class="col-form-label" for="redirect_url_input">Redirect to: <i class="fa fa-question-circle"
+                                data-bs-toggle="tooltip" data-bs-placement="right" title="This option lets you redirect the user to a page after credentials are submitted."></i></label>
                         <div class="form-group">
                             <input id="redirect_url_input" class="form-control" placeholder="http://example.com" />
                         </div>
                     </div>
                     <div id="redirect_html" style="display: none">
-                        <label class="control-label" for="redirect_html_editor">Redirect HTML: <i class="fa fa-question-circle"
-                                data-toggle="tooltip" data-placement="right" title="This option lets you show a templated HTML page after credentials are submitted."></i></label>
+                        <label class="col-form-label" for="redirect_html_editor">Redirect HTML: <i class="fa fa-question-circle"
+                                data-bs-toggle="tooltip" data-bs-placement="right" title="This option lets you show a templated HTML page after credentials are submitted."></i></label>
                         <textarea id="redirect_html_editor"></textarea>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" data-dismiss="modal" class="btn btn-default" onclick="dismiss()">Cancel</button>
+                <button type="button" data-bs-dismiss="modal" class="btn btn-secondary" onclick="dismiss()">Cancel</button>
                 <button type="button" class="btn btn-primary" id="modalSubmit">Save Page</button>
             </div>
         </div>
@@ -114,18 +113,18 @@
         <div class="modal-content">
             <!-- New Template Modal -->
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="importSiteModalLabel">Import Site</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="row" id="modal.flashes"></div>
-                <label class="control-label" for="url">URL:</label>
+                <label class="col-form-label" for="url">URL:</label>
                 <div class="form-group">
                     <input type="text" class="form-control" placeholder="http://google.com" id="url" autofocus />
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" data-dismiss="modal" class="btn btn-default">Cancel</button>
+                <button type="button" data-bs-dismiss="modal" class="btn btn-secondary">Cancel</button>
                 <button type="button" class="btn btn-primary" id="modalSubmit" onclick="importSite()">Import</button>
             </div>
         </div>
@@ -133,8 +132,6 @@
 </div>
 {{end}}
 {{define "scripts"}}
-<script src="/js/src/vendor/ckeditor/ckeditor.js"></script>
-<script src="/js/src/vendor/ckeditor/adapters/jquery.js"></script>
-<script src="/js/dist/app/autocomplete.min.js"></script>
+<script src="/js/dist/app/ckeditor-setup.min.js"></script>
 <script src="/js/dist/app/landing_pages.min.js"></script>
 {{end}}

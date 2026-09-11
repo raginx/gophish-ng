@@ -1,17 +1,13 @@
 {{define "body"}}
-<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-    <div class="row">
-        <h1 class="page-header">
-            Email Templates
-        </h1>
+<div class="main">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h1 class="page-header mb-0">Email Templates</h1>
+        {{if .ModifyObjects}}
+        <button type="button" class="btn btn-primary" onclick="edit(-1)" data-bs-toggle="modal" data-bs-backdrop="static"
+            data-bs-target="#modal"><i class="fa fa-plus"></i> New Template</button>
+        {{end}}
     </div>
     <div id="flashes" class="row"></div>
-    {{if .ModifyObjects}}
-    <div class="row">
-        <button type="button" class="btn btn-primary" onclick="edit(-1)" data-toggle="modal" data-backdrop="static"
-            data-target="#modal"><i class="fa fa-plus"></i> New Template</button>
-    </div>
-    {{end}}
     &nbsp;
     <div id="loading">
         <i class="fa fa-spinner fa-spin fa-4x"></i>
@@ -21,18 +17,20 @@
             No templates yet.{{if .ModifyObjects}} Let's create one!{{end}}
         </div>
     </div>
-    <div class="row">
-        <table id="templateTable" class="table" style="display:none;">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Modified Date</th>
-                    <th class="col-md-2 no-sort"></th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
+    <div class="card">
+        <div class="card-body">
+            <table id="templateTable" class="table" style="display:none;">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Modified Date</th>
+                        <th class="col-md-2 no-sort"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 <!-- Modal -->
@@ -41,34 +39,33 @@
         <div class="modal-content">
             <!-- New Template Modal -->
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="dismiss()"><span
-                        aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="templateModalLabel">New Template</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="dismiss()"></button>
             </div>
             <div class="modal-body">
                 <div class="row" id="modal.flashes"></div>
-                <label class="control-label" for="name">Name:</label>
+                <label class="col-form-label" for="name">Name:</label>
                 <div class="form-group">
                     <input type="text" class="form-control" ng-model="template.name" placeholder="Template name" id="name"
                         autofocus />
                 </div>
                 <div class="form-group">
-                    <button class="btn btn-danger" data-toggle="modal" data-backdrop="static" data-target="#importEmailModal"><i
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-backdrop="static" data-bs-target="#importEmailModal"><i
                             class="fa fa-envelope"></i>
                         Import Email</button>
                 </div>
-                <label class="control-label" for="envelope-sender">Envelope Sender: <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="right" title="This sender is shown to the user by most email clients. Defaults to the SMTP From as defined in the Sending Profile."></i></label>
+                <label class="col-form-label" for="envelope-sender">Envelope Sender: <i class="fa fa-question-circle" data-bs-toggle="tooltip" data-bs-placement="right" title="This sender is shown to the user by most email clients. Defaults to the SMTP From as defined in the Sending Profile."></i></label>
                 <div class="form-group">
                     <input type="text" class="form-control" placeholder="First Last <test@example.com>" id="envelope-sender" />
                 </div>
-                <label class="control-label" for="subject">Subject:</label>
+                <label class="col-form-label" for="subject">Subject:</label>
                 <div class="form-group">
                     <input type="text" class="form-control" placeholder="Email Subject" id="subject" />
                 </div>
                 <!-- Nav tabs -->
                 <ul class="nav nav-tabs" role="tablist">
-                    <li class="active" role="text"><a href="#text" aria-controls="text" role="tab" data-toggle="tab">Text</a></li>
-                    <li role="html"><a href="#html" aria-controls="html" role="tab" data-toggle="tab">HTML</a></li>
+                    <li class="nav-item" role="text"><a class="nav-link active" href="#text" aria-controls="text" role="tab" data-bs-toggle="tab">Text</a></li>
+                    <li class="nav-item" role="html"><a class="nav-link" href="#html" aria-controls="html" role="tab" data-bs-toggle="tab">HTML</a></li>
                 </ul>
                 <!-- Tab panes -->
                 <div class="tab-content">
@@ -83,7 +80,7 @@
                     <input id="use_tracker_checkbox" type="checkbox" checked>
                     <label for="use_tracker_checkbox">Add Tracking Image</label>
                 </div>
-                <span class="btn btn-danger btn-file"><i class="fa fa-plus"></i> Add Files
+                <span class="btn btn-primary btn-file"><i class="fa fa-plus"></i> Add Files
                     <input id="attachmentUpload" type="file" onchange="attach(this.files)" multiple>
                 </span>
                 <br />
@@ -104,7 +101,7 @@
                 <hr>
             </div>
             <div class="modal-footer">
-                <button type="button" data-dismiss="modal" class="btn btn-default" onclick="dismiss()">Cancel</button>
+                <button type="button" data-bs-dismiss="modal" class="btn btn-secondary" onclick="dismiss()">Cancel</button>
                 <button type="button" class="btn btn-primary" id="modalSubmit">Save Template</button>
             </div>
         </div>
@@ -116,12 +113,12 @@
         <div class="modal-content">
             <!-- New Email Modal -->
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="importEmailModalLabel">Import Email</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="row" id="modal.flashes"></div>
-                <label class="control-label" for="email">Email Content:</label>
+                <label class="col-form-label" for="email">Email Content:</label>
                 <div class="form-group">
                     <textarea rows="10" id="email_content" class="gophish-editor form-control" placeholder="Raw Email Source"></textarea>
                 </div>
@@ -131,7 +128,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" data-dismiss="modal" class="btn btn-default">Cancel</button>
+                <button type="button" data-bs-dismiss="modal" class="btn btn-secondary">Cancel</button>
                 <button type="button" class="btn btn-primary" id="modalSubmit" onclick="importEmail()">Import</button>
             </div>
         </div>
@@ -139,8 +136,6 @@
 </div>
 {{end}}
 {{define "scripts"}}
-<script src="/js/src/vendor/ckeditor/ckeditor.js"></script>
-<script src="/js/src/vendor/ckeditor/adapters/jquery.js"></script>
-<script src="/js/dist/app/autocomplete.min.js"></script>
+<script src="/js/dist/app/ckeditor-setup.min.js"></script>
 <script src="/js/dist/app/templates.min.js"></script>
 {{end}}

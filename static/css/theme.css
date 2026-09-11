@@ -1,0 +1,105 @@
+/*
+ * theme.css - lightweight custom skin for the admin UI
+ *
+ * Bootstrap 5 exposes its colors as CSS custom properties scoped per
+ * component (e.g. .btn-primary sets its own --bs-btn-bg, --bs-btn-hover-bg,
+ * ...) rather than one global variable everything reads from. So this file
+ * overrides those component-level variables instead of duplicating each
+ * component's CSS - it stays small and keeps working across Bootstrap point
+ * releases
+ */
+
+body {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6,
+.page-header,
+.card-title,
+.modal-title,
+.navbar-brand,
+.form-signin-heading {
+    font-family: 'Manrope', system-ui, sans-serif;
+    font-weight: 700;
+}
+
+:root {
+    --bs-body-bg: #f6f4f0;
+
+    --bs-primary: #e7a23a;
+    --bs-primary-rgb: 231, 162, 58;
+    --bs-link-color: #c9871f;
+    --bs-link-color-rgb: 201, 135, 31;
+    --bs-link-hover-color: #a86e17;
+    --bs-link-hover-color-rgb: 168, 110, 23;
+}
+
+.btn-primary {
+    --bs-btn-color: #201d17;
+    --bs-btn-bg: #e7a23a;
+    --bs-btn-border-color: #e7a23a;
+    --bs-btn-hover-color: #201d17;
+    --bs-btn-hover-bg: #c9871f;
+    --bs-btn-hover-border-color: #b5780f;
+    --bs-btn-active-color: #201d17;
+    --bs-btn-active-bg: #b5780f;
+    --bs-btn-active-border-color: #a06c11;
+    --bs-btn-disabled-bg: #e7a23a;
+    --bs-btn-disabled-border-color: #e7a23a;
+    --bs-btn-focus-shadow-rgb: 231, 162, 58;
+}
+
+.nav-tabs {
+    --bs-nav-tabs-link-active-color: #c9871f;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #f0c583;
+    box-shadow: 0 0 0 0.25rem rgba(231, 162, 58, 0.25);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+    accent-color: #c9871f;
+}
+
+/* checkbox.css (custom checkbox/radio component, predates Bootstrap 5) hard-
+   codes the old Bootstrap 3 blue (#337ab7) for its checked/"primary" state -
+   retint to the theme accent so it doesn't clash. */
+.checkbox-primary input[type="checkbox"]:checked + label::before,
+.checkbox-primary input[type="radio"]:checked + label::before {
+    background-color: #e7a23a;
+    border-color: #e7a23a;
+}
+.radio-primary input[type="radio"] + label::after {
+    background-color: #e7a23a;
+}
+.radio-primary input[type="radio"]:checked + label::before {
+    border-color: #e7a23a;
+}
+.radio-primary input[type="radio"]:checked + label::after {
+    background-color: #e7a23a;
+}
+
+/* Top navbar matches the sidebar for one cohesive dark shell instead of
+   Bootstrap's default near-black .bg-dark */
+.navbar.bg-dark {
+    --bs-bg-opacity: 1;
+    background-color: #0d1219 !important;
+}
+
+/* Subtle, warm-tinted elevation instead of flat borders-only - the
+   "dashboard" look the old flat-ui.css gave the app for free */
+.card,
+.modal-content {
+    box-shadow: 0 1px 2px rgba(32, 20, 10, .05), 0 6px 16px rgba(32, 20, 10, .06);
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.modal-dialog {
+    max-width: 900px;
+}

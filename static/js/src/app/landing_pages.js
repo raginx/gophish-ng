@@ -10,13 +10,12 @@ var pages = []
 function save(idx) {
     var page = {}
     page.name = $("#name").val()
-    editor = CKEDITOR.instances["html_editor"]
-    page.html = editor.getData()
+    page.html = editors["html_editor"].getData()
     page.capture_credentials = $("#capture_credentials_checkbox").prop("checked")
     page.capture_passwords = $("#capture_passwords_checkbox").prop("checked")
     page.redirect_url = $("#redirect_url_input").val()
     page.redirect_mode = $("input[name=redirect_choice]:checked").val()
-    page.redirect_html = CKEDITOR.instances["redirect_html_editor"].getData()
+    page.redirect_html = editors["redirect_html_editor"].getData()
     if (idx != -1) {
         page.id = pages[idx].id
         api.pageId.put(page)
@@ -42,17 +41,24 @@ function save(idx) {
 function dismiss() {
     $("#modal\\.flashes").empty()
     $("#name").val("")
-    $("#html_editor").val("")
+    if (editors["html_editor"]) {
+        // Force back to WYSIWYG first
+        ensureWysiwyg(editors["html_editor"])
+        editors["html_editor"].setData(EMPTY_FULL_PAGE_HTML)
+    }
     $("#url").val("")
     $("#redirect_url_input").val("")
-    $("#redirect_html_editor").val("")
+    if (editors["redirect_html_editor"]) {
+        ensureWysiwyg(editors["redirect_html_editor"])
+        editors["redirect_html_editor"].setData(EMPTY_FULL_PAGE_HTML)
+    }
     $("#modal").find("input[type='checkbox']").prop("checked", false)
     $("#redirect_url_radio").prop("checked", true)
     $("#capture_passwords").hide()
     $("#after-submit").hide()
     $("#redirect_url").show()
     $("#redirect_html").hide()
-    $("#modal").modal('hide')
+    hideModal()
 }
 
 var deletePage = function (idx) {
@@ -101,9 +107,9 @@ function importSite() {
                 include_resources: false
             })
             .done(function (data) {
-                $("#html_editor").val(data.html)
-                CKEDITOR.instances["html_editor"].setMode('wysiwyg')
-                $("#importSiteModal").modal("hide")
+                editors["html_editor"].setData(data.html)
+                ensureWysiwyg(editors["html_editor"])
+                hideModal("#importSiteModal")
             })
             .fail(function (data) {
                 modalError(data.responseJSON.message)
@@ -115,64 +121,69 @@ function edit(idx) {
     $("#modalSubmit").unbind('click').click(function () {
         save(idx)
     })
-    $("#html_editor").ckeditor()
-    setupAutocomplete(CKEDITOR.instances["html_editor"])
-    $("#redirect_html_editor").ckeditor()
-    setupAutocomplete(CKEDITOR.instances["redirect_html_editor"])
-    var page = {}
-    if (idx != -1) {
-        $("#modalLabel").text("Edit Landing Page")
-        page = pages[idx]
-        $("#name").val(page.name)
-        $("#html_editor").val(page.html)
-        $("#redirect_html_editor").val(page.redirect_html)
-        $("#capture_credentials_checkbox").prop("checked", page.capture_credentials)
-        $("#capture_passwords_checkbox").prop("checked", page.capture_passwords)
-        $("#redirect_url_input").val(page.redirect_url)
-        if (page.capture_credentials) {
-            $("#capture_passwords").show()
-            $("#after-submit").show()
-            if (page.redirect_mode == "html") {
-                $("#redirect_html_radio").prop("checked", true)
-                $("#redirect_url").hide()
-                $("#redirect_html").show()
+    createEditor("html_editor", function (htmlEditor) {
+        createEditor("redirect_html_editor", function (redirectEditor) {
+            var page = {}
+            if (idx != -1) {
+                $("#modalLabel").text("Edit Landing Page")
+                page = pages[idx]
+                $("#name").val(page.name)
+                htmlEditor.setData(page.html)
+                redirectEditor.setData(page.redirect_html)
+                $("#capture_credentials_checkbox").prop("checked", page.capture_credentials)
+                $("#capture_passwords_checkbox").prop("checked", page.capture_passwords)
+                $("#redirect_url_input").val(page.redirect_url)
+                if (page.capture_credentials) {
+                    $("#capture_passwords").show()
+                    $("#after-submit").show()
+                    if (page.redirect_mode == "html") {
+                        $("#redirect_html_radio").prop("checked", true)
+                        $("#redirect_url").hide()
+                        $("#redirect_html").show()
+                    } else {
+                        $("#redirect_url_radio").prop("checked", true)
+                        $("#redirect_url").show()
+                        $("#redirect_html").hide()
+                    }
+                }
             } else {
-                $("#redirect_url_radio").prop("checked", true)
-                $("#redirect_url").show()
-                $("#redirect_html").hide()
+                $("#modalLabel").text("New Landing Page")
+
+                htmlEditor.setData(EMPTY_FULL_PAGE_HTML)
+                redirectEditor.setData(EMPTY_FULL_PAGE_HTML)
             }
-        }
-    } else {
-        $("#modalLabel").text("New Landing Page")
-    }
+        })
+    })
 }
 
 function copy(idx) {
     $("#modalSubmit").unbind('click').click(function () {
         save(-1)
     })
-    $("#html_editor").ckeditor()
-    $("#redirect_html_editor").ckeditor()
-    var page = pages[idx]
-    $("#name").val("Copy of " + page.name)
-    $("#html_editor").val(page.html)
-    $("#redirect_html_editor").val(page.redirect_html)
-    $("#capture_credentials_checkbox").prop("checked", page.capture_credentials)
-    $("#capture_passwords_checkbox").prop("checked", page.capture_passwords)
-    $("#redirect_url_input").val(page.redirect_url)
-    if (page.capture_credentials) {
-        $("#capture_passwords").show()
-        $("#after-submit").show()
-        if (page.redirect_mode == "html") {
-            $("#redirect_html_radio").prop("checked", true)
-            $("#redirect_url").hide()
-            $("#redirect_html").show()
-        } else {
-            $("#redirect_url_radio").prop("checked", true)
-            $("#redirect_url").show()
-            $("#redirect_html").hide()
-        }
-    }
+    createEditor("html_editor", function (htmlEditor) {
+        createEditor("redirect_html_editor", function (redirectEditor) {
+            var page = pages[idx]
+            $("#name").val("Copy of " + page.name)
+            htmlEditor.setData(page.html)
+            redirectEditor.setData(page.redirect_html)
+            $("#capture_credentials_checkbox").prop("checked", page.capture_credentials)
+            $("#capture_passwords_checkbox").prop("checked", page.capture_passwords)
+            $("#redirect_url_input").val(page.redirect_url)
+            if (page.capture_credentials) {
+                $("#capture_passwords").show()
+                $("#after-submit").show()
+                if (page.redirect_mode == "html") {
+                    $("#redirect_html_radio").prop("checked", true)
+                    $("#redirect_url").hide()
+                    $("#redirect_html").show()
+                } else {
+                    $("#redirect_url_radio").prop("checked", true)
+                    $("#redirect_url").show()
+                    $("#redirect_html").hide()
+                }
+            }
+        })
+    })
 }
 
 function load() {
@@ -200,20 +211,20 @@ function load() {
                 $.each(pages, function (i, page) {
                     pageRows.push([
                         escapeHtml(page.name),
-                        moment(page.modified_date).format('MMMM Do YYYY, h:mm:ss a'),
-                        (canModifyObjects() ? "<div class='pull-right'><span data-toggle='modal' data-backdrop='static' data-target='#modal'><button class='btn btn-primary' data-toggle='tooltip' data-placement='left' title='Edit Page' onclick='edit(" + i + ")'>\
+                        moment(page.modified_date).format('MMM D, YYYY h:mm a'),
+                        (canModifyObjects() ? "<div class='pull-right'><span data-bs-toggle='modal' data-bs-backdrop='static' data-bs-target='#modal'><button class='btn btn-sm btn-primary' data-bs-toggle='tooltip' data-bs-placement='left' title='Edit Page' onclick='edit(" + i + ")'>\
                     <i class='fa fa-pencil'></i>\
                     </button></span>\
-		    <span data-toggle='modal' data-target='#modal'><button class='btn btn-primary' data-toggle='tooltip' data-placement='left' title='Copy Page' onclick='copy(" + i + ")'>\
+		    <span data-bs-toggle='modal' data-bs-target='#modal'><button class='btn btn-sm btn-primary' data-bs-toggle='tooltip' data-bs-placement='left' title='Copy Page' onclick='copy(" + i + ")'>\
                     <i class='fa fa-copy'></i>\
                     </button></span>\
-                    <button class='btn btn-danger' data-toggle='tooltip' data-placement='left' title='Delete Page' onclick='deletePage(" + i + ")'>\
+                    <button class='btn btn-sm btn-danger' data-bs-toggle='tooltip' data-bs-placement='left' title='Delete Page' onclick='deletePage(" + i + ")'>\
                     <i class='fa fa-trash-o'></i>\
                     </button></div>" : "")
                     ])
                 })
                 pagesTable.rows.add(pageRows).draw()
-                $('[data-toggle="tooltip"]').tooltip()
+                initTooltips()
             } else {
                 $("#emptyMessage").show()
             }
@@ -278,21 +289,5 @@ $(document).ready(function () {
         $("#redirect_url").toggle()
         $("#redirect_html").toggle()
     })
-    CKEDITOR.on('dialogDefinition', function (ev) {
-        // Take the dialog name and its definition from the event data.
-        var dialogName = ev.data.name;
-        var dialogDefinition = ev.data.definition;
-
-        // Check if the definition is from the dialog window you are interested in (the "Link" dialog window).
-        if (dialogName == 'link') {
-            dialogDefinition.minWidth = 500
-            dialogDefinition.minHeight = 100
-
-            // Remove the linkType field
-            var infoTab = dialogDefinition.getContents('info');
-            infoTab.get('linkType').hidden = true;
-        }
-    });
-
     load()
 })
