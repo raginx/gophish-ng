@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        goVer: ["1.25", "1.26"]
+        goVer: ["1.26"]
 
     steps:
     - name: Set up Go ${{ matrix.goVer }}
