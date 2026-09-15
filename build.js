@@ -25,7 +25,7 @@ const vendorFiles = [
   path.join("node_modules", "jquery", "dist", "jquery.min.js"),
   path.join("node_modules", "bootstrap", "dist", "js", "bootstrap.bundle.min.js"),
   path.join("node_modules", "moment", "min", "moment.min.js"),
-  path.join("node_modules", "datatables.net", "js", "jquery.dataTables.min.js"),
+  path.join("node_modules", "datatables.net", "js", "dataTables.min.js"),
   path.join("node_modules", "datatables.net-bs5", "js", "dataTables.bootstrap5.min.js"),
   "datetime-moment.js",
   path.join("node_modules", "echarts", "dist", "echarts.min.js"),
