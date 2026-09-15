@@ -350,7 +350,7 @@ $(document).ready(function () {
                         campaign.stats.clicked,
                         campaign.stats.submitted_data,
                         campaign.stats.email_reported,
-                        "<span class=\"badge " + label + "\" data-bs-toggle=\"tooltip\" data-bs-placement=\"right\" data-bs-html=\"true\" title=\"" + quickStats + "\">" + campaign.status + "</span>",
+                        "<span class=\"badge " + label + "\" data-bs-toggle=\"tooltip\" data-bs-placement=\"right\" data-bs-html=\"true\" title=\"" + escapeHtml(quickStats) + "\">" + campaign.status + "</span>",
                         "<div class='pull-right'><a class='btn btn-sm btn-primary' href='/campaigns/" + campaign.id + "' data-bs-toggle='tooltip' data-bs-placement='left' title='View Results'>\
                     <i class='fa fa-bar-chart'></i>\
                     </a>" + (canModifyObjects() ? "\
