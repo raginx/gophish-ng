@@ -40,9 +40,13 @@ type Campaign struct {
 
 // CampaignResults is a struct representing the results from a campaign
 type CampaignResults struct {
-	Id     int64  `json:"id"`
-	Name   string `json:"name"`
-	Status string `json:"status"`
+	Id         int64    `json:"id"`
+	Name       string   `json:"name"`
+	Status     string   `json:"status"`
+	TemplateId int64    `json:"-"`
+	Template   Template `json:"template"`
+	PageId     int64    `json:"-"`
+	Page       Page     `json:"page"`
 	// Results/Events are populated manually via separate queries, not a
 	// gorm relation - Result/Event's CampaignId satisfies Campaign's FK
 	// convention, not CampaignResults'.
@@ -461,7 +465,23 @@ func GetCampaignResults(id int64, teamID int64) (CampaignResults, error) {
 		log.Errorf("%s: events not found for campaign", err)
 		return cr, err
 	}
-	return cr, err
+	err = db.Table("templates").Where("id=?", cr.TemplateId).First(&cr.Template).Error
+	if err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return cr, err
+		}
+		cr.Template = Template{Name: "[Deleted]"}
+		log.Warnf("%s: template not found for campaign", err)
+	}
+	err = db.Table("pages").Where("id=?", cr.PageId).First(&cr.Page).Error
+	if err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return cr, err
+		}
+		cr.Page = Page{Name: "[Deleted]"}
+		log.Warnf("%s: page not found for campaign", err)
+	}
+	return cr, nil
 }
 
 // GetQueuedCampaigns returns the campaigns that are queued up for this given minute

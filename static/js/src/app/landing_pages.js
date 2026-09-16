@@ -225,6 +225,7 @@ function load() {
                 })
                 pagesTable.rows.add(pageRows).draw()
                 initTooltips()
+                openItemFromQuery(pages, edit)
             } else {
                 $("#emptyMessage").show()
             }

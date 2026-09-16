@@ -349,6 +349,7 @@ function load() {
                 })
                 templateTable.rows.add(templateRows).draw()
                 initTooltips()
+                openItemFromQuery(templates, edit)
             } else {
                 $("#emptyMessage").show()
             }

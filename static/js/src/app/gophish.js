@@ -87,6 +87,28 @@ function hideModal(selector) {
 }
 window.hideModal = hideModal
 
+// openItemFromQuery opens the edit modal for the item whose id matches the
+// page's `?id=` query param, e.g. when arriving via a deep link from
+// another page
+function openItemFromQuery(items, editFn) {
+    var id = new URLSearchParams(window.location.search).get("id")
+    if (!id) {
+        return
+    }
+    var idx = items.findIndex(function (item) {
+        return String(item.id) === id
+    })
+    if (idx === -1) {
+        return
+    }
+    editFn(idx)
+    var el = document.querySelector("#modal")
+    if (el) {
+        bootstrap.Modal.getOrCreateInstance(el).show()
+    }
+}
+window.openItemFromQuery = openItemFromQuery
+
 function showTab(selector) {
     var el = document.querySelector(selector)
     if (el) {

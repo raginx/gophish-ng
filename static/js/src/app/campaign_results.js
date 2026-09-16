@@ -792,6 +792,16 @@ function load() {
                 $("#campaignResults").show()
                 // Set the title
                 $("#page-title").text("Results for " + c.name)
+                var templateLabel = c.template.id ?
+                    "<a href=\"/templates?id=" + c.template.id + "\">" + escapeHtml(c.template.name) + "</a>" :
+                    escapeHtml(c.template.name)
+                var pageLabel = c.page.id ?
+                    "<a href=\"/landing_pages?id=" + c.page.id + "\">" + escapeHtml(c.page.name) + "</a>" :
+                    escapeHtml(c.page.name)
+                $("#campaign-meta").html(
+                    "<span><i class=\"fa fa-envelope-o me-1\"></i>Template: " + templateLabel + "</span>" +
+                    "<span><i class=\"fa fa-window-restore me-1\"></i>Landing Page: " + pageLabel + "</span>"
+                )
                 if (c.status == "Completed") {
                     // .prop() rather than [0].disabled: read-only accounts
                     // never get a complete button rendered, and indexing an
