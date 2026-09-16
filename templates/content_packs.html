@@ -1,0 +1,82 @@
+{{define "body"}}
+<div class="main">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h1 class="page-header mb-0">Content Packs</h1>
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-outline-secondary" id="exportContentPackButton" onclick="exportContentPack()" disabled><i class="fa fa-download"></i> Export Selected</button>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-backdrop="static" data-bs-target="#importContentPackModal"><i class="fa fa-upload"></i> Import Content Pack</button>
+        </div>
+    </div>
+    <div id="flashes" class="row"></div>
+    <p class="text-muted">Bundle Email Templates and Landing Pages into a single file to share with another Gophish instance, or import a Content Pack someone shared with you.</p>
+
+    <h4>Email Templates</h4>
+    <div class="card mb-4">
+        <div class="card-body">
+            <div id="templatesLoading">
+                <i class="fa fa-spinner fa-spin fa-2x"></i>
+            </div>
+            <div id="templatesEmptyMessage" class="alert alert-info" style="display:none;">No templates yet.</div>
+            <table id="templateTable" class="table" style="display:none;">
+                <thead>
+                    <tr>
+                        <th class="col-md-1 no-sort"><input type="checkbox" id="selectAllTemplates" onclick="toggleSelectAll(this, '.template-select')"></th>
+                        <th>Name</th>
+                        <th>Modified Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <h4>Landing Pages</h4>
+    <div class="card">
+        <div class="card-body">
+            <div id="pagesLoading">
+                <i class="fa fa-spinner fa-spin fa-2x"></i>
+            </div>
+            <div id="pagesEmptyMessage" class="alert alert-info" style="display:none;">No pages created yet.</div>
+            <table id="pagesTable" class="table" style="display:none;">
+                <thead>
+                    <tr>
+                        <th class="col-md-1 no-sort"><input type="checkbox" id="selectAllPages" onclick="toggleSelectAll(this, '.page-select')"></th>
+                        <th>Name</th>
+                        <th>Last Modified Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<!-- Modal -->
+<div class="modal fade" id="importContentPackModal" tabindex="-1" role="dialog" aria-labelledby="importContentPackModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <!-- Import Content Pack Modal -->
+            <div class="modal-header">
+                <h4 class="modal-title" id="importContentPackModalLabel">Import Content Pack</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row" id="importContentPack.flashes"></div>
+                <p>Select a Content Pack (<code>.json</code>) exported from Gophish. Templates and Pages it contains will be added to this team; names that already exist will be suffixed automatically.</p>
+                <label class="col-form-label" for="contentPackFile">Content Pack File:</label>
+                <div class="form-group">
+                    <input type="file" class="form-control" id="contentPackFile" accept="application/json,.json">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" data-bs-dismiss="modal" class="btn btn-secondary">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="importContentPack()">Import</button>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+{{define "scripts"}}
+<script src="/js/dist/app/content_packs.min.js"></script>
+{{end}}

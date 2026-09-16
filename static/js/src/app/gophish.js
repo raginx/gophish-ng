@@ -78,6 +78,35 @@ function initTooltips() {
 }
 window.initTooltips = initTooltips
 
+// toggleSelectAll checks/unchecks every checkbox matching `selector` to
+// match the state of the header checkbox `header`, and fires "change" so
+// listeners bound to the individual checkboxes (e.g. an Export button's
+// enabled state) stay in sync.
+function toggleSelectAll(header, selector) {
+    $(selector).prop("checked", $(header).prop("checked")).trigger("change")
+}
+window.toggleSelectAll = toggleSelectAll
+
+// downloadJSON triggers a browser download of `data` as a pretty-printed
+// JSON file, mirroring the Blob-based CSV export pattern used elsewhere.
+function downloadJSON(data, filename) {
+    var blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json"
+    });
+    if (navigator.msSaveBlob) {
+        navigator.msSaveBlob(blob, filename);
+        return
+    }
+    var url = window.URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+window.downloadJSON = downloadJSON
+
 function hideModal(selector) {
     var el = document.querySelector(selector || "#modal")
     var modal = el && bootstrap.Modal.getInstance(el)
@@ -374,6 +403,14 @@ var api = {
     // send_test_email sends an email to the specified email address
     send_test_email: function (req) {
         return query("/util/send_test_email", "POST", req, true)
+    },
+    // content_pack_export bundles the given templates/pages into a Content Pack
+    content_pack_export: function (req) {
+        return query("/content-packs/export", "POST", req, false)
+    },
+    // content_pack_import creates templates/pages from a Content Pack
+    content_pack_import: function (req) {
+        return query("/content-packs/import", "POST", req, false)
     },
     reset: function () {
         return query("/reset", "POST", {}, true)

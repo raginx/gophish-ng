@@ -136,6 +136,7 @@ func (as *AdminServer) registerRoutes() {
 	router.HandleFunc("/templates", mid.Use(as.Templates, mid.RequireLogin))
 	router.HandleFunc("/groups", mid.Use(as.Groups, mid.RequireLogin))
 	router.HandleFunc("/landing_pages", mid.Use(as.LandingPages, mid.RequireLogin))
+	router.HandleFunc("/content-packs", mid.Use(as.ContentPacks, mid.RequirePermission(models.PermissionModifyObjects), mid.RequireLogin))
 	router.HandleFunc("/sending_profiles", mid.Use(as.SendingProfiles, mid.RequireLogin))
 	router.HandleFunc("/settings", mid.Use(as.Settings, mid.RequireLogin))
 	router.HandleFunc("/oauth/imap/authorize", mid.Use(as.OAuthIMAPAuthorize, mid.RequireLogin))
@@ -277,6 +278,13 @@ func (as *AdminServer) LandingPages(w http.ResponseWriter, r *http.Request) {
 	params := newTemplateParams(r)
 	params.Title = "Landing Pages"
 	getTemplate(w, "landing_pages", params)
+}
+
+// ContentPacks handles the default path and template execution
+func (as *AdminServer) ContentPacks(w http.ResponseWriter, r *http.Request) {
+	params := newTemplateParams(r)
+	params.Title = "Content Packs"
+	getTemplate(w, "content_packs", params)
 }
 
 // SendingProfiles handles the default path and template execution
