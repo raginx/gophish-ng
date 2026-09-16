@@ -51,6 +51,7 @@ const appFiles = [
   "ckeditor-setup.js",
   "campaign_results.js",
   "campaigns.js",
+  "content_packs.js",
   "dashboard.js",
   "groups.js",
   "landing_pages.js",
