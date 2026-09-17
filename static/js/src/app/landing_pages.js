@@ -118,6 +118,7 @@ function importSite() {
 }
 
 function edit(idx) {
+    resetPreviewTabs()
     $("#modalSubmit").unbind('click').click(function () {
         save(idx)
     })
@@ -157,6 +158,7 @@ function edit(idx) {
 }
 
 function copy(idx) {
+    resetPreviewTabs()
     $("#modalSubmit").unbind('click').click(function () {
         save(-1)
     })

@@ -61,6 +61,73 @@ var TEMPLATE_TAGS = [{
     }
 ];
 
+// Plausible sample values for each TEMPLATE_TAGS variable, used only to
+// render the "Preview" tab - swapping literal "{{.FirstName}}" placeholders
+// for something readable so the preview looks like what a real recipient
+// would see.
+var TEMPLATE_PREVIEW_SAMPLE_VALUES = {
+    RId: 'a1b2c3',
+    FirstName: 'Jamie',
+    LastName: 'Nguyen',
+    Position: 'Marketing Manager',
+    Email: 'jamie.nguyen@example.com',
+    From: 'IT Security <itsecurity@example.com>',
+    TrackingURL: '#',
+    Tracker: '<!-- tracking pixel -->',
+    URL: '#',
+    BaseURL: '#',
+    Domain: 'example.com'
+};
+
+// applyPreviewSampleValues swaps every {{.Var}} template tag in `html` for
+// its sample value from TEMPLATE_PREVIEW_SAMPLE_VALUES.
+function applyPreviewSampleValues(html) {
+    return TEMPLATE_TAGS.reduce(function (result, tag) {
+        var value = TEMPLATE_PREVIEW_SAMPLE_VALUES[tag.name];
+        if (value === undefined) {
+            return result;
+        }
+        var pattern = new RegExp('\\{\\{\\.' + tag.name + '\\}\\}', 'g');
+        return result.replace(pattern, value);
+    }, html);
+}
+window.applyPreviewSampleValues = applyPreviewSampleValues;
+
+// updatePreviewFrame renders editors[editorId]'s current content into the
+// sandboxed <iframe> `frameId` via srcdoc. The iframe's empty `sandbox`
+// attribute blocks scripts, form submission, and navigation while still
+// rendering markup/CSS/images normally
+function updatePreviewFrame(frameId, editorId) {
+    var frame = document.getElementById(frameId);
+    var editor = editors[editorId];
+    if (!frame || !editor) {
+        return;
+    }
+    frame.srcdoc = applyPreviewSampleValues(editor.getData());
+}
+window.updatePreviewFrame = updatePreviewFrame;
+
+// resetPreviewTabs switches every tab group that contains a "Preview" tab
+// back to its first (non-preview) tab. The modal DOM (and so each tab's
+// Bootstrap-tracked active state) persists across opens - without this, a
+// Preview tab left active from a previous edit stays active and pre-shown
+// on the next one
+function resetPreviewTabs() {
+    $('a[data-preview-editor]').each(function () {
+        var firstTab = $(this).closest('ul.nav-tabs').find('a[data-bs-toggle="tab"]').first()[0];
+        if (firstTab) {
+            bootstrap.Tab.getOrCreateInstance(firstTab).show();
+        }
+    });
+}
+window.resetPreviewTabs = resetPreviewTabs;
+
+// Delegated so it applies to every preview tab on whichever page defines
+$(document).on('shown.bs.tab', 'a[data-preview-editor]', function (evt) {
+    var $tab = $(evt.currentTarget);
+    updatePreviewFrame($tab.data('preview-frame'), $tab.data('preview-editor'));
+});
+
 var TEMPLATE_VAR_PATTERN = /\{\{\.?([A-Za-z]|\})*$/;
 
 function templateVarMatches(query) {

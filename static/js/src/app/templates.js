@@ -119,16 +119,6 @@ var deleteTemplate = function (idx) {
     })
 }
 
-function deleteTemplate(idx) {
-    if (confirm("Delete " + templates[idx].name + "?")) {
-        api.templateId.delete(templates[idx].id)
-            .done(function (data) {
-                successFlash(data.message)
-                load()
-            })
-    }
-}
-
 function attach(files) {
     attachmentsTable = $("#attachmentsTable").DataTable({
         destroy: true,
@@ -165,6 +155,7 @@ function attach(files) {
 }
 
 function edit(idx) {
+    resetPreviewTabs()
     $("#modalSubmit").unbind('click').click(function () {
         save(idx)
     })
@@ -231,6 +222,7 @@ function edit(idx) {
 }
 
 function copy(idx) {
+    resetPreviewTabs()
     $("#modalSubmit").unbind('click').click(function () {
         save(-1)
     })
