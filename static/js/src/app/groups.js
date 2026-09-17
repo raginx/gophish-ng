@@ -161,7 +161,7 @@ var downloadCSVTemplate = function () {
 }
 
 
-var deleteGroup = function (id) {
+var deleteGroup = function (id, el) {
     var group = groups.find(function (x) {
         return x.id === id
     })
@@ -191,15 +191,13 @@ var deleteGroup = function (id) {
         }
     }).then(function (result) {
         if (result.value){
+            $(el).closest('table').DataTable().row($(el).closest('tr')).remove().draw(false)
             Swal.fire(
                 'Group Deleted!',
                 'This group has been deleted!',
                 'success'
             );
         }
-        $('button:contains("OK")').on('click', function () {
-            location.reload()
-        })
     })
 }
 
@@ -262,7 +260,7 @@ function load() {
                         (canModifyObjects() ? "<div class='pull-right'><button class='btn btn-sm btn-primary' data-bs-toggle='modal' data-bs-backdrop='static' data-bs-target='#modal' onclick='edit(" + group.id + ")'>\
                     <i class='fa fa-pencil'></i>\
                     </button>\
-                    <button class='btn btn-sm btn-danger' onclick='deleteGroup(" + group.id + ")'>\
+                    <button class='btn btn-sm btn-danger' onclick='deleteGroup(" + group.id + ", this)'>\
                     <i class='fa fa-trash-o'></i>\
                     </button></div>" : "")
                     ])

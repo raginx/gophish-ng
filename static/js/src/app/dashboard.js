@@ -90,12 +90,12 @@ var statsMapping = {
     "submitted_data": "Submitted Data",
 }
 
-function deleteCampaign(idx) {
+function deleteCampaign(idx, el) {
     if (confirm("Delete " + campaigns[idx].name + "?")) {
         api.campaignId.delete(campaigns[idx].id)
             .done(function (data) {
                 successFlash(data.message)
-                location.reload()
+                $(el).closest('table').DataTable().row($(el).closest('tr')).remove().draw(false)
             })
     }
 }
@@ -354,7 +354,7 @@ $(document).ready(function () {
                         "<div class='pull-right'><a class='btn btn-sm btn-primary' href='/campaigns/" + campaign.id + "' data-bs-toggle='tooltip' data-bs-placement='left' title='View Results'>\
                     <i class='fa fa-bar-chart'></i>\
                     </a>" + (canModifyObjects() ? "\
-                    <button class='btn btn-sm btn-danger' onclick='deleteCampaign(" + i + ")' data-bs-toggle='tooltip' data-bs-placement='left' title='Delete Campaign'>\
+                    <button class='btn btn-sm btn-danger' onclick='deleteCampaign(" + i + ", this)' data-bs-toggle='tooltip' data-bs-placement='left' title='Delete Campaign'>\
                     <i class='fa fa-trash-o'></i>\
                     </button>" : "") + "</div>"
                     ])

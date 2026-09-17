@@ -83,7 +83,7 @@ function dismiss() {
     hideModal()
 }
 
-var deleteTemplate = function (idx) {
+var deleteTemplate = function (idx, el) {
     Swal.fire({
         title: "Are you sure?",
         text: "This will delete the template. This can't be undone!",
@@ -107,15 +107,13 @@ var deleteTemplate = function (idx) {
         }
     }).then(function (result) {
         if(result.value) {
+            $(el).closest('table').DataTable().row($(el).closest('tr')).remove().draw(false)
             Swal.fire(
                 'Template Deleted!',
                 'This template has been deleted!',
                 'success'
             );
         }
-        $('button:contains("OK")').on('click', function () {
-            location.reload()
-        })
     })
 }
 
@@ -334,7 +332,7 @@ function load() {
 		    <span data-bs-toggle='modal' data-bs-target='#modal'><button class='btn btn-sm btn-primary' data-bs-toggle='tooltip' data-bs-placement='left' title='Copy Template' onclick='copy(" + i + ")'>\
                     <i class='fa fa-copy'></i>\
                     </button></span>\
-                    <button class='btn btn-sm btn-danger' data-bs-toggle='tooltip' data-bs-placement='left' title='Delete Template' onclick='deleteTemplate(" + i + ")'>\
+                    <button class='btn btn-sm btn-danger' data-bs-toggle='tooltip' data-bs-placement='left' title='Delete Template' onclick='deleteTemplate(" + i + ", this)'>\
                     <i class='fa fa-trash-o'></i>\
                     </button></div>" : "")
                     ])

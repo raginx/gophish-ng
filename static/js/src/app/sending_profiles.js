@@ -108,7 +108,7 @@ var dismissSendTestEmailModal = function () {
 }
 
 
-var deleteProfile = function (idx) {
+var deleteProfile = function (idx, el) {
     Swal.fire({
         title: "Are you sure?",
         text: "This will delete the sending profile. This can't be undone!",
@@ -132,15 +132,13 @@ var deleteProfile = function (idx) {
         }
     }).then(function (result) {
         if (result.value){
+            $(el).closest('table').DataTable().row($(el).closest('tr')).remove().draw(false)
             Swal.fire(
                 'Sending Profile Deleted!',
                 'This sending profile has been deleted!',
                 'success'
             );
         }
-        $('button:contains("OK")').on('click', function () {
-            location.reload()
-        })
     })
 }
 
@@ -224,7 +222,7 @@ function load() {
 		    <span data-bs-toggle='modal' data-bs-target='#modal'><button class='btn btn-sm btn-primary' data-bs-toggle='tooltip' data-bs-placement='left' title='Copy Profile' onclick='copy(" + i + ")'>\
                     <i class='fa fa-copy'></i>\
                     </button></span>\
-                    <button class='btn btn-sm btn-danger' data-bs-toggle='tooltip' data-bs-placement='left' title='Delete Profile' onclick='deleteProfile(" + i + ")'>\
+                    <button class='btn btn-sm btn-danger' data-bs-toggle='tooltip' data-bs-placement='left' title='Delete Profile' onclick='deleteProfile(" + i + ", this)'>\
                     <i class='fa fa-trash-o'></i>\
                     </button></div>" : "")
                     ])

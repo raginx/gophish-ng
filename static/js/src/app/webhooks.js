@@ -104,7 +104,7 @@ const editWebhook = (id) => {
     }
 };
 
-const deleteWebhook = (id) => {
+const deleteWebhook = (id, el) => {
     var wh = webhooks.find(x => x.id == id);
     if (!wh) {
         return;
@@ -135,15 +135,13 @@ const deleteWebhook = (id) => {
         }
     }).then(function(result) {
         if (result.value) {
+            $(el).closest('table').DataTable().row($(el).closest('tr')).remove().draw(false)
             Swal.fire(
                 "Webhook Deleted!",
                 `The webhook has been deleted!`,
                 "success"
             );
         }
-        $("button:contains('OK')").on("click", function() {
-            location.reload();
-        })
     })
 };
 
@@ -177,7 +175,7 @@ $(document).ready(function() {
         editWebhook($(this).attr("data-webhook-id"));
     });
     $("#webhookTable").on("click", ".delete_button", function(e) {
-        deleteWebhook($(this).attr("data-webhook-id"));
+        deleteWebhook($(this).attr("data-webhook-id"), this);
     });
     $("#webhookTable").on("click", ".ping_button", function(e) {
         pingUrl(e.currentTarget, e.currentTarget.dataset.webhookId);

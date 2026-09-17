@@ -88,7 +88,7 @@ const edit = (id) => {
     }
 }
 
-const deleteUser = (id) => {
+const deleteUser = (id, el) => {
     var user = users.find(x => x.id == id)
     if (!user) {
         return
@@ -127,15 +127,13 @@ const deleteUser = (id) => {
         }
     }).then(function (result) {
         if (result.value){
+            $(el).closest('table').DataTable().row($(el).closest('tr')).remove().draw(false)
             Swal.fire(
                 'User Deleted!',
                 "The user account for " + escapeHtml(user.username) + " has been deleted.",
                 'success'
             );
         }
-        $('button:contains("OK")').on('click', function () {
-            location.reload()
-        })
     })
 }
 
@@ -269,7 +267,7 @@ $(document).ready(function () {
         edit($(this).attr('data-user-id'))
     })
     $("#userTable").on('click', '.delete_button', function (e) {
-        deleteUser($(this).attr('data-user-id'))
+        deleteUser($(this).attr('data-user-id'), this)
     })
     $("#userTable").on('click', '.impersonate_button', function (e) {
         impersonate($(this).attr('data-user-id'))

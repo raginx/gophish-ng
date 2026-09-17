@@ -125,7 +125,7 @@ function dismiss() {
     hideModal();
 }
 
-function deleteCampaign(idx) {
+function deleteCampaign(idx, el) {
     Swal.fire({
         title: "Are you sure?",
         text: "This will delete the campaign. This can't be undone!",
@@ -149,15 +149,16 @@ function deleteCampaign(idx) {
         }
     }).then(function (result) {
         if (result.value){
+            // Remove the row in place instead of reloading the page,
+            // so the current column sort order is preserved.
+            var row = $(el).closest('tr')
+            $(el).closest('table').DataTable().row(row).remove().draw(false)
             Swal.fire(
                 'Campaign Deleted!',
                 'This campaign has been deleted!',
                 'success'
             );
         }
-        $('button:contains("OK")').on('click', function () {
-            location.reload()
-        })
     })
 }
 
@@ -375,7 +376,7 @@ $(document).ready(function () {
             <span data-bs-toggle='modal' data-bs-backdrop='static' data-bs-target='#modal'><button class='btn btn-sm btn-primary' data-bs-toggle='tooltip' data-bs-placement='left' title='Copy Campaign' onclick='copy(" + i + ")'>\
                     <i class='fa fa-copy'></i>\
                     </button></span>\
-                    <button class='btn btn-sm btn-danger' onclick='deleteCampaign(" + i + ")' data-bs-toggle='tooltip' data-bs-placement='left' title='Delete Campaign'>\
+                    <button class='btn btn-sm btn-danger' onclick='deleteCampaign(" + i + ", this)' data-bs-toggle='tooltip' data-bs-placement='left' title='Delete Campaign'>\
                     <i class='fa fa-trash-o'></i>\
                     </button>" : "") + "</div>"
                     ]
