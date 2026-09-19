@@ -1,3 +1,7 @@
+---
+description: "Reference for the Gophish JSON REST API, including this fork's OAuth2 IMAP additions, for automating phishing simulations."
+---
+
 # Introduction
 
 !!! note

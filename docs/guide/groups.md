@@ -1,3 +1,7 @@
+---
+description: "How to create and manage target groups of recipients for Gophish-NG phishing campaigns."
+---
+
 # Groups
 
 Gophish lets you manage groups of users targeted in campaigns.

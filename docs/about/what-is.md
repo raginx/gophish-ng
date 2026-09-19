@@ -1,3 +1,7 @@
+---
+description: "What Gophish is, why phishing simulations matter for security awareness training, and what Gophish-NG changes in this fork."
+---
+
 # What is Gophish?
 
 Gophish is a phishing framework that makes the simulation of real-world
@@ -23,9 +27,12 @@ Gophish actually does:
 * **Real, verified security fixes** – including a stored XSS in the campaign delete dialog, a process-wide crash bug, an SSRF-adjacent `allowed_internal_hosts` misconfiguration, and an authorization bypass in account unlocking.
 * **A rebuilt, minimal frontend toolchain** – Gulp + Webpack replaced with a single `esbuild` script.
 * **CI that actually catches things** – `govulncheck`, linting, and automated dependency updates.
+* **Features upstream lacks** – teams, so several operators share the same campaigns and assets instead of each working in their own silo; a read-only auditor role for reviewers and clients; OAuth 2.0 for IMAP reporting; SMTP CC and per-profile send rates.
 
-The features, workflows, and screenshots described in the rest of this
-guide apply equally to Gophish-NG and upstream Gophish, since this fork
-doesn't change user-facing behavior. See the
+Most of the features, workflows, and screenshots described in the rest of
+this guide apply equally to Gophish-NG and upstream Gophish. Sections
+covering [teams and the auditor role](../guide/user-management.md) and
+[OAuth2 IMAP reporting](../automation/email-reporting.md) describe
+functionality specific to this fork. See the
 [project README](https://github.com/raginx/gophish-ng#readme) for the full
 rationale.

@@ -1,3 +1,7 @@
+---
+description: "Community guides and articles about running phishing simulations with Gophish."
+---
+
 # Additional References
 
 ## Community Guides

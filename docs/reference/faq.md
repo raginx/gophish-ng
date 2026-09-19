@@ -1,3 +1,7 @@
+---
+description: "Answers to common Gophish-NG problems, including TLS handshake and dashboard access errors."
+---
+
 # FAQ
 
 ## Unable to Reach Admin Dashboard

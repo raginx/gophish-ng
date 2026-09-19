@@ -1,3 +1,7 @@
+---
+description: "API reference for resetting your Gophish-NG API key and managing account settings programmatically."
+---
+
 
 # Settings
 

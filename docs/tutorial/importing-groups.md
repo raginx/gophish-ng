@@ -1,3 +1,7 @@
+---
+description: "Step-by-step: import a target group of recipients into Gophish-NG for the Morning Catch tutorial."
+---
+
 # Importing Groups
 
 The first thing we need to do before we can launch a campaign is to figure out who to target. There are a ton of ways to gather/generate email addresses for potential targets. You can either harvest email addresses from public information using OSINT if you are aiming to simulate a realistic scenario.

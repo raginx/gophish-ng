@@ -1,3 +1,7 @@
+---
+description: "Let recipients report simulated phishing emails back to Gophish-NG via IMAP-based email reporting."
+---
+
 # Email Reporting
 
 Gophish supports the ability for users to report the simulated phishing emails they receive. This is to encourage users to report suspicious to their administrators, potentially catching malicious emails earlier.

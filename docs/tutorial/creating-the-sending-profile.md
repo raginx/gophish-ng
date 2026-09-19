@@ -1,3 +1,7 @@
+---
+description: "Step-by-step: configure an SMTP sending profile for the Morning Catch phishing simulation tutorial."
+---
+
 # Creating the Sending Profile
 
 Creating a sending profile is easy for this campaign. Navigate to the "Sending Profiles" page and click "New Profile".

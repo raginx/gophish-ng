@@ -1,3 +1,7 @@
+---
+description: "Install Gophish-NG from pre-built binaries, from source, or via Docker on Linux, macOS, and Windows."
+---
+
 # Installation
 
 ## Installing Gophish-NG Using Pre-Built Binaries

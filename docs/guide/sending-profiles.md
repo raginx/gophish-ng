@@ -1,3 +1,7 @@
+---
+description: "How to configure SMTP sending profiles used to relay Gophish-NG campaign emails."
+---
+
 # Sending Profiles
 
 To send emails, Gophish requires you to configure SMTP relay details called "Sending Profiles".

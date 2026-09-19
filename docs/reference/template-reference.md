@@ -1,3 +1,7 @@
+---
+description: "Full reference of template variables available in Gophish-NG email templates and landing pages."
+---
+
 # Template Reference
 
 The following variables are available in templates and landing pages:

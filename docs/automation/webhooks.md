@@ -1,3 +1,7 @@
+---
+description: "Configure Gophish-NG webhooks to receive real-time, optionally signed HTTP push notifications for campaign events."
+---
+
 # Webhooks
 
 Ever since Gophish was launched, we've had the ability to fetch campaign results via the API. But sometimes, you may want to have campaign updates pushed directly to you as they happen.

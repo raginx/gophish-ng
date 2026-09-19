@@ -1,3 +1,7 @@
+---
+description: "API reference for Gophish-NG user accounts and roles: User, Admin, and Auditor."
+---
+
 # User Management
 
 Gophish supports having multiple user accounts. Each of these accounts are separate, with their own campaigns, landing pages, templates, etc.

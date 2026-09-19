@@ -1,3 +1,7 @@
+---
+description: "How to configure and launch phishing campaigns, and monitor opens, clicks, and submissions in Gophish-NG."
+---
+
 # Campaigns
 
 Gophish is centered around launching campaigns. This involves sending emails to one or more groups and monitoring for opened emails, clicked links, or submitted credentials.

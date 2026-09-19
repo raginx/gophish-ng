@@ -1,3 +1,7 @@
+---
+description: "Step-by-step: clone a webmail portal into a Gophish-NG landing page for the Morning Catch tutorial."
+---
+
 # Creating the Landing Page
 
 The Morning Catch corporation has a webmail portal that we will clone for our landing page.

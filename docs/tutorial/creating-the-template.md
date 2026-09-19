@@ -1,3 +1,7 @@
+---
+description: "Step-by-step: build an email template for the Morning Catch phishing simulation tutorial."
+---
+
 # Creating the Template
 
 To create the template we will use for our Morning Catch campaign, first navigate to the "Email Templates" page and click the "New Template" button.

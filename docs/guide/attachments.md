@@ -1,3 +1,7 @@
+---
+description: "Add Gophish-NG tracking variables to Word, Excel, PowerPoint, and text file attachments."
+---
+
 # Attachment Tracking
 
 It is possible to add gophish [template variables](../reference/template-reference.md) to the contents of certain attachment file types. The following file types are supported:

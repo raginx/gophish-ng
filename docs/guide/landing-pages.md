@@ -1,3 +1,7 @@
+---
+description: "How to create landing pages that capture credentials and redirect targets in Gophish-NG."
+---
+
 # Landing Pages
 
 Landing pages are the actual HTML pages that are returned to the users when they click the phishing links they receive.

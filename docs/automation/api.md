@@ -1,3 +1,7 @@
+---
+description: "Gophish-NG is API-first: automate phishing simulations with the JSON REST API and official Python client."
+---
+
 # Using the API
 
 Gophish was designed to be API-first. This means that the UI is just a wrapper around a powerful JSON RESTful API.

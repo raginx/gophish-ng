@@ -1,3 +1,7 @@
+---
+description: "API reference for the Gophish-NG Sending Profile object and its SMTP configuration fields."
+---
+
 # Sending Profiles
 
 A "Sending Profile" is the SMTP configuration that tells Gophish how to send emails.

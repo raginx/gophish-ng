@@ -1,3 +1,7 @@
+---
+description: "Meet Morning Catch, the fictional company used throughout the Gophish-NG getting-started tutorial."
+---
+
 # Introducing the Morning Catch Corporation
 
 ![Morning Catch](http://imgur.com/ntxL0KB.png)

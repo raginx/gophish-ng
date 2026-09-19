@@ -1,3 +1,7 @@
+---
+description: "API reference for the Gophish-NG Group object used to manage campaign recipients."
+---
+
 # Users & Groups
 
 Gophish manages recipients for campaigns in groups. Each group can contain one or more recipients. Groups have the following format:

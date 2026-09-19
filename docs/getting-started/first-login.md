@@ -1,3 +1,7 @@
+---
+description: "Start the Gophish-NG binary, find your temporary admin credentials, and log in to the dashboard for the first time."
+---
+
 # First Login
 
 ## Running Gophish

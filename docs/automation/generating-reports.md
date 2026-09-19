@@ -1,3 +1,7 @@
+---
+description: "Generate Gophish-NG campaign reports from the web UI, exported CSV logs, or the API."
+---
+
 # Generating Reports
 
 Reporting is an important part of any Gophish campaign. To help facilitate generating reports, there are a few options you could consider:

@@ -1,3 +1,7 @@
+---
+description: "API reference for the Gophish-NG Landing Page object returned when targets click phishing links."
+---
+
 # Landing Pages
 
 A "Landing Page" is the HTML content returned when targets click on the links in Gophish emails.

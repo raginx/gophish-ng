@@ -1,3 +1,7 @@
+---
+description: "Step-by-step: configure and launch the finished phishing campaign in the Morning Catch tutorial."
+---
+
 # Launching the Campaign
 
 Now that we have all the pieces setup, we can launch the campaign!

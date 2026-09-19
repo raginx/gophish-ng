@@ -1,3 +1,7 @@
+---
+description: "How to configure and redirect Gophish-NG log output, including logging to a file."
+---
+
 # Logging
 
 ## Configuring Logging

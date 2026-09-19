@@ -1,3 +1,7 @@
+---
+description: "Gophish-NG is MIT licensed, the same permissive license as upstream Gophish."
+---
+
 # License
 
 Gophish-NG is licensed under the MIT License, same as upstream Gophish. The

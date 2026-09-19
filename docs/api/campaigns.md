@@ -1,3 +1,7 @@
+---
+description: "API reference for the Gophish-NG Campaign object and its fields."
+---
+
 # Campaigns
 
 Campaigns have the following structure:

@@ -1,3 +1,7 @@
+---
+description: "Gophish-NG user roles explained: User, Admin, and Auditor, and how to manage accounts."
+---
+
 # User Management
 
 Gophish supports user accounts with different roles. There are three separate roles that can be assigned to users:

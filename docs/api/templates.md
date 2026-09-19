@@ -1,3 +1,7 @@
+---
+description: "API reference for the Gophish-NG Template object used to define phishing email content."
+---
+
 # Templates
 
 A "Template" is the content of the emails that are sent to targets. They can be imported from an existing email, or created from scratch.

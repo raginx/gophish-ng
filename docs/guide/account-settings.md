@@ -1,3 +1,7 @@
+---
+description: "How to change your password and reset your API key in Gophish-NG account settings."
+---
+
 # Changing Account Settings
 
 ## Changing Your Password & Updating Settings

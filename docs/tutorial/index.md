@@ -1,3 +1,7 @@
+---
+description: "A complete Gophish-NG tutorial: build a phishing campaign end-to-end using the fictional Morning Catch company."
+---
+
 # Building Your First Campaign
 
 This tutorial walks through setting up a complete phishing campaign from
