@@ -7,10 +7,10 @@ description: "Gophish-NG documentation: an actively maintained fork of Gophish w
 
 ![Gophish-NG](https://raw.github.com/raginx/gophish-ng/master/static/images/gophish-ng.png)
 
-Gophish-NG is an actively maintained fork of [Gophish](https://github.com/gophish/gophish),
-the widely used, battle-tested open-source phishing toolkit for pentesters
-and businesses running real-world phishing simulations and security
-awareness training.
+[Gophish-NG](https://github.com/raginx/gophish-ng) is an actively maintained
+fork of [Gophish](https://github.com/gophish/gophish), the widely used,
+battle-tested open-source phishing toolkit for pentesters and businesses
+running real-world phishing simulations and security awareness training.
 
 Alongside everything Gophish already does well — landing pages, email
 templates, target groups, sending profiles, and per-recipient tracking
