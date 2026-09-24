@@ -49,3 +49,7 @@ A convincing landing page mirrors the real login page it's impersonating - here'
 
 There may be times that you want to store assets such as HTML pages, CSS/JS resources or other static files. To use these in Gophish, just move them under the `static/endpoint` directory. You can then reference them using the URL `http[s]://phishing_server/static/filename`. For more background, see [this issue.](https://github.com/gophish/gophish/issues/220)
 
+## Sharing Landing Pages
+
+To share a landing page with another Gophish-NG instance, see [Content Packs](content-packs.md).
+

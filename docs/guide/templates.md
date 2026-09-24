@@ -44,3 +44,5 @@ A well-built template looks and feels like a real corporate email - here's an ex
 
 ![Example email template](../assets/screen_mailtemplate.png)
 
+To share a template with another Gophish-NG instance, see [Content Packs](content-packs.md).
+
