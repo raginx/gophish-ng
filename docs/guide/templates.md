@@ -22,6 +22,16 @@ A powerful feature of Gophish is the HTML editor. To switch between the HTML sou
 
 This is helpful to ensure that the email received by the user is pixel-perfect.
 
+> Note: If your template includes a `<style>` block (for example, from an
+> imported email), that CSS is saved with the template and used in the
+> email that's actually sent, but it is **not** applied in the WYSIWYG
+> editing view — the editor only shows unstyled content there. This is
+> intentional: rendering arbitrary CSS live in the editor would let a
+> template (including one pasted in via "Import Email") inject styles into
+> the surrounding Gophish admin UI itself. Use the "Preview" tab next to
+> "Source" to see the template rendered with its CSS applied and its
+> `{{.Variable}}` tags filled in with sample values.
+
 ### Importing an Email
 
 Gophish supports the ability to import an email from the raw content. To do this, click the "Import Email" button and paste in the original email content. This content is usually found through the "View Original" feature of many mail clients:

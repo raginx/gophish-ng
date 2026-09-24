@@ -16,7 +16,7 @@ To create a landing page, click on the "Landing Pages" entry in the sidebar and 
 
 ![Landing Pages](http://imgur.com/Tg4sDId.png)
 
-The landing page modal supports the same HTML WYSIWYG editor shown in the Templates section.
+The landing page modal supports the same HTML WYSIWYG editor shown in the Templates section, including the same [Preview tab caveat](templates.md#using-the-html-editor) for `<style>` blocks: page CSS is saved and served correctly, but isn't rendered live in the editing view — use the "Preview" tab to check the styled result.
 
 ## Importing a Site From URL
 
