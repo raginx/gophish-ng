@@ -23,6 +23,7 @@
                 <thead>
                     <tr>
                         <th class="col-md-4">Name</th>
+                        <th class="tags-col">Tags</th>
                         <th>Interface Type</th>
                         <th>Last Modified Date</th>
                         <th class="col-md-2 no-sort"></th>
@@ -49,6 +50,8 @@
                     <div class="form-group">
                         <label class="col-form-label" for="name">Name:</label>
                         <input type="text" class="form-control" placeholder="Profile name" id="name" autofocus />
+                        <label class="col-form-label" for="tags">Tags:</label>
+                        <select id="tags" multiple></select>
                         <label class="col-form-label" for="interface_type">Interface Type:</label>
                         <input type="text" class="form-control" value="SMTP" id="interface_type" disabled />
                         <label class="col-form-label" for="from">SMTP From: <i class="fa fa-question-circle"
@@ -149,5 +152,6 @@
     </div>
 </div>
 {{end}} {{define "scripts"}}
+<script src="/js/dist/app/tags.min.js"></script>
 <script src="/js/dist/app/sending_profiles.min.js"></script>
 {{end}}

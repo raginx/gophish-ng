@@ -13,7 +13,8 @@ function save(id) {
     })
     var group = {
         name: $("#name").val(),
-        targets: targets
+        targets: targets,
+        tags: getTagInput("#tags")
     }
     // Submit the group
     if (id != -1) {
@@ -49,6 +50,7 @@ function save(id) {
 function dismiss() {
     $("#targetsTable").dataTable().DataTable().clear().draw()
     $("#name").val("")
+    clearTagInput("#tags")
     $("#modal\\.flashes").empty()
 }
 
@@ -63,6 +65,7 @@ function edit(id) {
     $("#modalSubmit").unbind('click').click(function () {
         save(id)
     })
+    initTagInput("#tags", "#modal")
     if (id == -1) {
         $("#groupModalLabel").text("New Group");
         var group = {}
@@ -71,6 +74,7 @@ function edit(id) {
         api.groupId.get(id)
             .done(function (group) {
                 $("#name").val(group.name)
+                setTagInput("#tags", group.tags)
                 targetRows = []
                 $.each(group.targets, function (i, record) {
                   targetRows.push([
@@ -243,18 +247,21 @@ function load() {
                 groups = response.groups
                 $("#emptyMessage").hide()
                 $("#groupTable").show()
+                var $tagFilter = buildTagFilter(collectTags(groups))
                 var groupTable = $("#groupTable").DataTable({
                     destroy: true,
                     columnDefs: [{
                         orderable: false,
                         targets: "no-sort"
-                    }]
+                    }],
+                    layout: tableLayout($tagFilter)
                 });
                 groupTable.clear();
                 groupRows = []
                 $.each(groups, function (i, group) {
                     groupRows.push([
                         escapeHtml(group.name),
+                        renderTagChips(group.tags),
                         escapeHtml(group.num_targets),
                         moment(group.modified_date).format('MMM D, YYYY h:mm a'),
                         (canModifyObjects() ? "<div class='pull-right'><button class='btn btn-sm btn-primary' data-bs-toggle='modal' data-bs-backdrop='static' data-bs-target='#modal' onclick='edit(" + group.id + ")'>\
@@ -266,6 +273,8 @@ function load() {
                     ])
                 })
                 groupTable.rows.add(groupRows).draw()
+                wireTagFilter($tagFilter, groupTable)
+                loadTagSuggestions()
             } else {
                 $("#emptyMessage").show()
             }

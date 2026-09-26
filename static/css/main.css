@@ -732,3 +732,56 @@ td.color-reported {
 #password-strength-container {
     height: 40px;
 }
+/* Tags feature: chips in list tables, hidden search tokens, and the
+   tag-filter control seated in the DataTables toolbar. */
+.tag-tokens {
+    display: none;
+}
+.tag-chip {
+    background-color: #eef1f6;
+    color: #4a5568;
+    border: 1px solid #dde3ec;
+    border-radius: 12px;
+    font-weight: 500;
+    padding: 0.3em 0.65em;
+    margin: 0 0.25rem 0.25rem 0;
+    display: inline-block;
+}
+.dt-tag-filter {
+    margin-left: 0.5rem;
+}
+.dt-tag-filter .select2-container {
+    min-width: 220px;
+}
+/* Keep selected tag pills side by side and compact  */
+.dt-tag-filter .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered {
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 4px;
+}
+.dt-tag-filter .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered .select2-selection__choice {
+    margin: 0;
+    padding: 1px 6px;
+    font-size: 0.78rem;
+    line-height: 1.5;
+}
+.dt-tag-filter .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered .select2-selection__choice__remove {
+    margin-right: 3px;
+}
+/* Let the search field share the pill row rather than forcing a new line. */
+.dt-tag-filter .select2-container--bootstrap-5 .select2-search--inline {
+    display: inline-flex;
+}
+/* Keep the DataTables toolbar rows aligned and breathing on all widths. */
+div.dt-container div.dt-layout-row {
+    align-items: center;
+    row-gap: 0.5rem;
+}
+div.dt-container .dt-layout-start {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}

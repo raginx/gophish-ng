@@ -23,6 +23,7 @@
                 <thead>
                     <tr>
                         <th>Name</th>
+                        <th class="tags-col">Tags</th>
                         <th>Last Modified Date</th>
                         <th class="col-md-2 no-sort"></th>
                     </tr>
@@ -47,6 +48,10 @@
                 <label class="col-form-label" for="name">Name:</label>
                 <div class="form-group">
                     <input type="text" class="form-control" placeholder="Page name" id="name" autofocus />
+                </div>
+                <label class="col-form-label" for="tags">Tags:</label>
+                <div class="form-group">
+                    <select id="tags" multiple></select>
                 </div>
                 <div class="form-group">
                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-backdrop="static" data-bs-target="#importSiteModal"><i
@@ -148,5 +153,6 @@
 {{end}}
 {{define "scripts"}}
 <script src="/js/dist/app/ckeditor-setup.min.js"></script>
+<script src="/js/dist/app/tags.min.js"></script>
 <script src="/js/dist/app/landing_pages.min.js"></script>
 {{end}}

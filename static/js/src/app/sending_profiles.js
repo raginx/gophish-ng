@@ -62,6 +62,7 @@ function save(idx) {
     profile.password = $("#password").val()
     profile.ignore_cert_errors = $("#ignore_cert_errors").prop("checked")
     profile.send_rate = parseInt($("#send_rate").val()) || 0
+    profile.tags = getTagInput("#tags")
     if (idx != -1) {
         profile.id = profiles[idx].id
         api.SMTPId.put(profile)
@@ -90,6 +91,7 @@ function save(idx) {
 function dismiss() {
     $("#modal\\.flashes").empty()
     $("#name").val("")
+    clearTagInput("#tags")
     $("#interface_type").val("SMTP")
     $("#from").val("")
     $("#cc").val("")
@@ -155,10 +157,12 @@ function edit(idx) {
         save(idx)
     })
     var profile = {}
+    initTagInput("#tags", "#modal")
     if (idx != -1) {
         $("#profileModalLabel").text("Edit Sending Profile")
         profile = profiles[idx]
         $("#name").val(profile.name)
+        setTagInput("#tags", profile.tags)
         $("#interface_type").val(profile.interface_type)
         $("#from").val(profile.from_address)
         $("#cc").val(profile.cc)
@@ -181,7 +185,9 @@ function copy(idx) {
     })
     var profile = {}
     profile = profiles[idx]
+    initTagInput("#tags", "#modal")
     $("#name").val("Copy of " + profile.name)
+    setTagInput("#tags", profile.tags)
     $("#interface_type").val(profile.interface_type)
     $("#from").val(profile.from_address)
     $("#cc").val(profile.cc)
@@ -202,18 +208,21 @@ function load() {
             $("#loading").hide()
             if (profiles.length > 0) {
                 $("#profileTable").show()
+                var $tagFilter = buildTagFilter(collectTags(profiles))
                 profileTable = $("#profileTable").DataTable({
                     destroy: true,
                     columnDefs: [{
                         orderable: false,
                         targets: "no-sort"
-                    }]
+                    }],
+                    layout: tableLayout($tagFilter)
                 });
                 profileTable.clear()
                 profileRows = []
                 $.each(profiles, function (i, profile) {
                     profileRows.push([
                         escapeHtml(profile.name),
+                        renderTagChips(profile.tags),
                         profile.interface_type,
                         moment(profile.modified_date).format('MMM D, YYYY h:mm a'),
                         (canModifyObjects() ? "<div class='pull-right'><span data-bs-toggle='modal' data-bs-backdrop='static' data-bs-target='#modal'><button class='btn btn-sm btn-primary' data-bs-toggle='tooltip' data-bs-placement='left' title='Edit Profile' onclick='edit(" + i + ")'>\
@@ -228,6 +237,8 @@ function load() {
                     ])
                 })
                 profileTable.rows.add(profileRows).draw()
+                wireTagFilter($tagFilter, profileTable)
+                loadTagSuggestions()
                 initTooltips()
             } else {
                 $("#emptyMessage").show()

@@ -321,6 +321,28 @@ var api = {
             return query("/smtp/" + id, "DELETE", {}, false)
         }
     },
+    // tags contains the endpoints for /tags
+    tags: {
+        // get() - Queries the API for GET /tags
+        get: function () {
+            return query("/tags/", "GET", {}, false)
+        },
+        // post() - Posts a tag to POST /tags
+        post: function (tag) {
+            return query("/tags/", "POST", tag, false)
+        }
+    },
+    // tagId contains the endpoints for /tags/:id
+    tagId: {
+        // put() - Puts a tag to PUT /tags/:id
+        put: function (tag) {
+            return query("/tags/" + tag.id, "PUT", tag, false)
+        },
+        // delete() - Deletes a tag at DELETE /tags/:id
+        delete: function (id) {
+            return query("/tags/" + id, "DELETE", {}, false)
+        }
+    },
     // IMAP containts the endpoints for /imap/
     IMAP: {
         get: function() {

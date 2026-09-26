@@ -24,6 +24,7 @@
                 <thead>
                     <tr>
                         <th>Name</th>
+                        <th class="tags-col">Tags</th>
                         <th># of Members</th>
                         <th>Modified Date</th>
                         <th class="col-md-2 no-sort"></th>
@@ -49,6 +50,10 @@
                 <div class="form-group">
                     <input type="text" class="form-control" ng-model="group.name" placeholder="Group name" id="name"
                         autofocus />
+                </div>
+                <label class="col-form-label" for="tags">Tags:</label>
+                <div class="form-group">
+                    <select id="tags" multiple></select>
                 </div>
                 <div class="form-group">
                     <span class="btn btn-primary btn-file" data-bs-toggle="tooltip" data-bs-placement="right"
@@ -98,5 +103,6 @@
     </div>
 </div>
 {{end}} {{define "scripts"}}
+<script src="/js/dist/app/tags.min.js"></script>
 <script src="/js/dist/app/groups.min.js"></script>
 {{end}}

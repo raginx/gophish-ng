@@ -23,6 +23,7 @@
                 <thead>
                     <tr>
                         <th>Name</th>
+                        <th class="tags-col">Tags</th>
                         <th>Modified Date</th>
                         <th class="col-md-2 no-sort"></th>
                     </tr>
@@ -61,6 +62,10 @@
                 <label class="col-form-label" for="subject">Subject:</label>
                 <div class="form-group">
                     <input type="text" class="form-control" placeholder="Email Subject" id="subject" />
+                </div>
+                <label class="col-form-label" for="tags">Tags:</label>
+                <div class="form-group">
+                    <select id="tags" multiple></select>
                 </div>
                 <!-- Nav tabs -->
                 <ul class="nav nav-tabs" role="tablist">
@@ -141,5 +146,6 @@
 {{end}}
 {{define "scripts"}}
 <script src="/js/dist/app/ckeditor-setup.min.js"></script>
+<script src="/js/dist/app/tags.min.js"></script>
 <script src="/js/dist/app/templates.min.js"></script>
 {{end}}

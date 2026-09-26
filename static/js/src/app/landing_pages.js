@@ -16,6 +16,7 @@ function save(idx) {
     page.redirect_url = $("#redirect_url_input").val()
     page.redirect_mode = $("input[name=redirect_choice]:checked").val()
     page.redirect_html = editors["redirect_html_editor"].getData()
+    page.tags = getTagInput("#tags")
     if (idx != -1) {
         page.id = pages[idx].id
         api.pageId.put(page)
@@ -41,6 +42,7 @@ function save(idx) {
 function dismiss() {
     $("#modal\\.flashes").empty()
     $("#name").val("")
+    clearTagInput("#tags")
     if (editors["html_editor"]) {
         // Force back to WYSIWYG first
         ensureWysiwyg(editors["html_editor"])
@@ -123,10 +125,12 @@ function edit(idx) {
     createEditor("html_editor", function (htmlEditor) {
         createEditor("redirect_html_editor", function (redirectEditor) {
             var page = {}
+            initTagInput("#tags", "#modal")
             if (idx != -1) {
                 $("#modalLabel").text("Edit Landing Page")
                 page = pages[idx]
                 $("#name").val(page.name)
+                setTagInput("#tags", page.tags)
                 htmlEditor.setData(page.html)
                 redirectEditor.setData(page.redirect_html)
                 $("#capture_credentials_checkbox").prop("checked", page.capture_credentials)
@@ -163,7 +167,9 @@ function copy(idx) {
     createEditor("html_editor", function (htmlEditor) {
         createEditor("redirect_html_editor", function (redirectEditor) {
             var page = pages[idx]
+            initTagInput("#tags", "#modal")
             $("#name").val("Copy of " + page.name)
+            setTagInput("#tags", page.tags)
             htmlEditor.setData(page.html)
             redirectEditor.setData(page.redirect_html)
             $("#capture_credentials_checkbox").prop("checked", page.capture_credentials)
@@ -199,18 +205,21 @@ function load() {
             $("#loading").hide()
             if (pages.length > 0) {
                 $("#pagesTable").show()
+                var $tagFilter = buildTagFilter(collectTags(pages))
                 pagesTable = $("#pagesTable").DataTable({
                     destroy: true,
                     columnDefs: [{
                         orderable: false,
                         targets: "no-sort"
-                    }]
+                    }],
+                    layout: tableLayout($tagFilter)
                 });
                 pagesTable.clear()
                 pageRows = []
                 $.each(pages, function (i, page) {
                     pageRows.push([
                         escapeHtml(page.name),
+                        renderTagChips(page.tags),
                         moment(page.modified_date).format('MMM D, YYYY h:mm a'),
                         (canModifyObjects() ? "<div class='pull-right'><span data-bs-toggle='modal' data-bs-backdrop='static' data-bs-target='#modal'><button class='btn btn-sm btn-primary' data-bs-toggle='tooltip' data-bs-placement='left' title='Edit Page' onclick='edit(" + i + ")'>\
                     <i class='fa fa-pencil'></i>\
@@ -224,6 +233,8 @@ function load() {
                     ])
                 })
                 pagesTable.rows.add(pageRows).draw()
+                wireTagFilter($tagFilter, pagesTable)
+                loadTagSuggestions()
                 initTooltips()
                 openItemFromQuery(pages, edit)
             } else {

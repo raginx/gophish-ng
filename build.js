@@ -57,6 +57,7 @@ const appFiles = [
   "landing_pages.js",
   "sending_profiles.js",
   "settings.js",
+  "tags.js",
   "templates.js",
   "gophish.js",
   "users.js",

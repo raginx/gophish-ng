@@ -35,6 +35,7 @@ function save(idx) {
         template.html = template.html.replace("{{.Tracker}}</body>", "</body>")
     }
     template.text = $("#text_editor").val()
+    template.tags = getTagInput("#tags")
     // Add the attachments
     $.each($("#attachmentsTable").DataTable().rows().data(), function (i, target) {
         template.attachments.push({
@@ -75,6 +76,7 @@ function dismiss() {
     $("#name").val("")
     $("#subject").val("")
     $("#text_editor").val("")
+    clearTagInput("#tags")
     if (editors["html_editor"]) {
         // Force back to WYSIWYG first
         ensureWysiwyg(editors["html_editor"])
@@ -178,6 +180,7 @@ function edit(idx) {
         var template = {
             attachments: []
         }
+        initTagInput("#tags", "#modal")
         if (idx != -1) {
             $("#templateModalLabel").text("Edit Template")
             template = templates[idx]
@@ -186,6 +189,7 @@ function edit(idx) {
             $("#envelope-sender").val(template.envelope_sender)
             editor.setData(template.html)
             $("#text_editor").val(template.text)
+            setTagInput("#tags", template.tags)
             attachmentRows = []
             $.each(template.attachments, function (i, file) {
                 var icon = icons[file.type] || "fa-file-o"
@@ -246,11 +250,13 @@ function copy(idx) {
             attachments: []
         }
         template = templates[idx]
+        initTagInput("#tags", "#modal")
         $("#name").val("Copy of " + template.name)
         $("#subject").val(template.subject)
         $("#envelope-sender").val(template.envelope_sender)
         editor.setData(template.html)
         $("#text_editor").val(template.text)
+        setTagInput("#tags", template.tags)
         $.each(template.attachments, function (i, file) {
             var icon = icons[file.type] || "fa-file-o"
             // Add the record to the modal
@@ -313,18 +319,21 @@ function load() {
             $("#loading").hide()
             if (templates.length > 0) {
                 $("#templateTable").show()
+                var $tagFilter = buildTagFilter(collectTags(templates))
                 templateTable = $("#templateTable").DataTable({
                     destroy: true,
                     columnDefs: [{
                         orderable: false,
                         targets: "no-sort"
-                    }]
+                    }],
+                    layout: tableLayout($tagFilter)
                 });
                 templateTable.clear()
                 templateRows = []
                 $.each(templates, function (i, template) {
                     templateRows.push([
                         escapeHtml(template.name),
+                        renderTagChips(template.tags),
                         moment(template.modified_date).format('MMM D, YYYY h:mm a'),
                         (canModifyObjects() ? "<div class='pull-right'><span data-bs-toggle='modal' data-bs-backdrop='static' data-bs-target='#modal'><button class='btn btn-sm btn-primary' data-bs-toggle='tooltip' data-bs-placement='left' title='Edit Template' onclick='edit(" + i + ")'>\
                     <i class='fa fa-pencil'></i>\
@@ -338,6 +347,8 @@ function load() {
                     ])
                 })
                 templateTable.rows.add(templateRows).draw()
+                wireTagFilter($tagFilter, templateTable)
+                loadTagSuggestions()
                 initTooltips()
                 openItemFromQuery(templates, edit)
             } else {

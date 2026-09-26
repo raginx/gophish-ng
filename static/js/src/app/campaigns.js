@@ -52,6 +52,7 @@ function launch() {
                     launch_date: moment($("#launch_date").val()).utc().format(),
                     send_by_date: send_by_date || null,
                     groups: groups,
+                    tags: getTagInput("#tags"),
                 }
                 // Submit the campaign
                 api.campaigns.post(campaign)
@@ -122,6 +123,7 @@ function dismiss() {
     $("#url").val("");
     $("#profile").val("").change();
     $("#users").val("").change();
+    clearTagInput("#tags");
     hideModal();
 }
 
@@ -249,14 +251,17 @@ function setupOptions() {
 
 function edit(campaign) {
     setupOptions();
+    initTagInput("#tags", "#modal_body");
 }
 
 function copy(idx) {
     setupOptions();
+    initTagInput("#tags", "#modal_body");
     // Set our initial values
     api.campaignId.get(campaigns[idx].id)
         .done(function (campaign) {
             $("#name").val("Copy of " + campaign.name)
+            setTagInput("#tags", campaign.tags)
             if (!campaign.template.id) {
                 $("#template").val("").change();
                 $("#template").select2({
@@ -331,14 +336,18 @@ $(document).ready(function () {
                 $("#campaignTable").show()
                 $("#campaignTableArchive").show()
 
+                var campaignTags = collectTags(campaigns)
+                var $tagFilterActive = buildTagFilter(campaignTags)
+                var $tagFilterArchived = buildTagFilter(campaignTags)
                 activeCampaignsTable = $("#campaignTable").DataTable({
                     columnDefs: [{
                         orderable: false,
                         targets: "no-sort"
                     }],
                     order: [
-                        [1, "desc"]
-                    ]
+                        [2, "desc"]
+                    ],
+                    layout: tableLayout($tagFilterActive)
                 });
                 archivedCampaignsTable = $("#campaignTableArchive").DataTable({
                     columnDefs: [{
@@ -346,8 +355,9 @@ $(document).ready(function () {
                         targets: "no-sort"
                     }],
                     order: [
-                        [1, "desc"]
-                    ]
+                        [2, "desc"]
+                    ],
+                    layout: tableLayout($tagFilterArchived)
                 });
                 rows = {
                     'active': [],
@@ -368,6 +378,7 @@ $(document).ready(function () {
 
                     var row = [
                         escapeHtml(campaign.name),
+                        renderTagChips(campaign.tags),
                         moment(campaign.created_date).format('MMM D, YYYY h:mm a'),
                         "<span class=\"badge " + label + "\" data-bs-toggle=\"tooltip\" data-bs-placement=\"right\" data-bs-html=\"true\" title=\"" + escapeHtml(quickStats) + "\">" + campaign.status + "</span>",
                         "<div class='pull-right'><a class='btn btn-sm btn-primary' href='/campaigns/" + campaign.id + "' data-bs-toggle='tooltip' data-bs-placement='left' title='View Results'>\
@@ -388,6 +399,9 @@ $(document).ready(function () {
                 })
                 activeCampaignsTable.rows.add(rows['active']).draw()
                 archivedCampaignsTable.rows.add(rows['archived']).draw()
+                wireTagFilter($tagFilterActive, activeCampaignsTable)
+                wireTagFilter($tagFilterArchived, archivedCampaignsTable)
+                loadTagSuggestions()
                 initTooltips()
             } else {
                 $("#emptyMessage").show()
