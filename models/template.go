@@ -21,6 +21,7 @@ type Template struct {
 	HTML           string       `json:"html" gorm:"column:html"`
 	ModifiedDate   time.Time    `json:"modified_date"`
 	Attachments    []Attachment `json:"attachments"`
+	Tags           []string     `json:"tags" gorm:"-"`
 }
 
 // ErrTemplateNameNotSpecified is thrown when a template name is not specified
@@ -75,6 +76,11 @@ func GetTemplates(teamID int64) ([]Template, error) {
 			log.Error(err)
 			return ts, err
 		}
+		// Get Tags
+		ts[i].Tags, err = getTagsFor(TaggableTemplate, ts[i].Id, teamID)
+		if err != nil {
+			return ts, err
+		}
 	}
 	return ts, err
 }
@@ -99,6 +105,11 @@ func GetTemplate(id int64, teamID int64) (Template, error) {
 	if err == nil && len(t.Attachments) == 0 {
 		t.Attachments = make([]Attachment, 0)
 	}
+	// Get Tags
+	t.Tags, err = getTagsFor(TaggableTemplate, t.Id, teamID)
+	if err != nil {
+		return t, err
+	}
 	return t, err
 }
 
@@ -121,6 +132,11 @@ func GetTemplateByName(n string, teamID int64) (Template, error) {
 	}
 	if err == nil && len(t.Attachments) == 0 {
 		t.Attachments = make([]Attachment, 0)
+	}
+	// Get Tags
+	t.Tags, err = getTagsFor(TaggableTemplate, t.Id, teamID)
+	if err != nil {
+		return t, err
 	}
 	return t, err
 }
@@ -148,6 +164,10 @@ func PostTemplate(t *Template) error {
 			log.Error(err)
 			return err
 		}
+	}
+	// Save tags
+	if err := setTagsFor(TaggableTemplate, t.Id, t.TeamId, t.Tags); err != nil {
+		return err
 	}
 	return nil
 }
@@ -179,6 +199,10 @@ func PutTemplate(t *Template) error {
 		log.Error(err)
 		return err
 	}
+	// Save tags
+	if err := setTagsFor(TaggableTemplate, t.Id, t.TeamId, t.Tags); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -189,6 +213,11 @@ func DeleteTemplate(id int64, teamID int64) error {
 	err := db.Where("template_id=?", id).Delete(&Attachment{}).Error
 	if err != nil {
 		log.Error(err)
+		return err
+	}
+
+	// Delete tag links
+	if err := deleteTagsFor(TaggableTemplate, id); err != nil {
 		return err
 	}
 

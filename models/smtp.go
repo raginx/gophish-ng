@@ -50,6 +50,7 @@ type SMTP struct {
 	CC           string    `json:"cc,omitempty"`
 	Headers      []Header  `json:"headers"`
 	ModifiedDate time.Time `json:"modified_date"`
+	Tags         []string  `json:"tags" gorm:"-"`
 }
 
 // Header contains the fields and methods for a sending profile to have
@@ -213,6 +214,10 @@ func GetSMTPs(teamID int64) ([]SMTP, error) {
 			log.Error(err)
 			return ss, err
 		}
+		ss[i].Tags, err = getTagsFor(TaggableSMTP, ss[i].Id, teamID)
+		if err != nil {
+			return ss, err
+		}
 	}
 	return ss, nil
 }
@@ -230,6 +235,7 @@ func GetSMTP(id int64, teamID int64) (SMTP, error) {
 		log.Error(err)
 		return s, err
 	}
+	s.Tags, err = getTagsFor(TaggableSMTP, s.Id, teamID)
 	return s, err
 }
 
@@ -245,6 +251,7 @@ func GetSMTPByName(n string, teamID int64) (SMTP, error) {
 	if err != nil && err != gorm.ErrRecordNotFound {
 		log.Error(err)
 	}
+	s.Tags, err = getTagsFor(TaggableSMTP, s.Id, teamID)
 	return s, err
 }
 
@@ -272,6 +279,10 @@ func PostSMTP(s *SMTP) error {
 			log.Error(err)
 			return err
 		}
+	}
+	// Save tags
+	if err := setTagsFor(TaggableSMTP, s.Id, s.TeamId, s.Tags); err != nil {
+		return err
 	}
 	return err
 }
@@ -303,6 +314,10 @@ func PutSMTP(s *SMTP) error {
 			return err
 		}
 	}
+	// Save tags
+	if err := setTagsFor(TaggableSMTP, s.Id, s.TeamId, s.Tags); err != nil {
+		return err
+	}
 	return err
 }
 
@@ -313,6 +328,10 @@ func DeleteSMTP(id int64, teamID int64) error {
 	err := db.Where("smtp_id=?", id).Delete(&Header{}).Error
 	if err != nil {
 		log.Error(err)
+		return err
+	}
+	// Delete tag links
+	if err := deleteTagsFor(TaggableSMTP, id); err != nil {
 		return err
 	}
 	err = db.Where("team_id=?", teamID).Delete(SMTP{Id: id}).Error

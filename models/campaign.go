@@ -33,9 +33,10 @@ type Campaign struct {
 	// campaign<->group relation for gorm to manage.
 	Groups []Group `json:"groups,omitempty" gorm:"-"`
 	Events []Event `json:"timeline,omitempty"`
-	SMTPId int64   `json:"-"`
-	SMTP   SMTP    `json:"smtp"`
-	URL    string  `json:"url"`
+	SMTPId int64    `json:"-"`
+	SMTP   SMTP     `json:"smtp"`
+	URL    string   `json:"url"`
+	Tags   []string `json:"tags" gorm:"-"`
 }
 
 // CampaignResults is a struct representing the results from a campaign
@@ -72,6 +73,7 @@ type CampaignSummary struct {
 	Name          string    `json:"name"`
 	// Stats is populated manually after the query, not via a gorm relation.
 	Stats CampaignStats `json:"stats" gorm:"-"`
+	Tags  []string      `json:"tags" gorm:"-"`
 }
 
 // CampaignStats is a struct representing the statistics for a single campaign
@@ -240,6 +242,10 @@ func (c *Campaign) getDetails() error {
 		log.Warn(err)
 		return err
 	}
+	c.Tags, err = getTagsFor(TaggableCampaign, c.Id, c.TeamId)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -351,6 +357,11 @@ func GetCampaignSummaries(teamID int64) (CampaignSummaries, error) {
 			return overview, err
 		}
 		cs[i].Stats = s
+		cs[i].Tags, err = getTagsFor(TaggableCampaign, cs[i].Id, teamID)
+		if err != nil {
+			log.Error(err)
+			return overview, err
+		}
 	}
 	overview.Total = int64(len(cs))
 	overview.Campaigns = cs
@@ -593,6 +604,10 @@ func PostCampaign(c *Campaign, uid int64, teamID int64) error {
 		log.Error(err)
 		return err
 	}
+	// Save tags
+	if err := setTagsFor(TaggableCampaign, c.Id, c.TeamId, c.Tags); err != nil {
+		return err
+	}
 	err = AddEvent(&Event{Message: "Campaign Created"}, c.Id)
 	if err != nil {
 		log.Error(err)
@@ -700,6 +715,10 @@ func DeleteCampaign(id int64) error {
 	err = db.Where("campaign_id=?", id).Delete(&MailLog{}).Error
 	if err != nil {
 		log.Error(err)
+		return err
+	}
+	// Delete tag links
+	if err := deleteTagsFor(TaggableCampaign, id); err != nil {
 		return err
 	}
 	// Delete the campaign

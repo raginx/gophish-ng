@@ -20,6 +20,7 @@ type Group struct {
 	Name         string    `json:"name"`
 	ModifiedDate time.Time `json:"modified_date"`
 	Targets      []Target  `json:"targets" gorm:"-"`
+	Tags         []string  `json:"tags" gorm:"-"`
 }
 
 // GroupSummaries is a struct representing the overview of Groups.
@@ -37,6 +38,7 @@ type GroupSummary struct {
 	Name         string    `json:"name"`
 	ModifiedDate time.Time `json:"modified_date"`
 	NumTargets   int64     `json:"num_targets"`
+	Tags         []string  `json:"tags" gorm:"-"`
 }
 
 // GroupTarget is used for a many-to-many relationship between 1..* Groups and 1..* Targets
@@ -120,6 +122,10 @@ func GetGroups(teamID int64) ([]Group, error) {
 		if err != nil {
 			log.Error(err)
 		}
+		gs[i].Tags, err = getTagsFor(TaggableGroup, gs[i].Id, teamID)
+		if err != nil {
+			return gs, err
+		}
 	}
 	return gs, nil
 }
@@ -140,6 +146,10 @@ func GetGroupSummaries(teamID int64) (GroupSummaries, error) {
 		if err != nil {
 			return gs, err
 		}
+		gs.Groups[i].Tags, err = getTagsFor(TaggableGroup, gs.Groups[i].Id, teamID)
+		if err != nil {
+			return gs, err
+		}
 	}
 	gs.Total = int64(len(gs.Groups))
 	return gs, nil
@@ -156,6 +166,10 @@ func GetGroup(id int64, teamID int64) (Group, error) {
 	g.Targets, err = GetTargets(g.Id)
 	if err != nil {
 		log.Error(err)
+	}
+	g.Tags, err = getTagsFor(TaggableGroup, g.Id, teamID)
+	if err != nil {
+		return g, err
 	}
 	return g, nil
 }
@@ -189,6 +203,7 @@ func GetGroupByName(n string, teamID int64) (Group, error) {
 	if err != nil {
 		log.Error(err)
 	}
+	g.Tags, err = getTagsFor(TaggableGroup, g.Id, teamID)
 	return g, err
 }
 
@@ -222,7 +237,8 @@ func PostGroup(g *Group) error {
 		tx.Rollback()
 		return err
 	}
-	return nil
+	// Save tags
+	return setTagsFor(TaggableGroup, g.Id, g.TeamId, g.Tags)
 }
 
 // PutGroup updates the given group if found in the database.
@@ -297,7 +313,8 @@ func PutGroup(g *Group) error {
 		tx.Rollback()
 		return err
 	}
-	return nil
+	// Save tags
+	return setTagsFor(TaggableGroup, g.Id, g.TeamId, g.Tags)
 }
 
 // DeleteGroup deletes a given group by group ID and user ID
@@ -306,6 +323,10 @@ func DeleteGroup(g *Group) error {
 	err := db.Where("group_id=?", g.Id).Delete(&GroupTarget{}).Error
 	if err != nil {
 		log.Error(err)
+		return err
+	}
+	// Delete tag links
+	if err := deleteTagsFor(TaggableGroup, g.Id); err != nil {
 		return err
 	}
 	// Delete the group itself

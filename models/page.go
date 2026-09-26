@@ -22,6 +22,7 @@ type Page struct {
 	ModifiedDate       time.Time `json:"modified_date"`
 	RedirectMode       string    `json:"redirect_mode" gorm:"column:redirect_mode"` // "url" or "html"
 	RedirectHTML       string    `json:"redirect_html" gorm:"column:redirect_html"`
+	Tags               []string  `json:"tags" gorm:"-"`
 }
 
 // ErrPageNameNotSpecified is thrown if the name of the landing page is blank.
@@ -102,6 +103,12 @@ func GetPages(teamID int64) ([]Page, error) {
 		log.Error(err)
 		return ps, err
 	}
+	for i := range ps {
+		ps[i].Tags, err = getTagsFor(TaggablePage, ps[i].Id, teamID)
+		if err != nil {
+			return ps, err
+		}
+	}
 	return ps, err
 }
 
@@ -111,7 +118,9 @@ func GetPage(id int64, teamID int64) (Page, error) {
 	err := db.Where("team_id=? and id=?", teamID, id).First(&p).Error
 	if err != nil {
 		log.Error(err)
+		return p, err
 	}
+	p.Tags, err = getTagsFor(TaggablePage, p.Id, teamID)
 	return p, err
 }
 
@@ -121,7 +130,9 @@ func GetPageByName(n string, teamID int64) (Page, error) {
 	err := db.Where("team_id=? and name=?", teamID, n).First(&p).Error
 	if err != nil {
 		log.Error(err)
+		return p, err
 	}
+	p.Tags, err = getTagsFor(TaggablePage, p.Id, teamID)
 	return p, err
 }
 
@@ -139,8 +150,10 @@ func PostPage(p *Page) error {
 	err = db.Save(p).Error
 	if err != nil {
 		log.Error(err)
+		return err
 	}
-	return err
+	// Save tags
+	return setTagsFor(TaggablePage, p.Id, p.TeamId, p.Tags)
 }
 
 // PutPage edits an existing Page in the database.
@@ -153,13 +166,19 @@ func PutPage(p *Page) error {
 	err = db.Where("id=?", p.Id).Save(p).Error
 	if err != nil {
 		log.Error(err)
+		return err
 	}
-	return err
+	// Save tags
+	return setTagsFor(TaggablePage, p.Id, p.TeamId, p.Tags)
 }
 
 // DeletePage deletes an existing page in the database.
 // An error is returned if a page with the given team id and page id is not found.
 func DeletePage(id int64, teamID int64) error {
+	// Delete tag links
+	if err := deleteTagsFor(TaggablePage, id); err != nil {
+		return err
+	}
 	err := db.Where("team_id=?", teamID).Delete(Page{Id: id}).Error
 	if err != nil {
 		log.Error(err)
