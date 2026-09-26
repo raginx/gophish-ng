@@ -31,8 +31,8 @@ type Campaign struct {
 	// Groups is only used as transient input when creating a campaign
 	// (expanded into Results at creation time); there's no persisted
 	// campaign<->group relation for gorm to manage.
-	Groups []Group `json:"groups,omitempty" gorm:"-"`
-	Events []Event `json:"timeline,omitempty"`
+	Groups []Group  `json:"groups,omitempty" gorm:"-"`
+	Events []Event  `json:"timeline,omitempty"`
 	SMTPId int64    `json:"-"`
 	SMTP   SMTP     `json:"smtp"`
 	URL    string   `json:"url"`
