@@ -83,6 +83,59 @@ func TestContentPackExportImportRoundtrip(t *testing.T) {
 	}
 }
 
+// TestContentPackCarriesTags verifies that a template's tags are exported
+// inline (as names) and resolve-or-created in the target team on import.
+func TestContentPackCarriesTags(t *testing.T) {
+	tc := setupTest(t)
+	template := models.Template{Name: "Tagged Roundtrip", HTML: "<html>Hi</html>", UserId: tc.admin.Id, Tags: []string{"de", "invoice"}}
+	if err := models.PostTemplate(&template); err != nil {
+		t.Fatalf("error creating template: %v", err)
+	}
+
+	exportReq := makeContentPackRequest("/api/content-packs/export", tc.admin.TeamID, tc.admin.Id, contentPackExportRequest{
+		TemplateIDs: []int64{template.Id},
+	})
+	exportResp := httptest.NewRecorder()
+	tc.apiServer.ContentPackExport(exportResp, exportReq)
+	if exportResp.Code != http.StatusOK {
+		t.Fatalf("unexpected export status: %d, body: %s", exportResp.Code, exportResp.Body.String())
+	}
+	pack := ContentPack{}
+	if err := json.NewDecoder(exportResp.Body).Decode(&pack); err != nil {
+		t.Fatalf("error decoding export response: %v", err)
+	}
+	if len(pack.Templates) != 1 || len(pack.Templates[0].Tags) != 2 {
+		t.Fatalf("expected exported template to carry 2 tags, got %+v", pack.Templates)
+	}
+
+	otherTeam, err := models.GetOrCreateTeamByName("Tag Import Team")
+	if err != nil {
+		t.Fatalf("error creating other team: %v", err)
+	}
+	importReq := makeContentPackRequest("/api/content-packs/import", otherTeam.Id, tc.admin.Id, pack)
+	importResp := httptest.NewRecorder()
+	tc.apiServer.ContentPackImport(importResp, importReq)
+	if importResp.Code != http.StatusOK {
+		t.Fatalf("unexpected import status: %d, body: %s", importResp.Code, importResp.Body.String())
+	}
+
+	imported, err := models.GetTemplateByName("Tagged Roundtrip", otherTeam.Id)
+	if err != nil {
+		t.Fatalf("error fetching imported template: %v", err)
+	}
+	if len(imported.Tags) != 2 || imported.Tags[0] != "de" || imported.Tags[1] != "invoice" {
+		t.Fatalf("imported template tags not preserved: %+v", imported.Tags)
+	}
+	// The tags must be created in the target team, not shared with the source.
+	tags, err := models.GetTags(otherTeam.Id)
+	if err != nil {
+		t.Fatalf("error listing tags: %v", err)
+	}
+	if len(tags) != 2 {
+		t.Fatalf("expected 2 tags created in target team, got %d", len(tags))
+	}
+}
+
 func TestContentPackImportRenamesOnNameCollision(t *testing.T) {
 	tc := setupTest(t)
 	pack := ContentPack{

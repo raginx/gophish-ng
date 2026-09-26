@@ -47,6 +47,8 @@ func (s *ModelsSuite) TearDownTest(c *check.C) {
 	gdb.Delete(Campaign{})
 	gdb.Delete(Template{})
 	gdb.Delete(Attachment{})
+	gdb.Delete(Tag{})
+	gdb.Delete(taggable{})
 
 	// Reset users table to default state.
 	db.Not("id", 1).Delete(User{})
@@ -146,6 +148,8 @@ func resetBenchmark(b *testing.B) {
 	gdb.Delete(Campaign{})
 	gdb.Delete(Template{})
 	gdb.Delete(Attachment{})
+	gdb.Delete(Tag{})
+	gdb.Delete(taggable{})
 
 	// Reset users table to default state.
 	db.Not("id", 1).Delete(User{})
