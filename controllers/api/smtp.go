@@ -18,9 +18,19 @@ import (
 func (as *Server) SendingProfiles(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == "GET":
-		ss, err := models.GetSMTPs(ctx.Get(r, "team_id").(int64))
+		teamID := ctx.Get(r, "team_id").(int64)
+		ss, err := models.GetSMTPs(teamID)
 		if err != nil {
 			log.Error(err)
+		}
+		if allowed, ok := tagFilter(r, models.TaggableSMTP, teamID); ok {
+			filtered := []models.SMTP{}
+			for _, s := range ss {
+				if allowed[s.Id] {
+					filtered = append(filtered, s)
+				}
+			}
+			ss = filtered
 		}
 		JSONResponse(w, ss, http.StatusOK)
 	//POST: Create a new SMTP and return it as JSON

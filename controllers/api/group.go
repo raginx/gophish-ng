@@ -19,10 +19,20 @@ import (
 func (as *Server) Groups(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == "GET":
-		gs, err := models.GetGroups(ctx.Get(r, "team_id").(int64))
+		teamID := ctx.Get(r, "team_id").(int64)
+		gs, err := models.GetGroups(teamID)
 		if err != nil {
 			JSONResponse(w, models.Response{Success: false, Message: "No groups found"}, http.StatusNotFound)
 			return
+		}
+		if allowed, ok := tagFilter(r, models.TaggableGroup, teamID); ok {
+			filtered := []models.Group{}
+			for _, g := range gs {
+				if allowed[g.Id] {
+					filtered = append(filtered, g)
+				}
+			}
+			gs = filtered
 		}
 		JSONResponse(w, gs, http.StatusOK)
 	//POST: Create a new group and return it as JSON

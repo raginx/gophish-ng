@@ -18,9 +18,19 @@ import (
 func (as *Server) Pages(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == "GET":
-		ps, err := models.GetPages(ctx.Get(r, "team_id").(int64))
+		teamID := ctx.Get(r, "team_id").(int64)
+		ps, err := models.GetPages(teamID)
 		if err != nil {
 			log.Error(err)
+		}
+		if allowed, ok := tagFilter(r, models.TaggablePage, teamID); ok {
+			filtered := []models.Page{}
+			for _, p := range ps {
+				if allowed[p.Id] {
+					filtered = append(filtered, p)
+				}
+			}
+			ps = filtered
 		}
 		JSONResponse(w, ps, http.StatusOK)
 	//POST: Create a new page and return it as JSON

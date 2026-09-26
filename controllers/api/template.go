@@ -18,9 +18,19 @@ import (
 func (as *Server) Templates(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == "GET":
-		ts, err := models.GetTemplates(ctx.Get(r, "team_id").(int64))
+		teamID := ctx.Get(r, "team_id").(int64)
+		ts, err := models.GetTemplates(teamID)
 		if err != nil {
 			log.Error(err)
+		}
+		if allowed, ok := tagFilter(r, models.TaggableTemplate, teamID); ok {
+			filtered := []models.Template{}
+			for _, t := range ts {
+				if allowed[t.Id] {
+					filtered = append(filtered, t)
+				}
+			}
+			ts = filtered
 		}
 		JSONResponse(w, ts, http.StatusOK)
 	//POST: Create a new template and return it as JSON

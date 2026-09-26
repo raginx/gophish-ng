@@ -20,9 +20,19 @@ import (
 func (as *Server) Campaigns(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		cs, err := models.GetCampaigns(ctx.Get(r, "team_id").(int64))
+		teamID := ctx.Get(r, "team_id").(int64)
+		cs, err := models.GetCampaigns(teamID)
 		if err != nil {
 			log.Error(err)
+		}
+		if allowed, ok := tagFilter(r, models.TaggableCampaign, teamID); ok {
+			filtered := []models.Campaign{}
+			for _, c := range cs {
+				if allowed[c.Id] {
+					filtered = append(filtered, c)
+				}
+			}
+			cs = filtered
 		}
 		JSONResponse(w, cs, http.StatusOK)
 	//POST: Create a new campaign and return it as JSON
