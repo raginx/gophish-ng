@@ -59,6 +59,7 @@ nav:
       - Content Packs: guide/content-packs.md
       - Sending Profiles: guide/sending-profiles.md
       - Campaigns: guide/campaigns.md
+      - Tags: guide/tags.md
       - Account Settings: guide/account-settings.md
       - User Management: guide/user-management.md
       - Logging: guide/logging.md
@@ -75,6 +76,7 @@ nav:
       - Landing Pages: api/landing-pages.md
       - Users & Groups: api/users-and-groups.md
       - Campaigns: api/campaigns.md
+      - Tags: api/tags.md
       - User Management: api/user-management.md
   - Reference:
       - Template Reference: reference/template-reference.md
