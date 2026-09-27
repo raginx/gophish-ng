@@ -16,7 +16,8 @@ Alongside everything Gophish already does well — landing pages, email
 templates, target groups, sending profiles, and per-recipient tracking
 through a single web UI — Gophish-NG adds features upstream lacks: teams
 for shared campaigns and assets, a read-only auditor role, OAuth 2.0 for
-IMAP email reporting, and SMTP CC with per-profile send rates. It also
+IMAP email reporting, SMTP CC with per-profile send rates, and tags for
+categorizing and filtering your content. It also
 modernizes the dependency and toolchain foundation underneath, with real,
 verified security fixes along the way. See
 [What is Gophish?](about/what-is.md) for the full rationale, or jump

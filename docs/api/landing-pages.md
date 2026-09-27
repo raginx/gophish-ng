@@ -17,6 +17,7 @@ Landing pages have the following structure:
   capture_passwords   : bool
   modified_date       : string(datetime)
   redirect_url        : string
+  tags                : list(string)
 }
 ```
 

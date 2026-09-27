@@ -19,8 +19,9 @@ to include, then click "Export Selected" to download a `content-pack.json`
 file containing them.
 
 > Note: Only Templates and Pages belonging to your current team can be
-> exported. Attachments are included as part of their Template, but
-> Sending Profiles and Groups are not part of a Content Pack.
+> exported. Attachments are included as part of their Template, and each
+> item's [tags](tags.md) travel with it, but Sending Profiles and Groups
+> are not part of a Content Pack.
 
 ## Importing a Content Pack
 

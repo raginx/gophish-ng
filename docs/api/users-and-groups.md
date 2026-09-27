@@ -12,6 +12,7 @@ Gophish manages recipients for campaigns in groups. Each group can contain one o
     name            : string
     targets         : array(Target)
     modified_date   : string(datetime)
+    tags            : list(string)
 }
 ```
 

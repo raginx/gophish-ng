@@ -22,6 +22,7 @@ Campaigns have the following structure:
   timeline            : []Event
   smtp                : SMTP
   url                 : string
+  tags                : list(string)
 }
 ```
 

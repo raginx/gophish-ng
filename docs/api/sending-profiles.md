@@ -22,6 +22,7 @@ Sending Profiles have the following structure:
   ignore_cert_errors : boolean (default:false)
   modified_date      : string(datetime)
   headers            : array({key: string, value: string}) (optional)
+  tags               : list(string)
 }
 ```
 

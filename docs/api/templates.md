@@ -19,6 +19,7 @@ Templates have the following structure:
   html          : string
   modified_date : string(datetime)
   attachments   : list(attachment)
+  tags          : list(string)
 }
 ```
 
