@@ -53,7 +53,9 @@ show up when a team runs it. So far that's meant:
 - **Features upstream lacks**: teams, so several operators share the same
   campaigns and assets instead of each working in their own silo; a
   read-only auditor role for reviewers and clients; OAuth 2.0 for IMAP
-  reporting; SMTP CC and per-profile send rates.
+  reporting; SMTP CC and per-profile send rates; and tags for categorizing
+  and filtering templates, landing pages, sending profiles, groups, and
+  campaigns.
 
 Every change here is tested and verified against a running instance, not
 just "looks right." See [CONTRIBUTING.md](CONTRIBUTING.md) for how this
