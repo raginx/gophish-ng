@@ -92,7 +92,7 @@ binaries instead, see the
 
 ## Building From Source
 
-**Requires Go 1.25 or above.**
+**Requires Go 1.26 or above.**
 
 ```sh
 git clone https://github.com/raginx/gophish-ng.git
