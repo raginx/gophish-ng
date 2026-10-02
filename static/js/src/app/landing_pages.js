@@ -139,15 +139,15 @@ function edit(idx) {
                 if (page.capture_credentials) {
                     $("#capture_passwords").show()
                     $("#after-submit").show()
-                    if (page.redirect_mode == "html") {
-                        $("#redirect_html_radio").prop("checked", true)
-                        $("#redirect_url").hide()
-                        $("#redirect_html").show()
-                    } else {
-                        $("#redirect_url_radio").prop("checked", true)
-                        $("#redirect_url").show()
-                        $("#redirect_html").hide()
-                    }
+                }
+                if (page.redirect_mode == "html") {
+                    $("#redirect_html_radio").prop("checked", true)
+                    $("#redirect_url").hide()
+                    $("#redirect_html").show()
+                } else {
+                    $("#redirect_url_radio").prop("checked", true)
+                    $("#redirect_url").show()
+                    $("#redirect_html").hide()
                 }
             } else {
                 $("#modalLabel").text("New Landing Page")
@@ -178,15 +178,15 @@ function copy(idx) {
             if (page.capture_credentials) {
                 $("#capture_passwords").show()
                 $("#after-submit").show()
-                if (page.redirect_mode == "html") {
-                    $("#redirect_html_radio").prop("checked", true)
-                    $("#redirect_url").hide()
-                    $("#redirect_html").show()
-                } else {
-                    $("#redirect_url_radio").prop("checked", true)
-                    $("#redirect_url").show()
-                    $("#redirect_html").hide()
-                }
+            }
+            if (page.redirect_mode == "html") {
+                $("#redirect_html_radio").prop("checked", true)
+                $("#redirect_url").hide()
+                $("#redirect_html").show()
+            } else {
+                $("#redirect_url_radio").prop("checked", true)
+                $("#redirect_url").show()
+                $("#redirect_html").hide()
             }
         })
     })
