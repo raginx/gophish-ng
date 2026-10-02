@@ -324,6 +324,20 @@ $(document).ready(function () {
     $('#modal').on('hidden.bs.modal', function (event) {
         dismiss()
     });
+    $("#openSendTestEmailModal").on("click", function (event) {
+        event.preventDefault();
+        var modalEl = document.getElementById("sendTestEmailModal");
+        if (window.bootstrap && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(modalEl, {
+                backdrop: "static"
+            }).show();
+            return;
+        }
+        $("#sendTestEmailModal").modal({
+            backdrop: "static",
+            show: true
+        });
+    });
     $("#sendTestEmailModal").on("hidden.bs.modal", function (event) {
         dismissSendTestEmailModal()
     })
