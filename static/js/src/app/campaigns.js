@@ -325,6 +325,20 @@ $(document).ready(function () {
     $(document).on('hidden.bs.modal', '.modal', function () {
         $('.modal:visible').length && $(document.body).addClass('modal-open');
     });
+    $("#openSendTestEmailModal").on("click", function (event) {
+        event.preventDefault();
+        var modalEl = document.getElementById("sendTestEmailModal");
+        if (window.bootstrap && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(modalEl, {
+                backdrop: "static"
+            }).show();
+            return;
+        }
+        $("#sendTestEmailModal").modal({
+            backdrop: "static",
+            show: true
+        });
+    });
     $('#modal').on('hidden.bs.modal', function (event) {
         dismiss()
     });
