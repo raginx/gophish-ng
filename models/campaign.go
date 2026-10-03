@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
 	"math/rand"
 	"net/url"
@@ -37,6 +38,13 @@ type Campaign struct {
 	SMTP   SMTP     `json:"smtp"`
 	URL    string   `json:"url"`
 	Tags   []string `json:"tags" gorm:"-"`
+	// ScrubOnComplete flags the campaign to have its recipient-identifying
+	// data scrubbed automatically when it completes (anonymous campaigns).
+	ScrubOnComplete bool `json:"scrub_on_complete"`
+	// ScrubbedDate is set when the campaign's results/events have been
+	// scrubbed. A non-zero value marks the campaign as anonymized and makes
+	// scrubbing idempotent.
+	ScrubbedDate time.Time `json:"scrubbed_date"`
 }
 
 // CampaignResults is a struct representing the results from a campaign
@@ -48,6 +56,9 @@ type CampaignResults struct {
 	Template   Template `json:"template"`
 	PageId     int64    `json:"-"`
 	Page       Page     `json:"page"`
+	// ScrubbedDate is non-zero when the campaign has been anonymized; the UI
+	// uses it to reflect the scrubbed state.
+	ScrubbedDate time.Time `json:"scrubbed_date"`
 	// Results/Events are populated manually via separate queries, not a
 	// gorm relation - Result/Event's CampaignId satisfies Campaign's FK
 	// convention, not CampaignResults'.
@@ -756,6 +767,171 @@ func CompleteCampaign(id int64, teamID int64) error {
 		Select([]string{"completed_date", "status"}).UpdateColumns(&c).Error
 	if err != nil {
 		log.Error(err)
+		return err
 	}
-	return err
+	// If the campaign was flagged for anonymization, scrub the recipient
+	// data now that it's complete.
+	if c.ScrubOnComplete {
+		if err := ScrubCampaign(id, teamID); err != nil {
+			log.Error(err)
+			return err
+		}
+	}
+	return nil
+}
+
+// scrubbedFirstName is the placeholder shown in the "name" column of a
+// scrubbed campaign's results, so the detail table reads "Anonymized" instead
+// of an empty cell.
+const scrubbedFirstName = "Anonymized"
+
+// scrubbedEmail returns the non-PII pseudonym used in place of a recipient's
+// email once a campaign is scrubbed. It's derived from the result's RId, which
+// is a random, non-identifying token that is unique per recipient. Keeping it
+// unique per recipient is what lets the per-recipient timeline keep working
+// after scrubbing: the UI joins events to results on the email field, so a
+// single shared placeholder (or an empty string) would collapse every
+// recipient's timeline into one.
+func scrubbedEmail(rid string) string {
+	if rid == "" {
+		return "anonymized"
+	}
+	return "anonymized-" + rid
+}
+
+// ScrubCampaign permanently anonymizes a campaign's results and events,
+// leaving the aggregate outcome data intact. This is how anonymous 
+// campaigns are realized (see #57) and is irreversible.
+//
+// Recipient identity is not simply blanked but replaced with a stable, non-PII
+// pseudonym derived from each result's RId: names become a
+// placeholder, and the email, which the reporting UI uses to group events by
+// recipient, becomes the pseudonym in both the result and its events, so each
+// recipient keeps a distinct, correctly separated timeline.
+func ScrubCampaign(id int64, teamID int64) error {
+	// Confirm the campaign exists and belongs to the team before touching
+	// any rows.
+	c := Campaign{}
+	err := db.Where("id = ? AND team_id = ?", id, teamID).First(&c).Error
+	if err != nil {
+		log.Errorf("%s: campaign not found", err)
+		return err
+	}
+	// Already scrubbed - nothing to do (keeps scrubbing idempotent).
+	if !c.ScrubbedDate.IsZero() {
+		return nil
+	}
+	now := time.Now().UTC()
+
+	// Load the results up front so we can build each recipient's pseudonym
+	// from its RId and map the recipient's real email to that same pseudonym.
+	results := []Result{}
+	if err := db.Where("campaign_id = ?", id).Find(&results).Error; err != nil {
+		log.Error(err)
+		return err
+	}
+	pseudonyms := make(map[string]string, len(results))
+	for _, r := range results {
+		pseudonyms[r.Email] = scrubbedEmail(r.RId)
+	}
+
+	tx := db.Begin()
+	// Scrub each result: replace the identity with its pseudonym/placeholders
+	// and drop the location data
+	for _, r := range results {
+		err = tx.Model(&Result{}).Where("id = ?", r.Id).
+			Updates(map[string]interface{}{
+				"email":      pseudonyms[r.Email],
+				"first_name": scrubbedFirstName,
+				"last_name":  "",
+				"position":   "",
+				"ip":         "",
+				"latitude":   0,
+				"longitude":  0,
+			}).Error
+		if err != nil {
+			log.Error(err)
+			tx.Rollback()
+			return err
+		}
+	}
+	// Scrub events: map the recipient email to the same pseudonym and strip
+	// PII from the details
+	events := []Event{}
+	err = tx.Where("campaign_id = ?", id).Find(&events).Error
+	if err != nil {
+		log.Error(err)
+		tx.Rollback()
+		return err
+	}
+	for i := range events {
+		e := &events[i]
+		email := e.Email
+		if email != "" {
+			if p, ok := pseudonyms[email]; ok {
+				email = p
+			} else {
+				// An event whose email has no matching result - pseudonymize
+				// it too rather than leaving a real address behind.
+				email = scrubbedEmail("")
+			}
+		}
+		details, err := scrubEventDetails(e.Details)
+		if err != nil {
+			log.Error(err)
+			tx.Rollback()
+			return err
+		}
+		err = tx.Model(&Event{}).Where("id = ?", e.Id).
+			Updates(map[string]interface{}{
+				"email":   email,
+				"details": details,
+			}).Error
+		if err != nil {
+			log.Error(err)
+			tx.Rollback()
+			return err
+		}
+	}
+	// Mark the campaign as scrubbed.
+	err = tx.Model(&Campaign{}).Where("id = ?", id).
+		Update("scrubbed_date", now).Error
+	if err != nil {
+		log.Error(err)
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit().Error
+}
+
+// scrubEventDetails removes PII from a serialized EventDetails JSON string
+func scrubEventDetails(details string) (string, error) {
+	if details == "" {
+		return details, nil
+	}
+	var m map[string]interface{}
+	if err := json.Unmarshal([]byte(details), &m); err != nil {
+		// Not a JSON object (e.g. an error event) - nothing to strip.
+		return details, nil
+	}
+	changed := false
+	if _, ok := m["payload"]; ok {
+		delete(m, "payload")
+		changed = true
+	}
+	if b, ok := m["browser"].(map[string]interface{}); ok {
+		if _, ok := b["address"]; ok {
+			delete(b, "address")
+			m["browser"] = b
+			changed = true
+		}
+	}
+	if !changed {
+		return details, nil
+	}
+	out, err := json.Marshal(m)
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
 }

@@ -37,6 +37,13 @@ function launch() {
                 if (send_by_date != "") {
                     send_by_date = moment(send_by_date).utc().format()
                 }
+                // An empty launch date means "launch immediately". Send null
+                // rather than formatting an empty value, which moment() turns
+                // into the string "Invalid date" that the server can't decode.
+                var launch_date = $("#launch_date").val()
+                if (launch_date != "") {
+                    launch_date = moment(launch_date).utc().format()
+                }
                 campaign = {
                     name: $("#name").val(),
                     template: {
@@ -49,10 +56,11 @@ function launch() {
                     smtp: {
                         name: $("#profile").select2("data")[0].text
                     },
-                    launch_date: moment($("#launch_date").val()).utc().format(),
+                    launch_date: launch_date || null,
                     send_by_date: send_by_date || null,
                     groups: groups,
                     tags: getTagInput("#tags"),
+                    scrub_on_complete: $("#scrub_on_complete").prop("checked"),
                 }
                 // Submit the campaign
                 api.campaigns.post(campaign)
@@ -123,6 +131,7 @@ function dismiss() {
     $("#url").val("");
     $("#profile").val("").change();
     $("#users").val("").change();
+    $("#scrub_on_complete").prop("checked", false);
     clearTagInput("#tags");
     hideModal();
 }

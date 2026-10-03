@@ -23,8 +23,12 @@ Campaigns have the following structure:
   smtp                : SMTP
   url                 : string
   tags                : list(string)
+  scrub_on_complete   : bool
+  scrubbed_date       : string(datetime)
 }
 ```
+
+The `scrub_on_complete` field flags the campaign to be anonymized automatically when it completes. The `scrubbed_date` field is set to the time the campaign was anonymized; a zero value (`0001-01-01T00:00:00Z`) means it has not been anonymized. See [Anonymize Campaign](#anonymize-campaign) and the [Campaigns guide](../guide/campaigns.md#anonymizing-a-campaign).
 
 The `template`, `page`, `groups`, and `smtp` objects are all Gophish objects. Their format can be found at their various API endpoints.
 
@@ -675,6 +679,34 @@ Marks a campaign as complete.
 ```javascript
 {
   "message": "Campaign completed successfully!",
+  "success": true,
+  "data": null
+}
+```
+
+## Anonymize Campaign
+
+`POST /api/campaigns/:id/scrub`
+
+Anonymizes a campaign by permanently removing recipient-identifying data from its results and timeline, while keeping the aggregate metrics. Names and positions are replaced with a placeholder and each recipient's email with a stable, non-identifying pseudonym; IP addresses, geolocation, and submitted data are removed. This **cannot** be undone. The call is idempotent - anonymizing an already-anonymized campaign is a no-op. See the [Campaigns guide](../guide/campaigns.md#anonymizing-a-campaign) for details.
+
+**Path Parameters**
+
+| Name | Required | Description |
+|---|---|---|
+| `id` (integer) | Yes | The campaign ID |
+
+**Headers**
+
+| Name | Required | Description |
+|---|---|---|
+| `Authorization` (string) | Yes | A valid API key |
+
+**Response `200`**
+
+```javascript
+{
+  "message": "Campaign anonymized successfully!",
   "success": true,
   "data": null
 }

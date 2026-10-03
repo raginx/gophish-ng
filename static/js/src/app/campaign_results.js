@@ -199,6 +199,61 @@ function completeCampaign() {
     })
 }
 
+// isScrubbed returns true if the campaign has been anonymized. Go marshals a
+// zero time as "0001-01-01T00:00:00Z", so treat that as "not scrubbed".
+function isScrubbed() {
+    return campaign.scrubbed_date && campaign.scrubbed_date.indexOf("0001-01-01") !== 0
+}
+
+// reflectScrubbedState updates the toolbar to show whether the campaign has
+// already been anonymized.
+function reflectScrubbedState() {
+    if (isScrubbed()) {
+        $('#anonymized_badge').show();
+        $('#scrub_button').prop('disabled', true)
+            .attr('title', 'This campaign has already been anonymized.');
+    }
+}
+
+// Anonymizes a campaign after prompting the user. This is irreversible.
+function scrubCampaign() {
+    Swal.fire({
+        title: "Are you sure?",
+        text: "This permanently removes recipient names, email addresses, IP addresses and submitted data from this campaign, keeping only the aggregate results. This cannot be undone.",
+        icon: "warning",
+        animation: false,
+        showCancelButton: true,
+        confirmButtonText: "Anonymize Campaign",
+        confirmButtonColor: "#d9534f",
+        reverseButtons: true,
+        allowOutsideClick: false,
+        showLoaderOnConfirm: true,
+        preConfirm: function () {
+            return new Promise(function (resolve, reject) {
+                api.campaignId.scrub(campaign.id)
+                    .done(function (msg) {
+                        resolve()
+                    })
+                    .fail(function (data) {
+                        reject(data.responseJSON.message)
+                    })
+            })
+        }
+    }).then(function (result) {
+        if (result.value) {
+            Swal.fire(
+                'Campaign Anonymized!',
+                'Recipient data has been removed from this campaign.',
+                'success'
+            );
+            $('#scrub_button').prop('disabled', true);
+            $('#anonymized_badge').show();
+            // Reload so the results table reflects the scrubbed data.
+            load();
+        }
+    })
+}
+
 // Exports campaign results as a CSV file
 function exportAsCSV(scope) {
     exportHTML = $("#exportButton").html()
@@ -811,6 +866,7 @@ function load() {
                     $('#complete_button').text('Completed!');
                     doPoll = false;
                 }
+                reflectScrubbedState()
                 // Setup viewing the details of a result
                 $("#resultsTable").on("click", ".timeline-event-details", function () {
                     // Show the parameters

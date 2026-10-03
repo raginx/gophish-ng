@@ -251,3 +251,21 @@ func (as *Server) CampaignComplete(w http.ResponseWriter, r *http.Request) {
 		JSONResponse(w, models.Response{Success: true, Message: "Campaign completed successfully!"}, http.StatusOK)
 	}
 }
+
+// CampaignScrub (/api/campaigns/{id}/scrub) permanently removes the
+// recipient-identifying data from a campaign's results and events,
+// anonymizing it while preserving the aggregate reporting data. This is
+// irreversible.
+func (as *Server) CampaignScrub(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, _ := strconv.ParseInt(vars["id"], 0, 64)
+	switch {
+	case r.Method == "POST":
+		err := models.ScrubCampaign(id, ctx.Get(r, "team_id").(int64))
+		if err != nil {
+			JSONResponse(w, models.Response{Success: false, Message: "Error anonymizing campaign"}, http.StatusInternalServerError)
+			return
+		}
+		JSONResponse(w, models.Response{Success: true, Message: "Campaign anonymized successfully!"}, http.StatusOK)
+	}
+}

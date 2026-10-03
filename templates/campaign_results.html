@@ -34,10 +34,18 @@
             <button id="resend_failed_button" type="button" class="btn btn-warning" data-bs-toggle="tooltip" onclick="resend_all_failed(campaign.id)">
                 <i class="fa fa-repeat"></i> Resend Failed
             </button>
+            <button id="scrub_button" type="button" class="btn btn-blue" data-bs-toggle="tooltip"
+                title="Permanently remove recipient names, email addresses, IPs and submitted data, keeping only aggregate results. This cannot be undone."
+                onclick="scrubCampaign()">
+                <i class="fa fa-user-secret"></i> Anonymize
+            </button>
             <button type="button" class="btn btn-danger" data-bs-toggle="tooltip" onclick="deleteCampaign()">
                 <i class="fa fa-trash-o fa-lg"></i> Delete
             </button>
             {{end}}
+            <span id="anonymized_badge" class="badge bg-secondary align-self-center" style="display:none">
+                <i class="fa fa-user-secret"></i> Anonymized
+            </span>
             <button id="refresh_btn" type="button" class="btn btn-blue" data-bs-toggle="tooltip" onclick="refresh()">
                 <i class="fa fa-refresh fa-lg"></i> Refresh
             </button>

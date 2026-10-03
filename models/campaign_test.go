@@ -2,6 +2,8 @@ package models
 
 import (
 	"fmt"
+	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -208,6 +210,176 @@ func (s *ModelsSuite) TestCampaignGetResults(c *check.C) {
 	got, err := GetCampaign(campaign.Id, campaign.UserId)
 	c.Assert(err, check.Equals, nil)
 	c.Assert(len(campaign.Results), check.Equals, len(got.Results))
+}
+
+// recordPIIEvents records a click and a form submission for the first result
+// of the campaign, with PII (submitted payload, source IP, user-agent) in the
+// event details, and gives that result an IP and geolocation. This mirrors the
+// data a real campaign accumulates so the scrubbing tests have something to
+// scrub.
+func (s *ModelsSuite) recordPIIEvents(c *check.C, campaign *Campaign) {
+	result := campaign.Results[0]
+	details := EventDetails{
+		Payload: url.Values{
+			"username": []string{"victim"},
+			"password": []string{"supersecret"},
+		},
+		Browser: map[string]string{
+			"address":    "1.2.3.4",
+			"user-agent": "Mozilla/5.0",
+		},
+	}
+	c.Assert(result.HandleClickedLink(details), check.Equals, nil)
+	c.Assert(result.HandleFormSubmit(details), check.Equals, nil)
+	// Simulate what UpdateGeo would persist on the result.
+	err := db.Model(&Result{}).Where("r_id = ?", result.RId).
+		Updates(map[string]interface{}{
+			"ip":        "1.2.3.4",
+			"latitude":  1.5,
+			"longitude": 2.5,
+		}).Error
+	c.Assert(err, check.Equals, nil)
+}
+
+func (s *ModelsSuite) TestScrubCampaign(c *check.C) {
+	campaign := s.createCampaign(c)
+	s.recordPIIEvents(c, &campaign)
+
+	// Capture the aggregate stats before scrubbing so we can prove they
+	// survive it (the scrub-safe reporting contract).
+	before, err := getCampaignStats(campaign.Id)
+	c.Assert(err, check.Equals, nil)
+
+	c.Assert(ScrubCampaign(campaign.Id, campaign.UserId), check.Equals, nil)
+
+	got, err := GetCampaign(campaign.Id, campaign.UserId)
+	c.Assert(err, check.Equals, nil)
+
+	// Every result has its real identity and location removed, its name
+	// replaced by the placeholder, and its email replaced by a distinct,
+	// RId-derived pseudonym (so per-recipient timelines stay separable).
+	seenEmails := map[string]bool{}
+	for _, r := range got.Results {
+		c.Assert(r.FirstName, check.Equals, scrubbedFirstName)
+		c.Assert(r.LastName, check.Equals, "")
+		c.Assert(r.Position, check.Equals, "")
+		c.Assert(r.IP, check.Equals, "")
+		c.Assert(r.Latitude, check.Equals, float64(0))
+		c.Assert(r.Longitude, check.Equals, float64(0))
+		c.Assert(r.RId, check.Not(check.Equals), "")
+		c.Assert(r.Email, check.Equals, scrubbedEmail(r.RId))
+		c.Assert(strings.Contains(r.Email, "@example.com"), check.Equals, false)
+		// Pseudonyms must be unique per recipient.
+		c.Assert(seenEmails[r.Email], check.Equals, false)
+		seenEmails[r.Email] = true
+	}
+
+	// Events drop any PII in details (payload, source IP) but retain the
+	// user-agent used for bot/scanner filtering. Their email is either empty
+	// (campaign-level events) or a recipient pseudonym - never a real address.
+	foundUserAgent := false
+	for _, e := range got.Events {
+		c.Assert(strings.Contains(e.Email, "@example.com"), check.Equals, false)
+		if e.Email != "" {
+			c.Assert(seenEmails[e.Email], check.Equals, true)
+		}
+		c.Assert(strings.Contains(e.Details, "supersecret"), check.Equals, false)
+		c.Assert(strings.Contains(e.Details, "1.2.3.4"), check.Equals, false)
+		if strings.Contains(e.Details, "Mozilla/5.0") {
+			foundUserAgent = true
+		}
+	}
+	c.Assert(foundUserAgent, check.Equals, true)
+
+	// The campaign is marked as scrubbed.
+	c.Assert(got.ScrubbedDate.IsZero(), check.Equals, false)
+
+	// Aggregate stats are unchanged by scrubbing.
+	after, err := getCampaignStats(campaign.Id)
+	c.Assert(err, check.Equals, nil)
+	c.Assert(after, check.DeepEquals, before)
+}
+
+func (s *ModelsSuite) TestCompleteCampaignScrubsWhenFlagged(c *check.C) {
+	campaign := s.createCampaign(c)
+	s.recordPIIEvents(c, &campaign)
+	c.Assert(db.Model(&Campaign{}).Where("id = ?", campaign.Id).
+		Update("scrub_on_complete", true).Error, check.Equals, nil)
+
+	c.Assert(CompleteCampaign(campaign.Id, campaign.UserId), check.Equals, nil)
+
+	got, err := GetCampaign(campaign.Id, campaign.UserId)
+	c.Assert(err, check.Equals, nil)
+	c.Assert(got.ScrubbedDate.IsZero(), check.Equals, false)
+	for _, r := range got.Results {
+		c.Assert(r.Email, check.Equals, scrubbedEmail(r.RId))
+	}
+}
+
+// TestScrubCampaignSeparatesTimelines verifies that after scrubbing, each
+// recipient's events stay associated with that recipient (via the RId-derived
+// pseudonym) rather than collapsing together - the reporting UI groups events
+// by email, so a shared or empty email would show every recipient the same
+// merged timeline.
+func (s *ModelsSuite) TestScrubCampaignSeparatesTimelines(c *check.C) {
+	campaign := s.createCampaign(c)
+	// Recipient 0 submits data; recipient 1 only has the email sent.
+	submitter := campaign.Results[0]
+	c.Assert(submitter.HandleFormSubmit(EventDetails{
+		Payload: url.Values{"password": []string{"supersecret"}},
+		Browser: map[string]string{"address": "1.2.3.4"},
+	}), check.Equals, nil)
+	other := campaign.Results[1]
+	c.Assert(other.HandleEmailSent(), check.Equals, nil)
+
+	c.Assert(ScrubCampaign(campaign.Id, campaign.UserId), check.Equals, nil)
+
+	got, err := GetCampaign(campaign.Id, campaign.UserId)
+	c.Assert(err, check.Equals, nil)
+
+	// The pseudonyms are stable and derived from the original RIds.
+	submitterEmail := scrubbedEmail(submitter.RId)
+	otherEmail := scrubbedEmail(other.RId)
+	c.Assert(submitterEmail, check.Not(check.Equals), otherEmail)
+
+	// The submit event must belong only to the submitter, and the sent event
+	// only to the other recipient - no cross-contamination.
+	var submitOwner, sentOwner string
+	for _, e := range got.Events {
+		switch e.Message {
+		case EventDataSubmit:
+			submitOwner = e.Email
+		case EventSent:
+			sentOwner = e.Email
+		}
+	}
+	c.Assert(submitOwner, check.Equals, submitterEmail)
+	c.Assert(sentOwner, check.Equals, otherEmail)
+}
+
+func (s *ModelsSuite) TestCompleteCampaignDoesNotScrubByDefault(c *check.C) {
+	campaign := s.createCampaign(c)
+
+	c.Assert(CompleteCampaign(campaign.Id, campaign.UserId), check.Equals, nil)
+
+	got, err := GetCampaign(campaign.Id, campaign.UserId)
+	c.Assert(err, check.Equals, nil)
+	c.Assert(got.ScrubbedDate.IsZero(), check.Equals, true)
+	c.Assert(got.Results[0].Email, check.Not(check.Equals), "")
+}
+
+func (s *ModelsSuite) TestScrubCampaignIsIdempotent(c *check.C) {
+	campaign := s.createCampaign(c)
+	c.Assert(ScrubCampaign(campaign.Id, campaign.UserId), check.Equals, nil)
+	first, err := GetCampaign(campaign.Id, campaign.UserId)
+	c.Assert(err, check.Equals, nil)
+
+	// A second scrub is a no-op: it must not error and must leave the
+	// original scrubbed_date in place.
+	c.Assert(ScrubCampaign(campaign.Id, campaign.UserId), check.Equals, nil)
+	second, err := GetCampaign(campaign.Id, campaign.UserId)
+	c.Assert(err, check.Equals, nil)
+	c.Assert(second.ScrubbedDate.Equal(first.ScrubbedDate), check.Equals, true)
 }
 
 // TestGetCampaignPhishContext verifies that the lightweight context used to

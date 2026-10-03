@@ -125,6 +125,13 @@
                     </div>
                     <label class="col-form-label" for="users">Groups:</label>
                     <select class="form-control" id="users" multiple="multiple"></select>
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="scrub_on_complete" />
+                        <label class="form-check-label" for="scrub_on_complete">
+                            Anonymize results when the campaign completes
+                            <i class="fa fa-question-circle" data-bs-toggle="tooltip" data-bs-placement="right" title="When the campaign completes, permanently remove recipient names, email addresses, IP addresses and submitted data, keeping only the aggregate results. This cannot be undone."></i>
+                        </label>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">

@@ -196,6 +196,10 @@ var api = {
         complete: function (id) {
             return query("/campaigns/" + id + "/complete", "POST", {}, true)
         },
+        // scrub() - Anonymizes a campaign at POST /campaigns/:id/scrub
+        scrub: function (id) {
+            return query("/campaigns/" + id + "/scrub", "POST", {}, true)
+        },
         // report() - Marks a result as reported at PUT /campaigns/:id/results/:rid/report
         report: function (id, rid, reportedDate) {
             return query("/campaigns/" + id + "/results/" + rid + "/report", "PUT", { reported_date: reportedDate }, false)

@@ -22,6 +22,7 @@ Setting up a campaign requires the following fields to be provided:
 * **Send Emails By** - This is the date all emails will be sent by. See Scheduling Campaigns for more information.
 * **Sending Profile** - This is the SMTP configuration to use when sending emails. This is created in the [Sending Profiles](sending-profiles.md) section of the documentation.
 * **Groups** - This defines which groups of recipients should be included in the campaign.
+* **Anonymize results when the campaign completes** - When checked, Gophish permanently removes recipient-identifying data from the campaign's results as soon as it completes. See [Anonymizing a Campaign](#anonymizing-a-campaign) for details.
 
 ### Scheduling Campaigns
 
@@ -60,6 +61,26 @@ To export campaign results in CSV format, click the "Export CSV" format and sele
 ### Completing a Campaign
 
 To complete a campaign, click the "Complete" button and confirm that you want to mark the campaign as completed.
+
+### Anonymizing a Campaign
+
+Some organizations - particularly public institutions bound by data-protection rules - are not permitted to analyze phishing results on a per-person basis. To support these use cases, Gophish-NG can **anonymize** (or "scrub") a campaign, permanently removing recipient-identifying data while keeping the aggregate metrics needed for reporting.
+
+When a campaign is anonymized, Gophish removes recipient-identifying data from its results and timeline:
+
+* The recipient's name and position are replaced with a generic "Anonymized" placeholder.
+* The recipient's email address is replaced with a stable, non-identifying pseudonym (for example, `anonymized-a1b2c3d`). Each recipient keeps a distinct pseudonym, so their individual timeline of events is preserved while their real identity is gone.
+* The IP address and geolocation recorded for each recipient are removed.
+* Any data submitted to the landing page (for example, captured credentials) is removed from the event details.
+
+The aggregate outcome data is preserved, so open rates, click rates, report rates, and event timing remain intact. The browser user-agent recorded for each event is also kept, since it carries no direct personal identifier.
+
+There are two ways to trigger anonymization:
+
+* **Automatically on completion** - Check the "Anonymize results when the campaign completes" option when creating the campaign. Gophish scrubs the results as part of marking the campaign complete.
+* **On demand** - Open the campaign's results page and click the "Anonymize" button, then confirm. Once a campaign has been anonymized, the results page shows an "Anonymized" badge.
+
+> Note: Anonymizing a campaign **cannot** be undone. Only the campaign's own results and timeline are affected - the groups used to launch the campaign are left untouched, so any group built from the same recipients still contains their details.
 
 ### Deleting a Campaign
 
