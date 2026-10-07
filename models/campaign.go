@@ -800,7 +800,7 @@ func scrubbedEmail(rid string) string {
 }
 
 // ScrubCampaign permanently anonymizes a campaign's results and events,
-// leaving the aggregate outcome data intact. This is how anonymous 
+// leaving the aggregate outcome data intact. This is how anonymous
 // campaigns are realized (see #57) and is irreversible.
 //
 // Recipient identity is not simply blanked but replaced with a stable, non-PII
