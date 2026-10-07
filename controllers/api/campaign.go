@@ -259,8 +259,8 @@ func (as *Server) CampaignComplete(w http.ResponseWriter, r *http.Request) {
 func (as *Server) CampaignScrub(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, _ := strconv.ParseInt(vars["id"], 0, 64)
-	switch {
-	case r.Method == "POST":
+	switch r.Method {
+	case "POST":
 		err := models.ScrubCampaign(id, ctx.Get(r, "team_id").(int64))
 		if err != nil {
 			JSONResponse(w, models.Response{Success: false, Message: "Error anonymizing campaign"}, http.StatusInternalServerError)
