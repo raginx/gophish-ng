@@ -269,3 +269,26 @@ func (as *Server) CampaignScrub(w http.ResponseWriter, r *http.Request) {
 		JSONResponse(w, models.Response{Success: true, Message: "Campaign anonymized successfully!"}, http.StatusOK)
 	}
 }
+
+// CampaignReport (/api/campaigns/{id}/report) returns the aggregated,
+// PII-free report for a campaign: funnel counts, rates, timing, and the
+// engagement timeline. It is produced identically for normal and anonymized
+// campaigns.
+func (as *Server) CampaignReport(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, _ := strconv.ParseInt(vars["id"], 0, 64)
+	switch r.Method {
+	case "GET":
+		report, err := models.GetCampaignReport(id, ctx.Get(r, "team_id").(int64))
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				JSONResponse(w, models.Response{Success: false, Message: "Campaign not found"}, http.StatusNotFound)
+			} else {
+				JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusInternalServerError)
+			}
+			log.Error(err)
+			return
+		}
+		JSONResponse(w, report, http.StatusOK)
+	}
+}
