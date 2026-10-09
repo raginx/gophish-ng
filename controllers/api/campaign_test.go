@@ -329,3 +329,55 @@ func TestCampaignResendFailed(t *testing.T) {
 		t.Fatalf("expected non-failed result to be untouched: got status %q, want %q", gotUntouched.Status, untouched.Status)
 	}
 }
+
+func TestCampaignReport(t *testing.T) {
+	testCtx := setupTest(t)
+	createTestData(t)
+	campaign := getFirstCampaign(t)
+
+	url := fmt.Sprintf("/api/campaigns/%d/report", campaign.Id)
+	r := httptest.NewRequest(http.MethodGet, url, nil)
+	r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", testCtx.apiKey))
+	w := httptest.NewRecorder()
+
+	testCtx.apiServer.ServeHTTP(w, r)
+	if w.Code != http.StatusOK {
+		t.Fatalf("unexpected status code received. expected %d got %d: %s", http.StatusOK, w.Code, w.Body.String())
+	}
+
+	var report models.CampaignReport
+	if err := json.Unmarshal(w.Body.Bytes(), &report); err != nil {
+		t.Fatalf("error decoding report: %v", err)
+	}
+	if report.CampaignId != campaign.Id {
+		t.Fatalf("unexpected campaign id. expected %d got %d", campaign.Id, report.CampaignId)
+	}
+	if report.Stats.Total != int64(len(campaign.Results)) {
+		t.Fatalf("unexpected total. expected %d got %d", len(campaign.Results), report.Stats.Total)
+	}
+	if report.Meta.Name != campaign.Name {
+		t.Fatalf("unexpected campaign name in meta. expected %q got %q", campaign.Name, report.Meta.Name)
+	}
+	if report.Meta.TemplateName == "" {
+		t.Fatalf("expected template name in meta, got empty")
+	}
+}
+
+// TestCampaignReportNotFound ensures the report endpoint is team-scoped: a
+// campaign id that doesn't belong to the requester returns 404 rather than
+// leaking another team's aggregates.
+func TestCampaignReportNotFound(t *testing.T) {
+	testCtx := setupTest(t)
+	createTestData(t)
+	campaign := getFirstCampaign(t)
+
+	url := fmt.Sprintf("/api/campaigns/%d/report", campaign.Id+9999)
+	r := httptest.NewRequest(http.MethodGet, url, nil)
+	r.Header.Set("Authorization", fmt.Sprintf("Bearer %s", testCtx.apiKey))
+	w := httptest.NewRecorder()
+
+	testCtx.apiServer.ServeHTTP(w, r)
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("unexpected status code received. expected %d got %d: %s", http.StatusNotFound, w.Code, w.Body.String())
+	}
+}
