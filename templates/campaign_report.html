@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Gophish-NG - Phishing Toolkit">
+    <link rel="shortcut icon" href="/images/favicon.ico">
+
+    <title>{{ .Title }} - Gophish-NG</title>
+
+    <link href="/css/dist/gophish.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        {{if .User}}
+        var user = {
+            api_key: {{ .User.ApiKey }},
+            username: {{ .User.Username }},
+            team: {{ .User.Team.Name }}
+        }
+        {{end}}
+        // The campaign this standalone report is scoped to, injected by the
+        // server so the JS doesn't have to parse it out of the URL.
+        var campaignId = {{ .CampaignID }}
+        // Build version, shown in the audit header so the report records which
+        // Gophish produced it.
+        var gophishVersion = {{ .Version }}
+    </script>
+
+    <style>
+        /* The report is a standalone document (no admin nav), so give the
+           content a sane page width and padding of its own. */
+        .report {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Funnel stat tiles. */
+        .stat-tiles {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .stat-tile {
+            flex: 1 1 140px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-tile .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+
+        .stat-tile .stat-rate {
+            font-size: 1rem;
+            color: #6c757d;
+        }
+
+        .stat-tile .stat-label {
+            margin-top: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        #timeline_chart {
+            width: 100%;
+            height: 320px;
+        }
+
+        /* One-line management takeaway, set apart from the body text. */
+        .executive-summary {
+            font-size: 1.15rem;
+            line-height: 1.5;
+            border-left: 4px solid #428bca;
+            padding: 0.5rem 0 0.5rem 1rem;
+            margin: 0.5rem 0 1.5rem;
+        }
+
+        /* Audit header as a compact two-column key/value grid. */
+        .audit-grid {
+            display: grid;
+            grid-template-columns: max-content 1fr;
+            gap: 0.4rem 1.5rem;
+        }
+
+        .audit-grid dt {
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        .audit-grid dd {
+            margin: 0;
+        }
+
+        /* Hide interactive chrome when printing, and drop shadows/colors the
+           printer doesn't need. */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            .report {
+                max-width: none;
+                padding: 0;
+            }
+
+            .stat-tile {
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="report">
+        <div id="loading">
+            <i class="fa fa-spinner fa-spin fa-4x"></i>
+        </div>
+
+        <div id="report" style="display:none;">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+                <div>
+                    <h1 class="page-header mb-1" id="report-title">Campaign Report</h1>
+                    <div class="d-flex flex-wrap gap-3 text-muted" id="report-meta"></div>
+                </div>
+                <div class="no-print">
+                    <button type="button" class="btn btn-primary" onclick="window.print()">
+                        <i class="fa fa-print"></i> Print / PDF
+                    </button>
+                </div>
+            </div>
+
+            <span id="anonymized_badge" class="badge bg-secondary mb-3" style="display:none">
+                <i class="fa fa-user-secret"></i> Anonymized
+            </span>
+
+            <p class="executive-summary" id="executive-summary"></p>
+
+            <h2 class="h5 mt-4 mb-3">Audit information</h2>
+            <div class="card">
+                <div class="card-body">
+                    <dl class="audit-grid mb-0" id="audit-header"></dl>
+                </div>
+            </div>
+
+            <div id="data-protection-card" class="card mt-3" style="display:none">
+                <div class="card-body">
+                    <h2 class="h6 mb-2"><i class="fa fa-shield"></i> Data protection</h2>
+                    <ul class="mb-0" id="data-protection"></ul>
+                </div>
+            </div>
+
+            <h2 class="h5 mt-5 mb-3">Funnel</h2>
+            <div class="stat-tiles" id="stat-tiles"></div>
+            <p class="mt-3 mb-1" id="no-interaction"></p>
+            <p class="mb-0" id="resilience"></p>
+
+            <h2 class="h5 mt-5 mb-3">Engagement over time</h2>
+            <div id="timeline_chart"></div>
+            <p class="text-muted" id="timeline-empty" style="display:none">No engagement recorded yet.</p>
+
+            <h2 class="h5 mt-5 mb-3">Time to engage</h2>
+            <div class="card">
+                <div class="card-body">
+                    <table class="table mb-0" id="timing-table">
+                        <thead>
+                            <tr>
+                                <th>Stage</th>
+                                <th class="text-end">Recipients</th>
+                                <th class="text-end">Median</th>
+                                <th class="text-end">Average</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="flashes" class="row"></div>
+    </div>
+
+    <script src="/js/dist/vendor.min.js"></script>
+    <script src="/js/dist/app/gophish.min.js"></script>
+    <script src="/js/dist/app/campaign_report.min.js"></script>
+</body>
+
+</html>

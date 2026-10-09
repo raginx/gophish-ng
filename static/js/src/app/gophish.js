@@ -215,6 +215,11 @@ var api = {
         // summary() - Queries the API for GET /campaigns/summary
         summary: function (id) {
             return query("/campaigns/" + id + "/summary", "GET", {}, true)
+        },
+        // reportData() - Queries the aggregated, PII-free report at
+        // GET /campaigns/:id/report (funnel counts, rates, timing, timeline).
+        reportData: function (id) {
+            return query("/campaigns/" + id + "/report", "GET", {}, true)
         }
     },
     // groups contains the endpoints for /groups

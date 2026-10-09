@@ -8,24 +8,17 @@ import (
 )
 
 // timelineTargetBuckets is the number of buckets computeTimeline aims to
-// produce across a campaign's engagement span. The actual count can be lower
-// when the span is short, since the bucket interval is clamped to a minimum.
+// produce across a campaign's engagement span
 const timelineTargetBuckets = 40
 
-// timelineMinInterval is the smallest bucket width the timeline uses, so very
-// short campaigns don't explode into thousands of sub-second buckets.
+// timelineMinInterval is the smallest bucket width the timeline uses
 const timelineMinInterval = time.Minute
 
 // CampaignReport is the aggregated, PII-free view of a campaign's outcome. It
-// is produced identically for normal and anonymized campaigns (see #57): every
-// metric is derived from result counts and event timestamps, never from
-// recipient identity, so scrubbing a campaign does not change its report. It is
-// the data foundation the HTML report (#64) renders.
+// is produced identically for normal and anonymized campaigns
 type CampaignReport struct {
 	CampaignId int64 `json:"campaign_id"`
-	// Anonymized reflects whether the campaign has been scrubbed; the report
-	// layer exposes it so consumers can label the view, not because it changes
-	// any of the numbers below.
+	// Anonymized reflects whether the campaign has been scrubbed
 	Anonymized bool           `json:"anonymized"`
 	Meta       CampaignMeta   `json:"meta"`
 	Stats      CampaignStats  `json:"stats"`
@@ -46,8 +39,7 @@ type CampaignMeta struct {
 	CreatedDate   time.Time `json:"created_date"`
 	LaunchDate    time.Time `json:"launch_date"`
 	CompletedDate time.Time `json:"completed_date"`
-	// ScrubbedDate is the zero value unless the campaign has been anonymized,
-	// in which case it is when that happened - the data-protection evidence.
+	// ScrubbedDate is the zero value unless the campaign has been anonymized
 	ScrubbedDate time.Time `json:"scrubbed_date"`
 	TemplateName string    `json:"template_name"`
 	SMTPName     string    `json:"smtp_name"`

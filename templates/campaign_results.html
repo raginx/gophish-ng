@@ -27,6 +27,10 @@
                     </li>
                 </ul>
             </div>
+            <button type="button" id="report_button" class="btn btn-primary" data-bs-toggle="tooltip"
+                title="Open a printable, aggregate report for this campaign" onclick="openReport()">
+                <i class="fa fa-file-text-o"></i> Report
+            </button>
             {{if .ModifyObjects}}
             <button id="complete_button" type="button" class="btn btn-blue" data-bs-toggle="tooltip" onclick="completeCampaign()">
                 <i class="fa fa-flag-checkered"></i> Complete

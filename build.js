@@ -49,6 +49,7 @@ function resolveVendorFile(f) {
 // autocomplete.js down to nothing.
 const appFiles = [
   "ckeditor-setup.js",
+  "campaign_report.js",
   "campaign_results.js",
   "campaigns.js",
   "content_packs.js",

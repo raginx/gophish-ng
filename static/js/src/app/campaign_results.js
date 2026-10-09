@@ -162,6 +162,12 @@ function deleteCampaign() {
 }
 
 // Completes a campaign after prompting the user
+// openReport opens the standalone, printable aggregate report for the
+// current campaign in a new tab.
+function openReport() {
+    window.open("/campaigns/" + campaign.id + "/report", "_blank")
+}
+
 function completeCampaign() {
     Swal.fire({
         title: "Are you sure?",

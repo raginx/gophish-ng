@@ -133,6 +133,7 @@ func (as *AdminServer) registerRoutes() {
 	router.HandleFunc("/reset_password", mid.Use(as.ResetPassword, mid.RequireLogin))
 	router.HandleFunc("/campaigns", mid.Use(as.Campaigns, mid.RequireLogin))
 	router.HandleFunc("/campaigns/{id:[0-9]+}", mid.Use(as.CampaignID, mid.RequireLogin))
+	router.HandleFunc("/campaigns/{id:[0-9]+}/report", mid.Use(as.CampaignReport, mid.RequireLogin))
 	router.HandleFunc("/templates", mid.Use(as.Templates, mid.RequireLogin))
 	router.HandleFunc("/groups", mid.Use(as.Groups, mid.RequireLogin))
 	router.HandleFunc("/landing_pages", mid.Use(as.LandingPages, mid.RequireLogin))
@@ -197,6 +198,10 @@ type templateParams struct {
 	Version       string
 	ModifySystem  bool
 	ModifyObjects bool
+	// CampaignID is set only for standalone pages scoped to a single
+	// campaign (e.g. the printable report), so their JS knows which
+	// campaign to load without parsing the URL.
+	CampaignID string
 }
 
 // newTemplateParams returns the default template parameters for a user and
@@ -257,6 +262,17 @@ func (as *AdminServer) CampaignID(w http.ResponseWriter, r *http.Request) {
 	params := newTemplateParams(r)
 	params.Title = "Campaign Results"
 	getTemplate(w, "campaign_results", params)
+}
+
+// CampaignReport serves the standalone, printable HTML report for a single
+// campaign. Unlike the other admin pages it is rendered without the shared
+// nav/sidebar chrome so it prints cleanly to PDF; its JS fetches the
+// aggregated data from GET /api/campaigns/:id/report.
+func (as *AdminServer) CampaignReport(w http.ResponseWriter, r *http.Request) {
+	params := newTemplateParams(r)
+	params.Title = "Campaign Report"
+	params.CampaignID = mux.Vars(r)["id"]
+	getStandaloneTemplate(w, "campaign_report", params)
 }
 
 // Templates handles the default path and template execution
@@ -558,6 +574,23 @@ func getTemplate(w http.ResponseWriter, tmpl string, params interface{}) {
 		log.Error(err)
 	}
 	if err := template.Must(templates, err).ExecuteTemplate(w, "base", params); err != nil {
+		log.Error(err)
+	}
+}
+
+// getStandaloneTemplate renders a self-contained page that supplies its own
+// full HTML document rather than filling the shared base/nav layout. It is
+// used for the printable campaign report, which must not carry the admin
+// chrome into the printout.
+func getStandaloneTemplate(w http.ResponseWriter, tmpl string, params interface{}) {
+	// Same no-cache rationale as getTemplate: per-user data behind auth.
+	w.Header().Set("Cache-Control", "no-store")
+	templates := template.New("template")
+	_, err := templates.ParseFiles("templates/" + tmpl + ".html")
+	if err != nil {
+		log.Error(err)
+	}
+	if err := template.Must(templates, err).ExecuteTemplate(w, tmpl+".html", params); err != nil {
 		log.Error(err)
 	}
 }
