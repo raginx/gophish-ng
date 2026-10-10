@@ -12,12 +12,20 @@ import (
 // enough of the protocol to observe which command a client sends first
 // (LOGIN vs AUTHENTICATE) - it always rejects the attempt afterwards, since
 // these tests only care about newClient()'s choice of authentication
-// command, not a full login round trip.
-func startFakeIMAPServer(t *testing.T) (addr string, gotCmd <-chan string, cleanup func()) {
+// command, not a full login round trip. authCaps are the AUTH= capabilities
+// the server advertises, defaulting to OAUTHBEARER only.
+func startFakeIMAPServer(t *testing.T, authCaps ...string) (addr string, gotCmd <-chan string, cleanup func()) {
 	t.Helper()
 	l, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("error starting fake IMAP listener: %v", err)
+	}
+	if len(authCaps) == 0 {
+		authCaps = []string{"OAUTHBEARER"}
+	}
+	capLine := "* CAPABILITY IMAP4rev1"
+	for _, c := range authCaps {
+		capLine += " AUTH=" + c
 	}
 	cmdCh := make(chan string, 1)
 	go func() {
@@ -45,7 +53,7 @@ func startFakeIMAPServer(t *testing.T) (addr string, gotCmd <-chan string, clean
 			return
 		}
 		capTag := firstLineTag(scanner.Text())
-		_, _ = conn.Write([]byte("* CAPABILITY IMAP4rev1 AUTH=OAUTHBEARER\r\n"))
+		_, _ = conn.Write([]byte(capLine + "\r\n"))
 		_, _ = conn.Write([]byte(capTag + " OK CAPABILITY completed\r\n"))
 
 		if !scanner.Scan() {
@@ -75,6 +83,45 @@ func TestNewClientUsesOAuthBearerWhenTokenSet(t *testing.T) {
 		}
 	case <-time.After(5 * time.Second):
 		t.Fatal("timed out waiting for the client to send a command")
+	}
+}
+
+// Exchange Online only advertises (and accepts) XOAUTH2
+func TestNewClientUsesXOAuth2WhenAdvertised(t *testing.T) {
+	for _, caps := range [][]string{{"PLAIN", "XOAUTH2"}, {"XOAUTH2", "OAUTHBEARER"}} {
+		addr, gotCmd, cleanup := startFakeIMAPServer(t, caps...)
+
+		mbox := &Mailbox{Host: addr, User: "user@example.com", OAuthToken: "test-access-token"}
+		_, _ = mbox.newClient()
+
+		select {
+		case cmd := <-gotCmd:
+			if !strings.Contains(cmd, "AUTHENTICATE XOAUTH2") {
+				t.Fatalf("expected an AUTHENTICATE XOAUTH2 command with caps %v, got %q", caps, cmd)
+			}
+		case <-time.After(5 * time.Second):
+			t.Fatal("timed out waiting for the client to send a command")
+		}
+		cleanup()
+	}
+}
+
+func TestXOAuth2ClientInitialResponse(t *testing.T) {
+	c := &xoauth2Client{username: "user@example.com", token: "tok"}
+	mech, ir, err := c.Start()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if mech != "XOAUTH2" {
+		t.Fatalf("expected mechanism XOAUTH2, got %q", mech)
+	}
+	if expected := "user=user@example.com\x01auth=Bearer tok\x01\x01"; string(ir) != expected {
+		t.Fatalf("expected initial response %q, got %q", expected, ir)
+	}
+	// A failed attempt is answered with an empty response
+	resp, err := c.Next([]byte(`{"status":"400"}`))
+	if err != nil || len(resp) != 0 {
+		t.Fatalf("expected an empty response to an error challenge, got %q, %v", resp, err)
 	}
 }
 
