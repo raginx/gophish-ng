@@ -50,7 +50,7 @@ type Mailbox struct {
 	User             string
 	Pwd              string
 	// OAuthToken, if set, is used instead of Pwd - newClient()
-	// authenticates via OAUTHBEARER rather than plain LOGIN
+	// authenticates via XOAUTH2/OAUTHBEARER rather than plain LOGIN
 	// Callers are responsible for resolving a currently-valid access
 	// token (see models.GetValidAccessToken) before constructing a
 	// Mailbox this way, since Mailbox itself has no way to refresh it.
@@ -217,6 +217,29 @@ func (mbox *Mailbox) GetUnread(markAsRead, delete bool) ([]Email, error) {
 	return emails, nil
 }
 
+// xoauth2Mechanism is the name of the (non-standard, but widely deployed)
+// XOAUTH2 SASL mechanism used by Microsoft and Google.
+const xoauth2Mechanism = "XOAUTH2"
+
+// xoauth2Client implements sasl.Client for XOAUTH2, which go-sasl doesn't
+// ship.
+type xoauth2Client struct {
+	username string
+	token    string
+}
+
+// Start returns the XOAUTH2 initial client response.
+func (a *xoauth2Client) Start() (mech string, ir []byte, err error) {
+	return xoauth2Mechanism, []byte("user=" + a.username + "\x01auth=Bearer " + a.token + "\x01\x01"), nil
+}
+
+// Next is only called when authentication failed: the server sends the
+// error details as a challenge and expects an empty response before it
+// fails the command with the actual error.
+func (a *xoauth2Client) Next(challenge []byte) ([]byte, error) {
+	return []byte{}, nil
+}
+
 // newClient will initiate a new IMAP connection with the given creds.
 func (mbox *Mailbox) newClient() (*client.Client, error) {
 	var imapClient *client.Client
@@ -234,10 +257,23 @@ func (mbox *Mailbox) newClient() (*client.Client, error) {
 	}
 
 	if mbox.OAuthToken != "" {
-		err = imapClient.Authenticate(sasl.NewOAuthBearerClient(&sasl.OAuthBearerOptions{
-			Username: mbox.User,
-			Token:    mbox.OAuthToken,
-		}))
+		// Exchange Online only speaks XOAUTH2 and answers OAUTHBEARER with
+		// "BAD Command Argument Error. 12", so prefer XOAUTH2 whenever the
+		// server advertises it and fall back to the standardized
+		// OAUTHBEARER otherwise.
+		var xoauth2 bool
+		xoauth2, err = imapClient.SupportAuth(xoauth2Mechanism)
+		if err != nil {
+			return imapClient, err
+		}
+		if xoauth2 {
+			err = imapClient.Authenticate(&xoauth2Client{username: mbox.User, token: mbox.OAuthToken})
+		} else {
+			err = imapClient.Authenticate(sasl.NewOAuthBearerClient(&sasl.OAuthBearerOptions{
+				Username: mbox.User,
+				Token:    mbox.OAuthToken,
+			}))
+		}
 	} else {
 		err = imapClient.Login(mbox.User, mbox.Pwd)
 	}
