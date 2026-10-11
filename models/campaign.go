@@ -45,6 +45,11 @@ type Campaign struct {
 	// scrubbed. A non-zero value marks the campaign as anonymized and makes
 	// scrubbing idempotent.
 	ScrubbedDate time.Time `json:"scrubbed_date"`
+	// AutoCompleteAfterDays, when > 0, tells the background worker to
+	// complete this campaign automatically that many days after its send-by
+	// date (or launch date, when no send-by date is set). 0 means the
+	// campaign is only completed manually.
+	AutoCompleteAfterDays int `json:"auto_complete_after_days" gorm:"not null;default:0"`
 }
 
 // CampaignResults is a struct representing the results from a campaign
@@ -56,6 +61,12 @@ type CampaignResults struct {
 	Template   Template `json:"template"`
 	PageId     int64    `json:"-"`
 	Page       Page     `json:"page"`
+	// LaunchDate/SendByDate/AutoCompleteAfterDays let the results page show
+	// when the campaign will auto-complete (if opted in). They're populated
+	// from the campaigns row alongside the other columns.
+	LaunchDate            time.Time `json:"launch_date"`
+	SendByDate            time.Time `json:"send_by_date"`
+	AutoCompleteAfterDays int       `json:"auto_complete_after_days"`
 	// ScrubbedDate is non-zero when the campaign has been anonymized; the UI
 	// uses it to reflect the scrubbed state.
 	ScrubbedDate time.Time `json:"scrubbed_date"`
@@ -524,6 +535,41 @@ func GetQueuedCampaigns(t time.Time) ([]Campaign, error) {
 	return cs, err
 }
 
+// GetCampaignsToAutoComplete returns campaigns that have opted into automatic
+// completion (auto_complete_after_days > 0), are not already complete, and
+// whose grace period has elapsed as of t. The grace period is measured from
+// the send-by date - or the launch date, when no send-by date was set - so
+// that opens, clicks and reports that trickle in after the last email is sent
+// still land in the campaign before it's closed.
+func GetCampaignsToAutoComplete(t time.Time) ([]Campaign, error) {
+	cs := []Campaign{}
+	// Pre-filter in SQL to the small set of opted-in, not-yet-complete
+	// campaigns; the per-campaign deadline is computed in Go to avoid
+	// date-arithmetic differences between SQLite and MySQL.
+	err := db.Where("status <> ?", CampaignComplete).
+		Where("auto_complete_after_days > 0").Find(&cs).Error
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	due := make([]Campaign, 0, len(cs))
+	for _, c := range cs {
+		ref := c.SendByDate
+		if ref.IsZero() {
+			ref = c.LaunchDate
+		}
+		// With neither date set there's no meaningful reference point, so
+		// skip rather than completing the campaign immediately.
+		if ref.IsZero() {
+			continue
+		}
+		if t.After(ref.AddDate(0, 0, c.AutoCompleteAfterDays)) {
+			due = append(due, c)
+		}
+	}
+	return due, nil
+}
+
 // PostCampaign inserts a campaign and all associated records into the database.
 // uid is the creating user (attribution only); teamID determines which
 // team's templates/pages/groups/sending profiles the campaign can draw from,
@@ -549,6 +595,10 @@ func PostCampaign(c *Campaign, uid int64, teamID int64) error {
 	}
 	if !c.SendByDate.IsZero() {
 		c.SendByDate = c.SendByDate.UTC()
+	}
+	// A negative grace period makes no sense; treat it as "manual only".
+	if c.AutoCompleteAfterDays < 0 {
+		c.AutoCompleteAfterDays = 0
 	}
 	if c.LaunchDate.Before(c.CreatedDate) || c.LaunchDate.Equal(c.CreatedDate) {
 		c.Status = CampaignInProgress
