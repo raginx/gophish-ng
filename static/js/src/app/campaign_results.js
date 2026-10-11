@@ -198,8 +198,8 @@ function completeCampaign() {
                 'This campaign has been completed!',
                 'success'
             );
-            $('#complete_button').prop('disabled', true);
-            $('#complete_button').text('Completed!')
+            $('#complete_button').hide();
+            $('#completed_badge').show();
             doPoll = false;
         }
     })
@@ -211,13 +211,27 @@ function isScrubbed() {
     return campaign.scrubbed_date && campaign.scrubbed_date.indexOf("0001-01-01") !== 0
 }
 
-// reflectScrubbedState updates the toolbar to show whether the campaign has
-// already been anonymized.
-function reflectScrubbedState() {
+// hasFailedResults returns true if any recipient is currently in an Error
+// state, i.e. the email failed to send and can be resent.
+function hasFailedResults() {
+    return (campaign.results || []).some(function (r) {
+        return r.status === "Error"
+    })
+}
+
+// reflectCampaignState keeps the toolbar and title badges in sync with the
+// current campaign state. It hides actions that don't apply in the current
+// state
+function reflectCampaignState() {
+    if (campaign.status == "Completed") {
+        $('#complete_button').hide();
+        $('#completed_badge').show();
+        doPoll = false;
+    }
+    $('#resend_failed_button').toggle(hasFailedResults());
     if (isScrubbed()) {
+        $('#scrub_button').hide();
         $('#anonymized_badge').show();
-        $('#scrub_button').prop('disabled', true)
-            .attr('title', 'This campaign has already been anonymized.');
     }
 }
 
@@ -252,7 +266,7 @@ function scrubCampaign() {
                 'Recipient data has been removed from this campaign.',
                 'success'
             );
-            $('#scrub_button').prop('disabled', true);
+            $('#scrub_button').hide();
             $('#anonymized_badge').show();
             // Reload so the results table reflects the scrubbed data.
             load();
@@ -851,8 +865,8 @@ function load() {
                 $("title").text(c.name + " - Gophish")
                 $("#loading").hide()
                 $("#campaignResults").show()
-                // Set the title
-                $("#page-title").text("Results for " + c.name)
+                // Set the title (text only - the badges live in #page-title too)
+                $("#page-title-text").text("Results for " + c.name)
                 var templateLabel = c.template.id ?
                     "<a href=\"/templates?id=" + c.template.id + "\">" + escapeHtml(c.template.name) + "</a>" :
                     escapeHtml(c.template.name)
@@ -863,16 +877,7 @@ function load() {
                     "<span><i class=\"fa fa-envelope-o me-1\"></i>Template: " + templateLabel + "</span>" +
                     "<span><i class=\"fa fa-window-restore me-1\"></i>Landing Page: " + pageLabel + "</span>"
                 )
-                if (c.status == "Completed") {
-                    // .prop() rather than [0].disabled: read-only accounts
-                    // never get a complete button rendered, and indexing an
-                    // empty jQuery set would throw and abort the rest of
-                    // this handler.
-                    $('#complete_button').prop('disabled', true);
-                    $('#complete_button').text('Completed!');
-                    doPoll = false;
-                }
-                reflectScrubbedState()
+                reflectCampaignState()
                 // Setup viewing the details of a result
                 $("#resultsTable").on("click", ".timeline-event-details", function () {
                     // Show the parameters
@@ -1054,6 +1059,8 @@ function load() {
                 }
                 updateMap(campaign.results)
             }
+            // Keep the toolbar/badges in sync as the campaign progresses.
+            reflectCampaignState()
         })
         .fail(function () {
             $("#loading").hide()
