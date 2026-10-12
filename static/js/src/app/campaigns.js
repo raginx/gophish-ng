@@ -61,6 +61,7 @@ function launch() {
                     groups: groups,
                     tags: getTagInput("#tags"),
                     scrub_on_complete: $("#scrub_on_complete").prop("checked"),
+                    auto_complete_after_days: parseInt($("#auto_complete_after_days").val(), 10) || 0,
                 }
                 // Submit the campaign
                 api.campaigns.post(campaign)
@@ -132,6 +133,7 @@ function dismiss() {
     $("#profile").val("").change();
     $("#users").val("").change();
     $("#scrub_on_complete").prop("checked", false);
+    $("#auto_complete_after_days").val("0");
     clearTagInput("#tags");
     hideModal();
 }

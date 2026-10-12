@@ -132,6 +132,12 @@
                             <i class="fa fa-question-circle" data-bs-toggle="tooltip" data-bs-placement="right" title="When the campaign completes, permanently remove recipient names, email addresses, IP addresses and submitted data, keeping only the aggregate results. This cannot be undone."></i>
                         </label>
                     </div>
+                    <div class="mt-3">
+                        <label class="col-form-label" for="auto_complete_after_days">Auto-complete after (days)
+                            <i class="fa fa-question-circle" data-bs-toggle="tooltip" data-bs-placement="right" title="If greater than 0, Gophish automatically completes this campaign this many days after the 'Send Emails By' date (or the launch date if no send-by date is set). Leave at 0 to complete the campaign manually."></i>
+                        </label>
+                        <input type="number" min="0" step="1" class="form-control" id="auto_complete_after_days" value="0" />
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">

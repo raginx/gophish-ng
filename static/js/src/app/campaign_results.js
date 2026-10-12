@@ -211,6 +211,24 @@ function isScrubbed() {
     return campaign.scrubbed_date && campaign.scrubbed_date.indexOf("0001-01-01") !== 0
 }
 
+// isZeroDate returns true for an unset Go time
+function isZeroDate(d) {
+    return !d || d.indexOf("0001-01-01") === 0
+}
+
+// autoCompleteMoment returns the moment a campaign will be auto-completed, or
+// null if it hasn't opted in
+function autoCompleteMoment(c) {
+    if (!c.auto_complete_after_days || c.auto_complete_after_days <= 0) {
+        return null
+    }
+    var ref = !isZeroDate(c.send_by_date) ? c.send_by_date : c.launch_date
+    if (isZeroDate(ref)) {
+        return null
+    }
+    return moment.utc(ref).local().add(c.auto_complete_after_days, "days")
+}
+
 // hasFailedResults returns true if any recipient is currently in an Error
 // state, i.e. the email failed to send and can be resent.
 function hasFailedResults() {
@@ -873,10 +891,15 @@ function load() {
                 var pageLabel = c.page.id ?
                     "<a href=\"/landing_pages?id=" + c.page.id + "\">" + escapeHtml(c.page.name) + "</a>" :
                     escapeHtml(c.page.name)
-                $("#campaign-meta").html(
+                var metaHtml =
                     "<span><i class=\"fa fa-envelope-o me-1\"></i>Template: " + templateLabel + "</span>" +
                     "<span><i class=\"fa fa-window-restore me-1\"></i>Landing Page: " + pageLabel + "</span>"
-                )
+                var autoComplete = autoCompleteMoment(c)
+                if (autoComplete && c.status != "Completed") {
+                    metaHtml += "<span><i class=\"fa fa-clock-o me-1\"></i>Auto-completes " +
+                        autoComplete.fromNow() + " (" + autoComplete.format("lll") + ")</span>"
+                }
+                $("#campaign-meta").html(metaHtml)
                 reflectCampaignState()
                 // Setup viewing the details of a result
                 $("#resultsTable").on("click", ".timeline-event-details", function () {

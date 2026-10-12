@@ -129,12 +129,31 @@ func (w *DefaultWorker) Start() {
 	log.Info("Background Worker Started Successfully - Waiting for Campaigns")
 	go w.mailer.Start(context.Background())
 	for t := range time.Tick(1 * time.Minute) {
-		err := w.processCampaigns(t)
-		if err != nil {
+		if err := w.processCampaigns(t); err != nil {
 			log.Error(err)
-			continue
+		}
+		if err := w.autoCompleteCampaigns(t); err != nil {
+			log.Error(err)
 		}
 	}
+}
+
+// autoCompleteCampaigns closes any campaigns whose configured auto-completion
+// grace period has elapsed
+func (w *DefaultWorker) autoCompleteCampaigns(t time.Time) error {
+	cs, err := models.GetCampaignsToAutoComplete(t.UTC())
+	if err != nil {
+		return err
+	}
+	for _, c := range cs {
+		log.WithFields(logrus.Fields{
+			"campaign_id": c.Id,
+		}).Info("Auto-completing campaign past its completion grace period")
+		if err := models.CompleteCampaign(c.Id, c.TeamId); err != nil {
+			log.Error(err)
+		}
+	}
+	return nil
 }
 
 // LaunchCampaign starts a campaign
