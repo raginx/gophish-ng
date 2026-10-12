@@ -73,6 +73,57 @@ func (s *ModelsSuite) TestGenerateSendDate(c *check.C) {
 // send order) aren't created in the same order targets were added to the
 // group - see #3167 upstream. With this many targets, a coincidental match
 // is astronomically unlikely, so this isn't a flaky test.
+func (s *ModelsSuite) TestGetCampaignsToAutoComplete(c *check.C) {
+	dep := s.createCampaignDependencies(c)
+
+	// Opted in and past its grace period: launched 10 days ago, no send-by
+	// date, auto-complete after 7 days -> due.
+	due := Campaign{Name: dep.Name, UserId: dep.UserId, Template: dep.Template, Page: dep.Page, SMTP: dep.SMTP, Groups: dep.Groups}
+	due.LaunchDate = time.Now().UTC().AddDate(0, 0, -10)
+	due.AutoCompleteAfterDays = 7
+	c.Assert(PostCampaign(&due, due.UserId, 0), check.Equals, nil)
+
+	// Opted in but still inside the grace period: launched now -> not due.
+	fresh := Campaign{Name: dep.Name, UserId: dep.UserId, Template: dep.Template, Page: dep.Page, SMTP: dep.SMTP, Groups: dep.Groups}
+	fresh.LaunchDate = time.Now().UTC()
+	fresh.AutoCompleteAfterDays = 7
+	c.Assert(PostCampaign(&fresh, fresh.UserId, 0), check.Equals, nil)
+
+	// The grace period is measured from the send-by date, not the launch
+	// date: launched 10 days ago but the send-by window still runs into the
+	// future, so with a 1-day grace it's not due yet.
+	sendByFuture := Campaign{Name: dep.Name, UserId: dep.UserId, Template: dep.Template, Page: dep.Page, SMTP: dep.SMTP, Groups: dep.Groups}
+	sendByFuture.LaunchDate = time.Now().UTC().AddDate(0, 0, -10)
+	sendByFuture.SendByDate = time.Now().UTC().AddDate(0, 0, 5)
+	sendByFuture.AutoCompleteAfterDays = 1
+	c.Assert(PostCampaign(&sendByFuture, sendByFuture.UserId, 0), check.Equals, nil)
+
+	// Not opted in (0) even though it's old -> never due.
+	optedOut := Campaign{Name: dep.Name, UserId: dep.UserId, Template: dep.Template, Page: dep.Page, SMTP: dep.SMTP, Groups: dep.Groups}
+	optedOut.LaunchDate = time.Now().UTC().AddDate(0, 0, -30)
+	c.Assert(PostCampaign(&optedOut, optedOut.UserId, 0), check.Equals, nil)
+
+	cs, err := GetCampaignsToAutoComplete(time.Now().UTC())
+	c.Assert(err, check.Equals, nil)
+	dueIDs := map[int64]bool{}
+	for _, camp := range cs {
+		dueIDs[camp.Id] = true
+	}
+	c.Assert(dueIDs[due.Id], check.Equals, true)
+	c.Assert(dueIDs[fresh.Id], check.Equals, false)
+	c.Assert(dueIDs[sendByFuture.Id], check.Equals, false)
+	c.Assert(dueIDs[optedOut.Id], check.Equals, false)
+
+	// A completed campaign is never returned, even if it was opted in and
+	// is well past its grace period.
+	c.Assert(CompleteCampaign(due.Id, due.UserId), check.Equals, nil)
+	cs, err = GetCampaignsToAutoComplete(time.Now().UTC())
+	c.Assert(err, check.Equals, nil)
+	for _, camp := range cs {
+		c.Assert(camp.Id, check.Not(check.Equals), due.Id)
+	}
+}
+
 func (s *ModelsSuite) TestPostCampaignShufflesTargets(c *check.C) {
 	group := Group{Name: "Shuffle Test Group"}
 	numTargets := 30
