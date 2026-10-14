@@ -9,7 +9,6 @@ import (
 	ctx "github.com/raginx/gophish-ng/context"
 	log "github.com/raginx/gophish-ng/logger"
 	"github.com/raginx/gophish-ng/models"
-	"golang.org/x/oauth2"
 )
 
 // oauthStateSessionKey is where the OAuth2 CSRF-defense nonce is stashed
@@ -80,7 +79,7 @@ func (as *AdminServer) OAuthIMAPAuthorize(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	http.Redirect(w, r, oauthConf.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.ApprovalForce), http.StatusFound)
+	http.Redirect(w, r, oauthConf.AuthCodeURL(state, models.AuthCodeOptions(&im)...), http.StatusFound)
 }
 
 // OAuthIMAPCallback completes the OAuth2 authorization-code flow started by

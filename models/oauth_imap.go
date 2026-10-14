@@ -95,6 +95,20 @@ func OAuthConfig(im *IMAP, redirectURL string) (*oauth2.Config, error) {
 	}, nil
 }
 
+// AuthCodeOptions returns the provider-specific options for the
+// authorization-code request (AuthCodeURL).
+//
+// Microsoft: prompt=select_account
+// Google: prompt=consent
+func AuthCodeOptions(im *IMAP) []oauth2.AuthCodeOption {
+	switch im.OAuthProvider {
+	case OAuthProviderMicrosoft:
+		return []oauth2.AuthCodeOption{oauth2.SetAuthURLParam("prompt", "select_account")}
+	default:
+		return []oauth2.AuthCodeOption{oauth2.AccessTypeOffline, oauth2.ApprovalForce}
+	}
+}
+
 // ExchangeOAuthCode exchanges an OAuth2 authorization code (as received on
 // the /oauth/imap/callback redirect) for a token, via the SSRF-restricted
 // HTTP client.
