@@ -33,7 +33,7 @@ run inside their own networks.
 This fork exists to keep that foundation solid, and to fill the gaps that
 show up when a team runs it. So far that's meant:
 
-- **Dependency & toolchain modernization**: Go 1.13 → 1.25+, a full
+- **Dependency & toolchain modernization**: Go 1.13 → 1.26+, a full
   migration off the long-abandoned `jinzhu/gorm` (v1) to `gorm.io/gorm`
   (v2), the unmaintained `bitbucket.org/liamstask/goose` replaced with the
   actively maintained `pressly/goose`, and every dependency brought current.
