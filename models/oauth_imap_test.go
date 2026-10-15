@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"sync/atomic"
 	"time"
 
@@ -46,6 +47,36 @@ func (s *ModelsSuite) TestOAuthScopesDefaultAndOverride(c *check.C) {
 
 	// "custom" has no built-in default.
 	c.Assert(oauthScopes(&IMAP{OAuthProvider: OAuthProviderCustom}), check.HasLen, 0)
+}
+
+func (s *ModelsSuite) TestAuthCodeOptions(c *check.C) {
+	authURLQuery := func(provider string) url.Values {
+		oc := &oauth2.Config{
+			ClientID: "client-id",
+			Endpoint: oauth2.Endpoint{AuthURL: "https://idp.example.com/authorize"},
+		}
+		raw := oc.AuthCodeURL("state", AuthCodeOptions(&IMAP{OAuthProvider: provider})...)
+		u, err := url.Parse(raw)
+		c.Assert(err, check.Equals, nil)
+		return u.Query()
+	}
+
+	// Microsoft: show an account picker and don't force consent, so a user
+	// rides an existing org-wide admin-consent grant instead of being blocked.
+	ms := authURLQuery(OAuthProviderMicrosoft)
+	c.Assert(ms.Get("prompt"), check.Equals, "select_account")
+	c.Assert(ms.Get("access_type"), check.Equals, "")
+
+	// Google: offline + forced consent, which is what makes Google reliably
+	// return a refresh token on every authorization.
+	g := authURLQuery(OAuthProviderGoogle)
+	c.Assert(g.Get("prompt"), check.Equals, "consent")
+	c.Assert(g.Get("access_type"), check.Equals, "offline")
+
+	// Custom falls back to the same conservative behavior as Google.
+	cu := authURLQuery(OAuthProviderCustom)
+	c.Assert(cu.Get("prompt"), check.Equals, "consent")
+	c.Assert(cu.Get("access_type"), check.Equals, "offline")
 }
 
 func (s *ModelsSuite) TestOAuthConfig(c *check.C) {
