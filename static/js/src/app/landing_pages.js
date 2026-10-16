@@ -293,6 +293,22 @@ $(document).ready(function () {
     $('#modal').on('hidden.bs.modal', function (event) {
         dismiss()
     });
+    // Open the Import Site modal without Bootstrap's data-API, which would
+    // auto-close the underlying edit modal
+    $("#openImportSiteModal").on("click", function (event) {
+        event.preventDefault();
+        var modalEl = document.getElementById("importSiteModal");
+        if (window.bootstrap && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(modalEl, {
+                backdrop: "static"
+            }).show();
+            return;
+        }
+        $("#importSiteModal").modal({
+            backdrop: "static",
+            show: true
+        });
+    });
     $("#capture_credentials_checkbox").change(function () {
         $("#capture_passwords").toggle()
         $("#after-submit").toggle()
