@@ -15,6 +15,7 @@ import (
 	log "github.com/raginx/gophish-ng/logger"
 	"github.com/raginx/gophish-ng/models"
 	"github.com/raginx/gophish-ng/util"
+	"golang.org/x/net/html/charset"
 )
 
 type cloneRequest struct {
@@ -128,8 +129,14 @@ func (as *Server) ImportSite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer resp.Body.Close()
+	// Decode the body to UTF-8 based on the Content-Type header
+	utf8Body, err := charset.NewReader(resp.Body, resp.Header.Get("Content-Type"))
+	if err != nil {
+		JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusBadRequest)
+		return
+	}
 	// Insert the base href tag to better handle relative resources
-	d, err := goquery.NewDocumentFromReader(resp.Body)
+	d, err := goquery.NewDocumentFromReader(utf8Body)
 	if err != nil {
 		JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusBadRequest)
 		return
