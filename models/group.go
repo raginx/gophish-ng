@@ -319,23 +319,30 @@ func PutGroup(g *Group) error {
 
 // DeleteGroup deletes a given group by group ID and user ID
 func DeleteGroup(g *Group) error {
-	// Delete all the group_targets entries for this group
-	err := db.Where("group_id=?", g.Id).Delete(&GroupTarget{}).Error
+	err := db.Transaction(func(tx *gorm.DB) error {
+		// An LDAP-managed group owns exactly one synchronization mapping;
+		// remove it with the group so the background monitor never keeps
+		// trying to synchronize a group that no longer exists. Only the
+		// mapping goes: ldap_target_identity rows are connection-scoped (and
+		// may be reused by another managed group), targets/campaign history
+		// and the LDAPConnection are untouched. Manual groups have no mapping
+		// and are unaffected.
+		if err := tx.Where("group_id=? and team_id=?", g.Id, g.TeamId).Delete(&LDAPGroupSync{}).Error; err != nil {
+			return err
+		}
+		// Delete all the group_targets entries for this group
+		if err := tx.Where("group_id=?", g.Id).Delete(&GroupTarget{}).Error; err != nil {
+			return err
+		}
+		// Delete the group itself
+		return tx.Delete(g).Error
+	})
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 	// Delete tag links
-	if err := deleteTagsFor(TaggableGroup, g.Id); err != nil {
-		return err
-	}
-	// Delete the group itself
-	err = db.Delete(g).Error
-	if err != nil {
-		log.Error(err)
-		return err
-	}
-	return err
+	return deleteTagsFor(TaggableGroup, g.Id)
 }
 
 func insertTargetIntoGroup(tx *gorm.DB, t Target, gid int64) error {

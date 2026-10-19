@@ -76,6 +76,25 @@ func (as *Server) registerRoutes() {
 	router.HandleFunc("/groups/summary", as.GroupsSummary)
 	router.HandleFunc("/groups/{id:[0-9]+}", as.Group)
 	router.HandleFunc("/groups/{id:[0-9]+}/summary", as.GroupSummary)
+	// LDAP connections hold a service-account credential, so managing them
+	// is gated like system configuration. The per-group sync mappings below
+	// are ordinary team objects (auditors are already read-only via
+	// EnforceViewOnly).
+	router.HandleFunc("/ldap/connections/", mid.Use(as.LDAPConnections, mid.RequirePermission(models.PermissionModifySystem)))
+	// Object-tier, non-sensitive connection picker for the Groups UI
+	// (id/name/base_dn only). Connection administration stays modify_system.
+	router.HandleFunc("/ldap/connections/summary", mid.Use(as.LDAPConnectionsSummary, mid.RequirePermission(models.PermissionModifyObjects)))
+	router.HandleFunc("/ldap/connections/{id:[0-9]+}", mid.Use(as.LDAPConnection, mid.RequirePermission(models.PermissionModifySystem)))
+	router.HandleFunc("/ldap/connections/{id:[0-9]+}/test", mid.Use(as.LDAPConnectionTest, mid.RequirePermission(models.PermissionModifySystem)))
+	// Active Directory group discovery for selecting the directory group an
+	// LDAP-managed Gophish group synchronizes from. Object-tier
+	// (modify_objects): it consumes only the stored, team-scoped connection
+	// and returns group name/DN/stable id - never members. Connection
+	// administration above stays modify_system.
+	router.HandleFunc("/ldap/connections/{id:[0-9]+}/groups", mid.Use(as.LDAPConnectionGroups, mid.RequirePermission(models.PermissionModifyObjects)))
+	router.HandleFunc("/ldap/syncs/", as.LDAPGroupSyncs)
+	router.HandleFunc("/ldap/syncs/{id:[0-9]+}", as.LDAPGroupSync)
+	router.HandleFunc("/ldap/syncs/{id:[0-9]+}/sync", as.LDAPGroupSyncRun)
 	router.HandleFunc("/templates/", as.Templates)
 	router.HandleFunc("/templates/{id:[0-9]+}", as.Template)
 	router.HandleFunc("/pages/", as.Pages)

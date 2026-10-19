@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -37,12 +38,27 @@ func (as *Server) Groups(w http.ResponseWriter, r *http.Request) {
 		JSONResponse(w, gs, http.StatusOK)
 	//POST: Create a new group and return it as JSON
 	case r.Method == "POST":
-		g := models.Group{}
+		// groupRequest extends the group payload with an optional LDAP
+		// synchronization mapping. When ldap_sync is present, the group is
+		// created as an LDAP-managed group (atomically, with the mapping) and
+		// does not require manually supplied members. When absent, this is an
+		// ordinary manual group and behaves exactly as before.
+		type groupRequest struct {
+			models.Group
+			LDAPSync *models.LDAPGroupSync `json:"ldap_sync,omitempty"`
+		}
+		req := groupRequest{}
 		// Put the request into a group
-		err := json.NewDecoder(r.Body).Decode(&g)
+		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
 			JSONResponse(w, models.Response{Success: false, Message: "Invalid JSON structure"}, http.StatusBadRequest)
 			return
+		}
+		g := req.Group
+		if req.LDAPSync != nil {
+			// The managed-group name is auto-filled from the selected AD group
+			// by the UI; trim it before the uniqueness check and persistence.
+			g.Name = strings.TrimSpace(g.Name)
 		}
 		_, err = models.GetGroupByName(g.Name, ctx.Get(r, "team_id").(int64))
 		if err != gorm.ErrRecordNotFound {
@@ -52,6 +68,31 @@ func (as *Server) Groups(w http.ResponseWriter, r *http.Request) {
 		g.ModifiedDate = time.Now().UTC()
 		g.UserId = ctx.Get(r, "user_id").(int64)
 		g.TeamId = ctx.Get(r, "team_id").(int64)
+		if req.LDAPSync != nil {
+			// LDAP-managed group: create the group and its mapping atomically.
+			// Any manually supplied targets are ignored - membership is owned
+			// by LDAP synchronization.
+			g.Targets = nil
+			// Resolve the selected AD group server-side BEFORE creating
+			// anything: a group that does not resolve leaves no orphan.
+			req.LDAPSync.UserId = g.UserId
+			req.LDAPSync.TeamId = g.TeamId
+			if status, msg := resolveMappingGroup(req.LDAPSync); msg != "" {
+				JSONResponse(w, models.Response{Success: false, Message: msg}, status)
+				return
+			}
+			err = models.PostLDAPManagedGroup(&g, req.LDAPSync)
+			if errors.Is(err, gorm.ErrDuplicatedKey) {
+				JSONResponse(w, models.Response{Success: false, Message: "Group name already in use"}, http.StatusConflict)
+				return
+			}
+			if err != nil {
+				JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusBadRequest)
+				return
+			}
+			JSONResponse(w, g, http.StatusCreated)
+			return
+		}
 		err = models.PostGroup(&g)
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
 			// Two concurrent requests both passed the check above before
@@ -115,9 +156,23 @@ func (as *Server) Group(w http.ResponseWriter, r *http.Request) {
 			JSONResponse(w, models.Response{Success: false, Message: "Error: /:id and group_id mismatch"}, http.StatusInternalServerError)
 			return
 		}
+		teamID := ctx.Get(r, "team_id").(int64)
+		// Membership of an LDAP-managed group is owned exclusively by LDAP
+		// synchronization. Reject any attempt to edit it manually through the
+		// group API, regardless of what the UI allows. (Manual groups are
+		// unaffected.)
+		managed, mErr := models.IsGroupLDAPManaged(id, teamID)
+		if mErr != nil {
+			JSONResponse(w, models.Response{Success: false, Message: mErr.Error()}, http.StatusInternalServerError)
+			return
+		}
+		if managed {
+			JSONResponse(w, models.Response{Success: false, Message: "This group's membership is managed by LDAP synchronization and cannot be modified manually."}, http.StatusConflict)
+			return
+		}
 		g.ModifiedDate = time.Now().UTC()
 		g.UserId = ctx.Get(r, "user_id").(int64)
-		g.TeamId = ctx.Get(r, "team_id").(int64)
+		g.TeamId = teamID
 		err = models.PutGroup(&g)
 		if err != nil {
 			JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusBadRequest)
