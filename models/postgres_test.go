@@ -2,8 +2,10 @@ package models
 
 import (
 	"database/sql"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/raginx/gophish-ng/config"
@@ -17,10 +19,12 @@ import (
 //	GOPHISH_TEST_POSTGRES_DSN="host=localhost user=gophish dbname=gophish_test sslmode=disable" go test ./models/ -run TestPostgres
 //
 // With GOPHISH_TEST_POSTGRES_RESET=1 the public schema of that database is
-// dropped and recreated first, so the full migration chain is exercised from
-// an empty database; without it the test runs against whatever state the
-// database is in (migrations are idempotent). The default `go test ./...` run
-// skips this test, so PostgreSQL is never required for unit tests.
+// DROPPED and recreated first, so the full migration chain is exercised from
+// an empty database; the reset is refused unless the database name contains
+// "test" or "dev". Without the reset flag the test runs against whatever
+// state the database is in (migrations are idempotent). The default
+// `go test ./...` run skips this test, so PostgreSQL is never required for
+// unit tests.
 func TestPostgresMigrationsAndBootstrap(t *testing.T) {
 	dsn := os.Getenv("GOPHISH_TEST_POSTGRES_DSN")
 	if dsn == "" {
@@ -108,14 +112,16 @@ func TestPostgresMigrationsAndBootstrap(t *testing.T) {
 }
 
 // resetPostgresSchema drops and recreates the public schema of the test
-// database so the migration chain runs from scratch.
+// database so the migration chain runs from scratch. It is destructive, so it
+// only runs when the caller opted in with GOPHISH_TEST_POSTGRES_RESET=1 AND
+// the database name in the DSN clearly marks a test/development database
+// (it contains "test" or "dev"); anything else is refused without touching
+// the database. Being on localhost is deliberately not treated as safe.
 func resetPostgresSchema(t *testing.T, conf *config.Config) {
 	t.Helper()
-	if err := Setup(conf); err != nil {
-		// Setup migrates; a failure here may simply mean a half-migrated
-		// database from an earlier run, which the reset below clears. Open a
-		// raw connection instead.
-		t.Logf("initial Setup before reset failed (continuing with reset): %v", err)
+	name := postgresDatabaseName(conf.DBPath)
+	if !isDisposablePostgresDatabase(name) {
+		t.Fatalf("refusing destructive reset: destructive PostgreSQL tests require a dedicated test/development database whose name contains \"test\" or \"dev\" (configured database: %q)", name)
 	}
 	sqlDB, err := openPostgresRaw(conf)
 	if err != nil {
@@ -125,6 +131,54 @@ func resetPostgresSchema(t *testing.T, conf *config.Config) {
 	for _, stmt := range []string{"DROP SCHEMA public CASCADE", "CREATE SCHEMA public"} {
 		if _, err := sqlDB.Exec(stmt); err != nil {
 			t.Fatalf("%s: %v", stmt, err)
+		}
+	}
+}
+
+// postgresDatabaseName extracts the database name from a PostgreSQL connection
+// string in either the URL form (postgres://user:pw@host/dbname?...) or the
+// keyword/value form (host=... dbname=... ). It returns "" when none is found.
+// Only the name is ever surfaced; the rest of the DSN (which may carry a
+// password) is never logged.
+func postgresDatabaseName(dsn string) string {
+	if strings.Contains(dsn, "://") {
+		u, err := url.Parse(dsn)
+		if err != nil {
+			return ""
+		}
+		return strings.Trim(u.Path, "/")
+	}
+	for _, field := range strings.Fields(dsn) {
+		if strings.HasPrefix(field, "dbname=") {
+			return strings.Trim(strings.TrimPrefix(field, "dbname="), "'\"")
+		}
+	}
+	return ""
+}
+
+// isDisposablePostgresDatabase reports whether a database name clearly marks a
+// test/development database.
+func isDisposablePostgresDatabase(name string) bool {
+	n := strings.ToLower(name)
+	return n != "" && (strings.Contains(n, "test") || strings.Contains(n, "dev"))
+}
+
+func TestPostgresDatabaseNameGuard(t *testing.T) {
+	cases := map[string]string{
+		"host=localhost user=gophish dbname=gophish_test sslmode=disable":            "gophish_test",
+		"host=/tmp dbname=gophish_dev":                                               "gophish_dev",
+		"postgres://gophish:pw@localhost:5432/gophish_postgres_test?sslmode=disable": "gophish_postgres_test",
+		"postgresql://gophish@localhost/gophish":                                     "gophish",
+		"host=localhost user=gophish":                                                "",
+	}
+	for dsn, want := range cases {
+		if got := postgresDatabaseName(dsn); got != want {
+			t.Errorf("postgresDatabaseName(%q) = %q, want %q", dsn, got, want)
+		}
+	}
+	for name, want := range map[string]bool{"gophish_dev": true, "gophish_test": true, "gophish_postgres_test": true, "DevDB": true, "gophish": false, "production": false, "": false} {
+		if got := isDisposablePostgresDatabase(name); got != want {
+			t.Errorf("isDisposablePostgresDatabase(%q) = %v, want %v", name, got, want)
 		}
 	}
 }
