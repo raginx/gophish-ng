@@ -423,6 +423,83 @@ var api = {
             return query("/webhooks/" + id + "/validate", "POST", {}, true)
         },
     },
+    // ldapConnections contains the endpoints for /ldap/connections
+    ldapConnections: {
+        get: function() {
+            return query("/ldap/connections/", "GET", {}, false)
+        },
+        post: function(connection) {
+            return query("/ldap/connections/", "POST", connection, false)
+        },
+    },
+    // ldapConnectionId contains the endpoints for /ldap/connections/:id
+    ldapConnectionId: {
+        get: function(id) {
+            return query("/ldap/connections/" + id, "GET", {}, false)
+        },
+        put: function(connection) {
+            return query("/ldap/connections/" + connection.id, "PUT", connection, false)
+        },
+        delete: function(id) {
+            return query("/ldap/connections/" + id, "DELETE", {}, false)
+        },
+        test: function(id) {
+            return query("/ldap/connections/" + id + "/test", "POST", {}, true)
+        },
+        // groups() - Bounded Active Directory group search on the stored
+        // connection, for selecting the group a managed Gophish group
+        // synchronizes from. GET /ldap/connections/:id/groups?q=<text>.
+        // Returns [{name, dn, directory_id}] - never members.
+        groups: function(id, q) {
+            var path = "/ldap/connections/" + id + "/groups"
+            if (q) {
+                path += "?q=" + encodeURIComponent(q)
+            }
+            return query(path, "GET", {}, true)
+        },
+    },
+    // ldapConnectionsSummary is the object-tier (modify_objects) connection
+    // picker for the Groups UI: id/name/base_dn only, no credentials or
+    // security configuration. Distinct from the modify_system ldapConnections
+    // administrative API above.
+    ldapConnectionsSummary: {
+        get: function() {
+            return query("/ldap/connections/summary", "GET", {}, true)
+        },
+    },
+    // ldapSyncs contains the endpoints for /ldap/syncs (LDAP group-sync
+    // mappings). All object-tier (modify_objects).
+    ldapSyncs: {
+        // get() - lists mappings for the team. Pass a groupId to fetch only
+        // the mapping (if any) for that group: GET /ldap/syncs/?group_id=:id.
+        get: function(groupId) {
+            var path = "/ldap/syncs/"
+            if (groupId) {
+                path += "?group_id=" + encodeURIComponent(groupId)
+            }
+            return query(path, "GET", {}, true)
+        },
+        post: function(sync) {
+            return query("/ldap/syncs/", "POST", sync, true)
+        },
+    },
+    // ldapSyncId contains the endpoints for /ldap/syncs/:id
+    ldapSyncId: {
+        get: function(id) {
+            return query("/ldap/syncs/" + id, "GET", {}, true)
+        },
+        put: function(sync) {
+            return query("/ldap/syncs/" + sync.id, "PUT", sync, true)
+        },
+        delete: function(id) {
+            return query("/ldap/syncs/" + id, "DELETE", {}, true)
+        },
+        // sync() - triggers a synchronous Sync Now:
+        // POST /ldap/syncs/:id/sync (returns added/updated/removed counts).
+        sync: function(id) {
+            return query("/ldap/syncs/" + id + "/sync", "POST", {}, true)
+        },
+    },
     // import handles all of the "import" functions in the api
     import_email: function (req) {
         return query("/import/email", "POST", req, false)

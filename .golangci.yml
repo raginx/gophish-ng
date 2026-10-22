@@ -27,3 +27,8 @@ linters:
         # connection we're already done with - same reasoning as the
         # Close() entries above, just a different method name.
         - (*github.com/emersion/go-imap/client.Client).Logout
+        # An LDAP connection is only ever read from (search/bind); it is
+        # closed on error paths and via defer once the directory read is
+        # complete, so a failed Close cannot lose data - same reasoning as
+        # the IMAP Logout entry above.
+        - (*github.com/go-ldap/ldap/v3.Conn).Close
