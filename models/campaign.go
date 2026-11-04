@@ -782,6 +782,11 @@ func DeleteCampaign(id int64) error {
 	if err := deleteTagsFor(TaggableCampaign, id); err != nil {
 		return err
 	}
+	// Delete any Phish Scale assessment
+	if err := deletePhishScaleFor(id); err != nil {
+		log.Error(err)
+		return err
+	}
 	// Delete the campaign
 	err = db.Delete(&Campaign{Id: id}).Error
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -290,5 +291,53 @@ func (as *Server) CampaignReport(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		JSONResponse(w, report, http.StatusOK)
+	}
+}
+
+// CampaignPhishScale (/api/campaigns/{id}/phishscale) reads (GET) or saves
+// (PUT) the campaign's NIST Phish Scale assessment: the counted detection cues
+// and the premise alignment, from which the detection difficulty is derived.
+// The response always includes the cue catalogue so a client renders exactly
+// the cues the server validates against. Writes are gated to non-auditor roles
+// by the EnforceViewOnly middleware, as with every other object.
+func (as *Server) CampaignPhishScale(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, _ := strconv.ParseInt(vars["id"], 0, 64)
+	teamID := ctx.Get(r, "team_id").(int64)
+	switch r.Method {
+	case "GET":
+		result, err := models.GetPhishScale(id, teamID)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				JSONResponse(w, models.Response{Success: false, Message: "Campaign not found"}, http.StatusNotFound)
+			} else {
+				JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusInternalServerError)
+			}
+			log.Error(err)
+			return
+		}
+		JSONResponse(w, result, http.StatusOK)
+	case "PUT", "POST":
+		var input models.PhishScaleInput
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil && err != io.EOF {
+			JSONResponse(w, models.Response{Success: false, Message: "Invalid JSON structure"}, http.StatusBadRequest)
+			return
+		}
+		result, err := models.SavePhishScale(id, teamID, input)
+		if err != nil {
+			switch {
+			case err == gorm.ErrRecordNotFound:
+				JSONResponse(w, models.Response{Success: false, Message: "Campaign not found"}, http.StatusNotFound)
+			case err == models.ErrInvalidPremiseAlignment,
+				err == models.ErrNegativeCueCount,
+				strings.HasPrefix(err.Error(), "unknown phish scale cue"):
+				JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusBadRequest)
+			default:
+				JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusInternalServerError)
+			}
+			log.Error(err)
+			return
+		}
+		JSONResponse(w, result, http.StatusOK)
 	}
 }
