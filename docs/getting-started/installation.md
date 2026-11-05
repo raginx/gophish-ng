@@ -167,6 +167,37 @@ The last step you'll need to do to leverage Mysql is to create the `gophish` dat
 
 After that, you'll be good to go!
 
+## Using PostgreSQL
+
+Gophish-NG can also use PostgreSQL. The application creates and migrates its own schema, so the only prerequisite is an empty database that the configured role may connect to and create tables in.
+
+### Create the Database
+
+Create a role and an empty database, for example with `psql` as a superuser:
+
+```text
+CREATE ROLE gophish WITH LOGIN PASSWORD 'change-me';
+CREATE DATABASE gophish OWNER gophish;
+```
+
+### Update `config.json`
+
+Set `db_name` to `postgres` and put a PostgreSQL connection string in `db_path`. Both the keyword/value form and the URL form are accepted:
+
+```text
+"db_name" : "postgres",
+"db_path" : "host=localhost port=5432 user=gophish password=change-me dbname=gophish sslmode=require",
+```
+
+or
+
+```text
+"db_name" : "postgres",
+"db_path" : "postgres://gophish:change-me@localhost:5432/gophish?sslmode=require",
+```
+
+Use `sslmode=disable` only for a local database that is not reachable over the network. The PostgreSQL migrations live in `db/db_postgres/migrations` and are applied automatically on startup, exactly like the SQLite and MySQL ones; the first start creates the schema and the default admin account.
+
 ## Running Gophish
 
 Now that you have gophish installed, you’re ready to run the software. To launch gophish, simply open a command shell and navigate to the directory the gophish binary is located.
