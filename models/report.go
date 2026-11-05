@@ -25,6 +25,19 @@ type CampaignReport struct {
 	Rates      CampaignRates  `json:"rates"`
 	Timing     CampaignTiming `json:"timing"`
 	Timeline   []ReportBucket `json:"timeline"`
+	// PhishScale is the NIST Phish Scale detection-difficulty summary for the
+	// campaign
+	PhishScale PhishScaleSummary `json:"phish_scale"`
+}
+
+// PhishScaleSummary is the report-facing slice of a Phish Scale assessment
+type PhishScaleSummary struct {
+	Assessed         bool   `json:"assessed"`
+	PremiseAlignment string `json:"premise_alignment"`
+	CueCount         int    `json:"cue_count"`
+	CueBand          string `json:"cue_band"`
+	Difficulty       string `json:"difficulty"`
+	DifficultyLabel  string `json:"difficulty_label"`
 }
 
 // CampaignMeta carries the descriptive, non-metric context a report needs to
@@ -117,6 +130,21 @@ func GetCampaignReport(id int64, teamID int64) (CampaignReport, error) {
 	}
 	report.Timing = computeTiming(events)
 	report.Timeline = computeTimeline(events)
+
+	// Fold in the Phish Scale difficulty so a reader can weigh the funnel
+	// rates against how hard the message was to detect
+	if ps, err := GetPhishScale(id, teamID); err == nil {
+		report.PhishScale = PhishScaleSummary{
+			Assessed:         ps.Assessed,
+			PremiseAlignment: ps.PremiseAlignment,
+			CueCount:         ps.CueCount,
+			CueBand:          ps.CueBand,
+			Difficulty:       ps.Difficulty,
+			DifficultyLabel:  ps.DifficultyLabel,
+		}
+	} else {
+		log.Error(err)
+	}
 
 	return report, nil
 }
