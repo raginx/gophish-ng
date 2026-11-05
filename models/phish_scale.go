@@ -77,6 +77,7 @@ type CueDefinition struct {
 	Key      string `json:"key"`
 	Category string `json:"category"`
 	Name     string `json:"name"`
+	Hint     string `json:"hint"`
 }
 
 // phishScaleCatalog is the ordered NIST cue catalogue (Table II / Appendix A).
@@ -84,33 +85,33 @@ type CueDefinition struct {
 // counted by the number of instances present in the message, and the instance
 // counts are summed for the total that feeds the cue band.
 var phishScaleCatalog = []CueDefinition{
-	{Key: "spelling_grammar", Category: CueCategoryError, Name: "Spelling and grammar irregularities"},
-	{Key: "inconsistency", Category: CueCategoryError, Name: "Inconsistency"},
+	{Key: "spelling_grammar", Category: CueCategoryError, Name: "Spelling and grammar irregularities", Hint: "Does the message contain spelling or grammar errors, including mismatched plurality?"},
+	{Key: "inconsistency", Category: CueCategoryError, Name: "Inconsistency", Hint: "Are there inconsistencies contained in the email message?"},
 
-	{Key: "attachment_type", Category: CueCategoryTechnical, Name: "Attachment type"},
-	{Key: "sender_display", Category: CueCategoryTechnical, Name: "Sender display name and email address"},
-	{Key: "url_hyperlinking", Category: CueCategoryTechnical, Name: "URL hyperlinking"},
-	{Key: "domain_spoofing", Category: CueCategoryTechnical, Name: "Domain spoofing"},
+	{Key: "attachment_type", Category: CueCategoryTechnical, Name: "Attachment type", Hint: "Is there a potentially dangerous attachment?"},
+	{Key: "sender_display", Category: CueCategoryTechnical, Name: "Sender display name and email address", Hint: "Does a display name hide the real sender?"},
+	{Key: "url_hyperlinking", Category: CueCategoryTechnical, Name: "URL hyperlinking", Hint: "Is there text that hides the true URL in a hyperlink?"},
+	{Key: "domain_spoofing", Category: CueCategoryTechnical, Name: "Domain spoofing", Hint: "Is a domain name used in addresses or links plausibly similar to a legitimate entity's domain?"},
 
-	{Key: "no_branding", Category: CueCategoryVisual, Name: "No/minimal branding and logos"},
-	{Key: "logo_imitation", Category: CueCategoryVisual, Name: "Logo imitation or out-of-date branding/logos"},
-	{Key: "unprofessional_design", Category: CueCategoryVisual, Name: "Unprofessional looking design or formatting"},
-	{Key: "security_indicators", Category: CueCategoryVisual, Name: "Security indicators and icons"},
+	{Key: "no_branding", Category: CueCategoryVisual, Name: "No/minimal branding and logos", Hint: "Is appropriate branding missing?"},
+	{Key: "logo_imitation", Category: CueCategoryVisual, Name: "Logo imitation or out-of-date branding/logos", Hint: "Do any branding elements appear to be an imitation or out-of-date?"},
+	{Key: "unprofessional_design", Category: CueCategoryVisual, Name: "Unprofessional looking design or formatting", Hint: "Does the design and formatting violate any conventional professional practices?"},
+	{Key: "security_indicators", Category: CueCategoryVisual, Name: "Security indicators and icons", Hint: "Are any inappropriate security indicators or icons present?"},
 
-	{Key: "legal_language", Category: CueCategoryLanguage, Name: "Legal language/copyright info/disclaimers"},
-	{Key: "distracting_detail", Category: CueCategoryLanguage, Name: "Distracting detail"},
-	{Key: "sensitive_request", Category: CueCategoryLanguage, Name: "Requests for sensitive information"},
-	{Key: "urgency", Category: CueCategoryLanguage, Name: "Sense of urgency"},
-	{Key: "threatening", Category: CueCategoryLanguage, Name: "Threatening language"},
-	{Key: "generic_greeting", Category: CueCategoryLanguage, Name: "Generic greeting"},
-	{Key: "lack_signer_details", Category: CueCategoryLanguage, Name: "Lack of signer details"},
+	{Key: "legal_language", Category: CueCategoryLanguage, Name: "Legal language/copyright info/disclaimers", Hint: "Does the message contain any legal-type language such as copyright information, disclaimers, or tax information?"},
+	{Key: "distracting_detail", Category: CueCategoryLanguage, Name: "Distracting detail", Hint: "Does the message contain detailed aspects that are not central to the content?"},
+	{Key: "sensitive_request", Category: CueCategoryLanguage, Name: "Requests for sensitive information", Hint: "Does the message request sensitive information, including personally identifying information or credentials?"},
+	{Key: "urgency", Category: CueCategoryLanguage, Name: "Sense of urgency", Hint: "Does the message contain time pressure, including implied?"},
+	{Key: "threatening", Category: CueCategoryLanguage, Name: "Threatening language", Hint: "Does the message contain a threat, including an implied threat?"},
+	{Key: "generic_greeting", Category: CueCategoryLanguage, Name: "Generic greeting", Hint: "Does the message lack a greeting or lack personalization?"},
+	{Key: "lack_signer_details", Category: CueCategoryLanguage, Name: "Lack of signer details", Hint: "Does the message lack detail about the sender, such as contact information?"},
 
-	{Key: "humanitarian", Category: CueCategoryTactic, Name: "Humanitarian appeals"},
-	{Key: "too_good", Category: CueCategoryTactic, Name: "Too good to be true offers"},
-	{Key: "youre_special", Category: CueCategoryTactic, Name: "You're special"},
-	{Key: "limited_time", Category: CueCategoryTactic, Name: "Limited time offer"},
-	{Key: "mimics_process", Category: CueCategoryTactic, Name: "Mimics a work or business process"},
-	{Key: "poses_authority", Category: CueCategoryTactic, Name: "Poses as friend, colleague, supervisor, authority figure"},
+	{Key: "humanitarian", Category: CueCategoryTactic, Name: "Humanitarian appeals", Hint: "Does the message make an appeal to help others?"},
+	{Key: "too_good", Category: CueCategoryTactic, Name: "Too good to be true offers", Hint: "Does the message offer anything too good to be true, such as winning a contest, lottery, or free vacation?"},
+	{Key: "youre_special", Category: CueCategoryTactic, Name: "You're special", Hint: "Does the message offer anything just for you?"},
+	{Key: "limited_time", Category: CueCategoryTactic, Name: "Limited time offer", Hint: "Does the message offer anything for a limited time?"},
+	{Key: "mimics_process", Category: CueCategoryTactic, Name: "Mimics a work or business process", Hint: "Does the message appear to be a work or business-related process?"},
+	{Key: "poses_authority", Category: CueCategoryTactic, Name: "Poses as friend, colleague, supervisor, authority figure", Hint: "Does the message appear to be from a friend, colleague, boss, or other authority entity?"},
 }
 
 // cueCatalogIndex is a lookup of valid cue keys, built once from the catalogue.
