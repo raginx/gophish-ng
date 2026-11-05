@@ -1,5 +1,6 @@
 {{define "body"}}
 <div class="main">
+    <div id="flashes" class="row"></div>
     <div id="loading">
         <i class="fa fa-spinner fa-spin fa-4x"></i>
     </div>
@@ -25,6 +26,12 @@
                 <button type="button" id="report_button" class="btn btn-primary" data-bs-toggle="tooltip"
                     title="Open a printable, aggregate report for this campaign" onclick="openReport()">
                     <i class="fa fa-file-text-o"></i> Report
+                </button>
+                <button type="button" id="phish_scale_button" class="btn btn-primary"
+                    title="Rate how hard this phish was to detect (NIST Phish Scale)"
+                    data-bs-toggle="modal" data-bs-target="#phishScaleModal">
+                    <i class="fa fa-balance-scale"></i> Phish Scale
+                    <span id="ps_difficulty_badge" class="badge ms-1" style="display:none"></span>
                 </button>
                 <div class="btn-group">
                     <button type="button" id="exportButton" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown"
@@ -117,7 +124,185 @@
             </div>
         </div>
     </div>
-    <div id="flashes" class="row"></div>
+</div>
+
+<!-- NIST Phish Scale assessment modal -->
+<style>
+    /* Live verdict strip at the top of the modal: cues × premise → difficulty. */
+    .ps-verdict {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+    }
+    .ps-verdict-value {
+        font-size: 1.6rem;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+    .ps-verdict-label {
+        font-size: .75rem;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+        color: #6c757d;
+    }
+    .ps-verdict-arrow {
+        color: #adb5bd;
+        font-size: 1.1rem;
+    }
+
+    /* Premise alignment as three selectable option cards. */
+    .ps-premise-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: .75rem;
+    }
+    @media (max-width: 575px) {
+        .ps-premise-grid { grid-template-columns: 1fr; }
+    }
+    .ps-premise-option {
+        display: block;
+        margin: 0;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: .75rem .9rem;
+        cursor: pointer;
+        transition: border-color .12s, box-shadow .12s, background .12s;
+    }
+    .ps-premise-option:hover { border-color: #9ec5fe; }
+    .ps-premise-option input { display: none; }
+    .ps-premise-option.selected {
+        border-color: #428bca;
+        background: #eaf2fb;
+        box-shadow: 0 0 0 1px #428bca inset;
+    }
+    .ps-premise-head {
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        font-weight: 600;
+    }
+    .ps-premise-head .ps-check { color: #428bca; opacity: 0; }
+    .ps-premise-option.selected .ps-premise-head .ps-check { opacity: 1; }
+    .ps-premise-hint {
+        display: block;
+        font-size: .8rem;
+        color: #6c757d;
+        margin-top: .25rem;
+    }
+
+    /* Cue catalogue: category blocks flowing in up to two colums  */
+    .ps-cue-grid { columns: 2; column-gap: 1.75rem; }
+    @media (max-width: 767px) {
+        .ps-cue-grid { columns: 1; }
+    }
+    .ps-cue-category {
+        break-inside: avoid;
+        -webkit-column-break-inside: avoid;
+        margin-bottom: 1.1rem;
+    }
+    .ps-cue-category-head {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        font-weight: 600;
+        font-size: .8rem;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+        color: #495057;
+        padding-bottom: .35rem;
+        margin-bottom: .25rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+    .ps-cue-category-head .ps-cat-icon {
+        width: 1.4rem;
+        text-align: center;
+        color: #428bca;
+    }
+    .ps-cue-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+        padding: .35rem .25rem;
+        border-radius: 6px;
+    }
+    .ps-cue-row:hover { background: #f1f6fc; }
+    .ps-cue-row.counted { background: #eaf2fb; }
+    .ps-cue-name { font-size: .92rem; }
+    .ps-cue-name .ps-info { color: #adb5bd; margin-left: .25rem; cursor: help; }
+    .ps-cue-input {
+        width: 4.25rem;
+        text-align: center;
+        flex: 0 0 auto;
+    }
+</style>
+
+<div class="modal fade" id="phishScaleModal" tabindex="-1" aria-labelledby="phishScaleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title d-flex flex-wrap align-items-center gap-2" id="phishScaleModalLabel">
+                    <i class="fa fa-balance-scale text-primary"></i> Phish Scale
+                    <span id="ps_modal_difficulty_badge" class="badge fs-6 align-middle" style="display:none"></span>
+                </h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">
+                    The <a href="https://doi.org/10.1093/cybsec/tyaa009" target="_blank" rel="noopener">NIST Phish Scale</a>
+                    rates how hard this message was for its audience to detect, reading two judgements together: the number
+                    of observable detection cues and how well the premise aligns with the audience's work context. It's what
+                    makes this campaign's click rate interpretable.
+                </p>
+
+                <div class="ps-verdict mb-4">
+                    <div class="d-flex flex-wrap align-items-center gap-3 gap-md-4">
+                        <div class="text-center">
+                            <div class="ps-verdict-value" id="ps_cue_count">0</div>
+                            <div class="ps-verdict-label">cues <span id="ps_cue_band"></span></div>
+                        </div>
+                        <i class="fa fa-times ps-verdict-arrow"></i>
+                        <div class="text-center">
+                            <div class="ps-verdict-value" id="ps_premise_value">&mdash;</div>
+                            <div class="ps-verdict-label">premise alignment</div>
+                        </div>
+                        <i class="fa fa-long-arrow-right ps-verdict-arrow"></i>
+                        <div class="text-center flex-grow-1">
+                            <span id="ps_difficulty_text" class="badge bg-secondary fs-6">Not yet rated</span>
+                            <div class="ps-verdict-label mt-1">detection difficulty</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="h6 text-uppercase text-muted mb-1">Premise alignment</h5>
+                <p class="text-muted small mb-2">How well does the pretext fit the target audience's work context?</p>
+                <div class="ps-premise-grid" id="ps_premise_options"></div>
+
+                <h5 class="h6 text-uppercase text-muted mt-4 mb-1">Observable cues</h5>
+                <p class="text-muted small mb-3">Count how many <em>instances</em> of each cue the message contains. Hover
+                    the <i class="fa fa-question-circle-o"></i> for what each cue means.</p>
+                <div class="ps-cue-grid" id="ps_cue_catalog"></div>
+
+                <div class="mt-3">
+                    <label class="form-label fw-semibold" for="ps_notes">Notes <span class="text-muted fw-normal">(optional)</span></label>
+                    <textarea id="ps_notes" class="form-control" rows="2"
+                        placeholder="e.g. target OU, pretext rationale, scoring caveats"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <span id="ps_saved_note" class="text-muted small"></span>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    {{if .ModifyObjects}}
+                    <button type="button" id="ps_save_button" class="btn btn-primary" onclick="savePhishScale()">
+                        <i class="fa fa-save"></i> Save assessment
+                    </button>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {{end}} {{define "scripts"}}
 <script src="/js/dist/world-map.js"></script>

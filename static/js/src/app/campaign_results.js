@@ -901,6 +901,8 @@ function load() {
                 }
                 $("#campaign-meta").html(metaHtml)
                 reflectCampaignState()
+                // Load the NIST Phish Scale assessment
+                loadPhishScale()
                 // Setup viewing the details of a result
                 $("#resultsTable").on("click", ".timeline-event-details", function () {
                     // Show the parameters
@@ -1231,6 +1233,235 @@ $(window).on('resize', function () {
         chart.resize()
     })
 })
+
+/* ---------------------------------------------------------------------------
+ * NIST Phish Scale assessment
+ *
+ * The operator counts observable detection cues and rates premise alignment;
+ * from those two the detection difficulty is derived
+ * ------------------------------------------------------------------------- */
+
+// Human labels for the cue categories
+var psCategoryLabels = {
+    error: "Errors",
+    technical_indicator: "Technical indicators",
+    visual_presentation: "Visual presentation",
+    language_and_content: "Language and content",
+    common_tactic: "Common tactics"
+}
+
+// Font Awesome icon per cue category
+var psCategoryIcons = {
+    error: "fa-exclamation-triangle",
+    technical_indicator: "fa-cogs",
+    visual_presentation: "fa-image",
+    language_and_content: "fa-comment-o",
+    common_tactic: "fa-bullseye"
+}
+
+// Premis alignment options, each with its NIST guideline shown inline
+var psPremiseOptions = [
+    { value: "high", label: "High", hint: "A significant portion of the audience has matching work responsibilities; the premise is highly plausible or aligns strongly with an audience-relevant event." },
+    { value: "medium", label: "Medium", hint: "Plausible but weak context alignment for a large portion of the audience, or moderate alignment for a small portion." },
+    { value: "low", label: "Low", hint: "The premise is not relevant or plausible to the target audience." }
+]
+
+// Difficulty display metadata
+var psDifficultyMeta = {
+    very_difficult: { label: "Very difficult", color: "bg-danger" },
+    moderately_difficult: { label: "Moderately difficult", color: "bg-warning text-dark" },
+    moderately_to_least_difficult: { label: "Moderately to least difficult", color: "bg-warning text-dark" },
+    least_difficult: { label: "Least difficult", color: "bg-success" }
+}
+
+function psCueBandFor(count) {
+    if (count <= 0) return ""
+    if (count <= 8) return "few"
+    if (count <= 14) return "some"
+    return "many"
+}
+
+function psDifficultyFor(band, premise) {
+    if (!band || !premise) return ""
+    var table = {
+        few: { high: "very_difficult", medium: "very_difficult", low: "moderately_difficult" },
+        some: { high: "very_difficult", medium: "moderately_difficult", low: "moderately_to_least_difficult" },
+        many: { high: "moderately_difficult", medium: "moderately_difficult", low: "least_difficult" }
+    }
+    return (table[band] && table[band][premise]) || ""
+}
+
+function psSelectedPremise() {
+    return $("input[name='ps_premise']:checked").val() || ""
+}
+
+function psGatherCues() {
+    var cues = {}
+    $(".ps-cue-input").each(function () {
+        var key = $(this).data("cue")
+        var n = parseInt($(this).val(), 10)
+        if (isNaN(n) || n < 0) n = 0
+        cues[key] = n
+    })
+    return cues
+}
+
+function renderPremiseOptions(selected) {
+    var html = ""
+    psPremiseOptions.forEach(function (o) {
+        var isSel = o.value === selected
+        html +=
+            '<label class="ps-premise-option' + (isSel ? " selected" : "") + '" for="ps_premise_' + o.value + '">' +
+            '<input type="radio" name="ps_premise" id="ps_premise_' + o.value + '" value="' + o.value + '"' + (isSel ? " checked" : "") + '>' +
+            '<span class="ps-premise-head"><i class="fa fa-check-circle ps-check"></i>' + escapeHtml(o.label) + '</span>' +
+            '<span class="ps-premise-hint">' + escapeHtml(o.hint) + '</span>' +
+            '</label>'
+    })
+    $("#ps_premise_options").html(html)
+}
+
+function renderCueCatalog(catalog, cues) {
+    var groups = {}
+    var order = []
+    ;(catalog || []).forEach(function (cue) {
+        if (!groups[cue.category]) {
+            groups[cue.category] = []
+            order.push(cue.category)
+        }
+        groups[cue.category].push(cue)
+    })
+    var html = ""
+    order.forEach(function (cat) {
+        var icon = psCategoryIcons[cat] || "fa-tag"
+        html += '<div class="ps-cue-category">' +
+            '<div class="ps-cue-category-head"><i class="fa ' + icon + ' ps-cat-icon"></i>' +
+            escapeHtml(psCategoryLabels[cat] || cat) + '</div>'
+        groups[cat].forEach(function (cue) {
+            var val = (cues && cues[cue.key]) || 0
+            var info = cue.hint ?
+                ' <i class="fa fa-question-circle-o ps-info" data-bs-toggle="tooltip" title="' + escapeHtml(cue.hint) + '"></i>' : ""
+            html +=
+                '<div class="ps-cue-row' + (val > 0 ? " counted" : "") + '" data-cue-row="' + escapeHtml(cue.key) + '">' +
+                '<span class="ps-cue-name">' + escapeHtml(cue.name) + info + '</span>' +
+                '<input type="number" min="0" step="1" class="form-control form-control-sm ps-cue-input" ' +
+                'data-cue="' + escapeHtml(cue.key) + '" value="' + val + '">' +
+                '</div>'
+        })
+        html += '</div>'
+    })
+    $("#ps_cue_catalog").html(html)
+}
+
+// psApplyDifficulty paints the three places the verdict shows up: the inline
+// pill in the modal's verdict strip, the badge on the toolbar button, and the
+// badge in the modal title.
+function psApplyDifficulty(difficulty, total, premise) {
+    var pill = $("#ps_difficulty_text")
+    var btnBadge = $("#ps_difficulty_badge")
+    var modalBadge = $("#ps_modal_difficulty_badge")
+    if (difficulty && psDifficultyMeta[difficulty]) {
+        var meta = psDifficultyMeta[difficulty]
+        pill.text(meta.label).attr("class", "badge fs-6 " + meta.color)
+        btnBadge.text(meta.label).attr("class", "badge ms-1 " + meta.color).show()
+        modalBadge.text(meta.label).attr("class", "badge fs-6 align-middle " + meta.color).show()
+    } else {
+        if (total && !premise) {
+            pill.text("Set premise alignment")
+        } else if (!total && premise) {
+            pill.text("Count the cues")
+        } else {
+            pill.text("Not yet rated")
+        }
+        pill.attr("class", "badge fs-6 bg-secondary")
+        btnBadge.hide()
+        modalBadge.hide()
+    }
+}
+
+function updatePhishScaleDerived() {
+    var cues = psGatherCues()
+    var total = 0
+    Object.keys(cues).forEach(function (k) {
+        total += cues[k]
+        // Reflect counted cues with a subtle row highlight.
+        $('[data-cue-row="' + k + '"]').toggleClass("counted", cues[k] > 0)
+    })
+    var band = psCueBandFor(total)
+    var premise = psSelectedPremise()
+    var difficulty = psDifficultyFor(band, premise)
+
+    $("#ps_cue_count").text(total)
+    $("#ps_cue_band").text(band ? "(" + capitalize(band) + ")" : "")
+    $("#ps_premise_value").text(premise ? capitalize(premise) : "—")
+
+    // Keep the premise cards' selected state in sync with the radios.
+    $(".ps-premise-option").each(function () {
+        $(this).toggleClass("selected", $(this).find("input").is(":checked"))
+    })
+
+    psApplyDifficulty(difficulty, total, premise)
+}
+
+function renderPhishScale(data) {
+    renderPremiseOptions(data.premise_alignment || "")
+    renderCueCatalog(data.catalog, data.cues)
+    $("#ps_notes").val(data.notes || "")
+    if (data.assessed && data.modified_date && !isZeroDate(data.modified_date)) {
+        $("#ps_saved_note").text("Last saved " + moment(data.modified_date).fromNow()).show()
+    } else {
+        $("#ps_saved_note").hide()
+    }
+    // Auditors (no Save button rendered) get a read-only view.
+    if ($("#ps_save_button").length === 0) {
+        $("#phishScaleModal").find(".ps-cue-input, input[name='ps_premise'], #ps_notes").prop("disabled", true)
+        $(".ps-premise-option").css("cursor", "default")
+    }
+    // Namespaced so a reload rebinds cleanly instead of stacking handlers.
+    $("#phishScaleModal").off("input.ps change.ps")
+        .on("input.ps change.ps", ".ps-cue-input", updatePhishScaleDerived)
+        .on("change.ps", "input[name='ps_premise']", updatePhishScaleDerived)
+    initTooltips()
+    updatePhishScaleDerived()
+}
+
+function loadPhishScale() {
+    api.campaignId.phishScale.get(campaign.id)
+        .done(function (data) {
+            renderPhishScale(data)
+        })
+        .fail(function () {
+            // Leave the funnel usable even if the assessment can't be loaded.
+            $("#phish_scale_button").hide()
+        })
+}
+
+function savePhishScale() {
+    var payload = {
+        premise_alignment: psSelectedPremise(),
+        notes: $("#ps_notes").val(),
+        cues: psGatherCues()
+    }
+    var btn = $("#ps_save_button")
+    btn.prop("disabled", true)
+    api.campaignId.phishScale.save(campaign.id, payload)
+        .done(function (data) {
+            renderPhishScale(data)
+            // Feedback stays inside the modal...
+            $("#ps_saved_note")
+                .html('<span class="text-success"><i class="fa fa-check-circle"></i> Saved.</span> ' +
+                    escapeHtml($("#ps_saved_note").text()))
+                .show()
+        })
+        .fail(function (data) {
+            var msg = (data.responseJSON && data.responseJSON.message) || "Could not save assessment"
+            $("#ps_saved_note")
+                .html('<span class="text-danger"><i class="fa fa-exclamation-circle"></i> ' + escapeHtml(msg) + '</span>')
+                .show()
+        })
+        .always(function () {
+            btn.prop("disabled", false)
+        })
+}
 
 $(document).ready(function () {
     load();

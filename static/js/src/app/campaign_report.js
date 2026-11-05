@@ -172,6 +172,29 @@ function renderResilience(stats) {
     $("#resilience").html(text)
 }
 
+// renderPhishScale surfaces the NIST Phish Scale detection-difficulty verdict
+// next to the funnel
+function renderPhishScale(ps) {
+    if (!ps || !ps.assessed || !ps.difficulty) {
+        return
+    }
+    var colors = {
+        very_difficult: "bg-danger",
+        moderately_difficult: "bg-warning text-dark",
+        moderately_to_least_difficult: "bg-warning text-dark",
+        least_difficult: "bg-success"
+    }
+    var color = colors[ps.difficulty] || "bg-secondary"
+    $("#ps-difficulty").text(ps.difficulty_label || ps.difficulty).attr("class", "badge fs-6 " + color)
+    var premise = ps.premise_alignment ? capitalize(ps.premise_alignment) : "-"
+    var band = ps.cue_band ? capitalize(ps.cue_band) : "-"
+    $("#ps-breakdown").html(
+        "Premise alignment: <b>" + premise + "</b> &middot; Cues: <b>" + ps.cue_count +
+        "</b> (" + band + "). Detection difficulty contextualizes the click rate above."
+    )
+    $("#phish-scale-section").show()
+}
+
 // renderTimeline draws cumulative engagement (opens, clicks, submissions) over
 // time as lines - the classic "how fast did recipients fall for it" curve.
 // With no engagement events there's nothing to plot, so it shows a message in
@@ -258,6 +281,7 @@ $(document).ready(function () {
 
         renderMeta(report.meta, report.anonymized)
         renderExecutiveSummary(report.stats, report.rates)
+        renderPhishScale(report.phish_scale)
         renderAuditHeader(report.meta, generatedAt)
         renderDataProtection(report.meta, report.anonymized)
         renderTiles(report.stats, report.rates)
