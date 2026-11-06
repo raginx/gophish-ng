@@ -15,6 +15,10 @@
         <li class="nav-item" role="reportingSettings"><a class="nav-link" href="#reportingSettings" aria-controls="reportingSettings" role="tab" id="reporttab"
             data-bs-toggle="tab">Reporting Settings</a></li>
         {{end}}
+        {{if .ModifySystem}}
+        <li class="nav-item" role="ldapSettings"><a class="nav-link" href="#ldapSettings" aria-controls="ldapSettings" role="tab" id="ldaptab"
+            data-bs-toggle="tab">LDAP / Active Directory</a></li>
+        {{end}}
     </ul>
     <!-- Tab Panes -->
     <div class="tab-content">
@@ -367,8 +371,195 @@
         </div>
         {{end}}
         <!-- Reporting Settings End -->
+
+        <!-- LDAP / Active Directory Begin -->
+        {{if .ModifySystem}}
+        <div role="tabpanel" class="tab-pane" id="ldapSettings">
+            <br />
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
+                <div>
+                    <p class="text-muted mb-0">
+                        Reusable directory connections configured here can be shared by
+                        directory-enabled features. Credentials are stored encrypted and are
+                        never displayed again.
+                    </p>
+                </div>
+                <button type="button" class="btn btn-primary" id="ldap_new_button" data-bs-toggle="modal"
+                    data-bs-backdrop="static" data-ldap-id="-1" data-bs-target="#ldapModal">
+                    <i class="fa fa-plus"></i> Add Connection</button>
+            </div>
+            <div id="ldapFlashes" class="row"></div>
+            &nbsp;
+            <div id="ldapLoading">
+                <i class="fa fa-spinner fa-spin fa-4x"></i>
+            </div>
+
+            <!-- Empty state -->
+            <div id="ldapEmptyState" class="card text-center" style="display:none;">
+                <div class="card-body py-5">
+                    <i class="fa fa-server fa-3x text-muted mb-3" aria-hidden="true"></i>
+                    <h4 class="mb-2">No directory connections configured</h4>
+                    <p class="text-muted mb-4">
+                        Add an LDAP or Active Directory connection to use with
+                        directory-enabled features.
+                    </p>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                        data-bs-backdrop="static" data-ldap-id="-1" data-bs-target="#ldapModal">
+                        <i class="fa fa-plus"></i> Add Connection</button>
+                </div>
+            </div>
+
+            <!-- Connections table -->
+            <div class="card" id="ldapTableCard" style="display:none;">
+                <div class="card-body">
+                    <table id="ldapTable" class="table">
+                        <thead>
+                            <tr>
+                                <th class="col-md-3 no-sort">Name</th>
+                                <th class="col-md-3 no-sort">Server</th>
+                                <th class="col-md-3 no-sort">Base DN</th>
+                                <th class="col-md-2 no-sort">Last Test</th>
+                                <th class="col-md-1 no-sort"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {{end}}
+        <!-- LDAP / Active Directory End -->
     </div>
 </div>
+
+<!-- LDAP Add / Edit Connection Modal -->
+{{if .ModifySystem}}
+<div class="modal fade" id="ldapModal" tabindex="-1" role="dialog" aria-labelledby="ldapModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="ldapModalLabel">Add Connection</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="ldapModalBody">
+                <div class="row" id="ldapModalFlashes"></div>
+
+                <!-- General -->
+                <h5 class="text-muted text-uppercase small fw-bold mb-3">General</h5>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="ldap_name">Connection name</label>
+                        <input type="text" class="form-control" placeholder="e.g. Corp Active Directory" id="ldap_name"
+                            required autofocus />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="ldap_server_url">Server URL</label>
+                        <input type="text" class="form-control" placeholder="ldaps://ad.example.com:636"
+                            id="ldap_server_url" required />
+                        <div class="form-text"><code>ldaps://</code> for TLS or <code>ldap://</code> for
+                            unencrypted/STARTTLS.</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="ldap_base_dn">Base DN</label>
+                    <input type="text" class="form-control" placeholder="dc=example,dc=com" id="ldap_base_dn" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="ldap_directory_type">Directory type</label>
+                    <select class="form-control" id="ldap_directory_type">
+                        <option value="ad">Active Directory</option>
+                        <option value="generic">Generic LDAP</option>
+                    </select>
+                    <div class="form-text">
+                        Uses the directory's stable user identity so synchronized users stay matched
+                        when attributes such as email change.
+                    </div>
+                </div>
+                <div class="mb-3" id="ldap_user_identity_group" style="display:none;">
+                    <label class="form-label" for="ldap_user_identity">User identity</label>
+                    <select class="form-control" id="ldap_user_identity">
+                        <option value="entryUUID">entryUUID</option>
+                        <option value="">Email address (fallback)</option>
+                    </select>
+                    <div class="form-text">
+                        entryUUID is a stable per-user identifier available on many LDAP servers.
+                        Choose Email address if your directory does not provide it.
+                    </div>
+                </div>
+
+                <!-- Authentication -->
+                <hr>
+                <h5 class="text-muted text-uppercase small fw-bold mb-3">Authentication</h5>
+                <div class="mb-3">
+                    <label class="form-label" for="ldap_bind_dn">Bind DN</label>
+                    <input type="text" class="form-control"
+                        placeholder="cn=service-account,ou=Service Accounts,dc=example,dc=com" id="ldap_bind_dn"
+                        required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="ldap_bind_password">Password</label>
+                    <input type="password" class="form-control" id="ldap_bind_password" autocomplete="off" />
+                    <div class="form-text" id="ldap_password_help">Service-account password for the bind DN.</div>
+                </div>
+
+                <!-- Security -->
+                <hr>
+                <h5 class="text-muted text-uppercase small fw-bold mb-3">Security</h5>
+                <div class="checkbox checkbox-primary">
+                    <input type="checkbox" id="ldap_start_tls" value="true" />
+                    <label for="ldap_start_tls">Use STARTTLS <i class="fa fa-question-circle" data-bs-toggle="tooltip"
+                            data-bs-placement="right"
+                            title="Upgrade a plain ldap:// connection to TLS. Not needed for ldaps:// which is already encrypted."></i>
+                    </label>
+                </div>
+                <!-- Shown when the connection is ldap:// without STARTTLS: credentials and
+                     directory data would travel unencrypted. Informational only; it does
+                     not block saving (laboratory use). -->
+                <div id="ldap_tls_warning" class="alert alert-warning d-flex align-items-start gap-2 py-2" role="alert"
+                    style="display:none;">
+                    <i class="fa fa-exclamation-triangle mt-1" aria-hidden="true"></i>
+                    <div>This connection uses <code>ldap://</code> without STARTTLS: the service-account
+                        password and all directory data are sent unencrypted. Use <code>ldaps://</code> or
+                        enable STARTTLS for anything other than an isolated lab.</div>
+                </div>
+
+                <div class="mt-3">
+                    <button class="btn btn-sm btn-link px-0" id="ldapAdvancedToggle" type="button">
+                        <i class="fa fa-caret-right" id="ldapAdvancedCaret"></i> Advanced security options
+                    </button>
+                </div>
+                <div id="ldapAdvancedArea" style="display:none;">
+                    <div class="alert alert-warning d-flex align-items-start gap-2 mt-2" role="alert">
+                        <i class="fa fa-exclamation-triangle mt-1" aria-hidden="true"></i>
+                        <div>
+                            <div class="checkbox checkbox-primary mb-1">
+                                <input type="checkbox" id="ldap_ignore_cert_errors" value="true" />
+                                <label for="ldap_ignore_cert_errors">Disable TLS certificate verification</label>
+                            </div>
+                            <small class="text-muted">
+                                Insecure. Only use with trusted self-signed certificates.
+                                Leave disabled in production.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <span id="ldapModalTestWrap" class="d-inline-block" tabindex="0" data-bs-toggle="tooltip"
+                    data-bs-placement="top" title="Save the connection before testing it.">
+                    <button type="button" class="btn btn-secondary" id="ldapModalTest">
+                        <i class="fa fa-wrench"></i> Test Connection</button>
+                </span>
+                <div>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="ldapModalSubmit">Save Connection</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
 {{end}} {{define "scripts"}}
 <script src="/js/dist/app/passwords.min.js"></script>
 <script src="/js/dist/app/settings.min.js"></script>
