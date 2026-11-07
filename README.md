@@ -87,9 +87,7 @@ per-recipient tracking, all through a single web UI.
 
 Pre-built binaries for this fork are available on the
 [releases page](https://github.com/raginx/gophish-ng/releases). Alternatively,
-build from source (see below). If you're looking for official upstream
-binaries instead, see the
-[upstream releases page](https://github.com/gophish/gophish/releases/).
+build from source (see below). 
 
 ## Building From Source
 
@@ -142,17 +140,12 @@ time="2020-07-29T01:24:08Z" level=info msg="Please login with the username admin
 
 The full user guide is available at
 **[raginx.github.io/gophish-ng](https://raginx.github.io/gophish-ng/)**.
-Since this fork tracks upstream Gophish closely, the
-[upstream documentation](http://getgophish.com/documentation) also mostly
-applies.
+
 
 ## Issues
 
 Found a bug specific to this fork? Please
-[file an issue](https://github.com/raginx/gophish-ng/issues/new) here. For
-issues that also affect upstream Gophish, consider checking the
-[upstream issue tracker](https://github.com/gophish/gophish/issues) as
-well.
+[file an issue](https://github.com/raginx/gophish-ng/issues/new) here. 
 
 ## Contact
 
