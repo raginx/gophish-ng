@@ -70,6 +70,7 @@ vulnerabilities.
 - [Building From Source](#building-from-source)
 - [Docker](#docker)
 - [Setup](#setup)
+- [Quick Start](#quick-start)
 - [Documentation](#documentation)
 - [Issues](#issues)
 - [Contact](#contact)
@@ -135,6 +136,33 @@ output, e.g.:
 ```
 time="2020-07-29T01:24:08Z" level=info msg="Please login with the username admin and the password 4304d5255378177d"
 ```
+
+## Quick Start
+
+A phishing campaign is assembled from a few building blocks. Create each
+one from the sidebar, then tie them together in a campaign:
+
+1. **Sending Profile** the SMTP server the emails are sent through.
+2. **Email Template** the email recipients receive. Put the `{{.URL}}`
+   variable where the phishing link should go; opens and clicks are tracked
+   for you.
+3. **Landing Page** where the link leads, and optionally where submitted
+   credentials are captured.
+4. **Users & Groups** the recipients to target.
+5. **Campaign** pick a template, landing page, sending profile, and group,
+   set the phishing URL, and launch. Follow live results on the campaign's
+   results page, and open its **Report** for the aggregate, printable summary
+   (including the NIST Phish Scale difficulty and the program trend).
+
+### Starter templates
+
+Don't want to write the first template from scratch? This fork ships a
+**starter Content Pack** with three example phishing emails and matching
+landing pages for a fictional company, *Hooked Media Co.* Go to
+**Content Packs → Import**, choose `static/content-packs/starter.json` (it's
+included in the release archive and the Docker image), and import it. You'll
+get ready-made Email Templates and Landing Pages, leaving only a Sending
+Profile and a Group to add before launching.
 
 ## Documentation
 
