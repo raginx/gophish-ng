@@ -38,6 +38,7 @@ import (
 	"github.com/raginx/gophish-ng/controllers"
 	"github.com/raginx/gophish-ng/dialer"
 	"github.com/raginx/gophish-ng/imap"
+	"github.com/raginx/gophish-ng/ldap"
 	log "github.com/raginx/gophish-ng/logger"
 	"github.com/raginx/gophish-ng/middleware"
 	"github.com/raginx/gophish-ng/models"
@@ -123,10 +124,16 @@ func main() {
 	phishServer := controllers.NewPhishingServer(phishConfig)
 
 	imapMonitor := imap.NewMonitor()
+	ldapMonitor := ldap.NewMonitor()
 	if *mode == "admin" || *mode == "all" {
 		go adminServer.Start()
 		go func() {
 			if err := imapMonitor.Start(); err != nil {
+				log.Error(err)
+			}
+		}()
+		go func() {
+			if err := ldapMonitor.Start(); err != nil {
 				log.Error(err)
 			}
 		}()
@@ -145,6 +152,9 @@ func main() {
 			log.Error(err)
 		}
 		if err := imapMonitor.Shutdown(); err != nil {
+			log.Error(err)
+		}
+		if err := ldapMonitor.Shutdown(); err != nil {
 			log.Error(err)
 		}
 	}

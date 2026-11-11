@@ -22,6 +22,10 @@ func (s *ModelsSuite) SetUpSuite(c *check.C) {
 		DBName:         "sqlite3",
 		DBPath:         ":memory:",
 		MigrationsPath: "../db/db_sqlite3/migrations/",
+		// A fixed 32-byte key (base64) so tests that exercise secret
+		// encryption at rest (OAuth tokens, LDAP bind passwords) have a
+		// usable secret_key.
+		SecretKey: "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
 	}
 	s.config = conf
 	err := Setup(conf)
@@ -49,6 +53,9 @@ func (s *ModelsSuite) TearDownTest(c *check.C) {
 	gdb.Delete(Attachment{})
 	gdb.Delete(Tag{})
 	gdb.Delete(taggable{})
+	gdb.Delete(LDAPConnection{})
+	gdb.Delete(LDAPGroupSync{})
+	gdb.Delete(LDAPTargetIdentity{})
 
 	// Reset users table to default state.
 	db.Not("id", 1).Delete(User{})
@@ -150,6 +157,9 @@ func resetBenchmark(b *testing.B) {
 	gdb.Delete(Attachment{})
 	gdb.Delete(Tag{})
 	gdb.Delete(taggable{})
+	gdb.Delete(LDAPConnection{})
+	gdb.Delete(LDAPGroupSync{})
+	gdb.Delete(LDAPTargetIdentity{})
 
 	// Reset users table to default state.
 	db.Not("id", 1).Delete(User{})
