@@ -1,0 +1,7 @@
+-- +goose Up
+-- SQL in section 'Up' is executed when this migration is applied
+ALTER TABLE smtp ADD COLUMN ignore_cert_errors boolean;
+
+-- +goose Down
+-- SQL section 'Down' is executed when this migration is rolled back
+ALTER TABLE smtp DROP COLUMN ignore_cert_errors;

@@ -545,8 +545,13 @@ func seedCampaign(uid, teamID int64, spec campaignSpec, rng *rand.Rand, rawDB *s
 
 func openRawDB(conf *config.Config) (*sql.DB, error) {
 	driver := "sqlite3"
-	if conf.DBName == "mysql" {
+	switch conf.DBName {
+	case "mysql":
 		driver = "mysql"
+	case "postgres":
+		// The pgx database/sql driver is registered by gorm.io/driver/postgres,
+		// which models already imports.
+		driver = "pgx"
 	}
 	return sql.Open(driver, conf.DBPath)
 }
