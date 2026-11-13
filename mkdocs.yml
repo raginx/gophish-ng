@@ -43,6 +43,7 @@ nav:
   - Getting Started:
       - Installation: getting-started/installation.md
       - First Login: getting-started/first-login.md
+      - Troubleshooting: getting-started/troubleshooting.md
   - Tutorial:
       - Overview: tutorial/index.md
       - Introducing Morning Catch: tutorial/morning-catch.md
