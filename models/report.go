@@ -28,6 +28,20 @@ type CampaignReport struct {
 	// PhishScale is the NIST Phish Scale detection-difficulty summary for the
 	// campaign
 	PhishScale PhishScaleSummary `json:"phish_scale"`
+	// Trend is the program-level funnel-rate series for the team's completed
+	// campaigns up to and including this one
+	Trend []TrendPoint `json:"trend"`
+}
+
+// TrendPoint ist one campaign's funnel rates as a single point in the
+// program-level trend series
+type TrendPoint struct {
+	CampaignId    int64         `json:"campaign_id"`
+	Name          string        `json:"name"`
+	CompletedDate time.Time     `json:"completed_date"`
+	Total         int64         `json:"total"`
+	Rates         CampaignRates `json:"rates"`
+	IsCurrent bool `json:"is_current"`
 }
 
 // PhishScaleSummary is the report-facing slice of a Phish Scale assessment
@@ -146,7 +160,58 @@ func GetCampaignReport(id int64, teamID int64) (CampaignReport, error) {
 		log.Error(err)
 	}
 
+	// Fold in the program-level trend up to this campaign so a reader can see
+	// where the campaign's rates sit in the team's trajectory
+	if trend, err := computeTrend(c, teamID); err == nil {
+		report.Trend = trend
+	} else {
+		log.Error(err)
+	}
+
 	return report, nil
+}
+
+// computeTrend builds the program-level trend leading up to and including the
+// campaign this report is fore
+func computeTrend(current Campaign, teamID int64) ([]TrendPoint, error) {
+	cutoff := current.CompletedDate
+	if current.Status != CampaignComplete || cutoff.IsZero() {
+		cutoff = time.Now().UTC()
+	}
+
+	history := []Campaign{}
+	err := db.Where("team_id = ? AND id <> ? AND status = ? AND completed_date <= ?",
+		teamID, current.Id, CampaignComplete, cutoff).
+		Order("completed_date asc").Find(&history).Error
+	if err != nil {
+		return nil, err
+	}
+
+	points := make([]TrendPoint, 0, len(history)+1)
+	appendPoint := func(c Campaign, isCurrent bool) error {
+		stats, err := getCampaignStats(c.Id)
+		if err != nil {
+			return err
+		}
+		points = append(points, TrendPoint{
+			CampaignId:    c.Id,
+			Name:          c.Name,
+			CompletedDate: c.CompletedDate,
+			Total:         stats.Total,
+			Rates:         computeRates(stats),
+			IsCurrent:     isCurrent,
+		})
+		return nil
+	}
+	for _, c := range history {
+		if err := appendPoint(c, false); err != nil {
+			return nil, err
+		}
+	}
+	if err := appendPoint(current, true); err != nil {
+		return nil, err
+	}
+	return points, nil
 }
 
 // campaignMeta builds the descriptive context for a report from the campaign
