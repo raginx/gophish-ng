@@ -41,7 +41,7 @@ type TrendPoint struct {
 	CompletedDate time.Time     `json:"completed_date"`
 	Total         int64         `json:"total"`
 	Rates         CampaignRates `json:"rates"`
-	IsCurrent bool `json:"is_current"`
+	IsCurrent     bool          `json:"is_current"`
 }
 
 // PhishScaleSummary is the report-facing slice of a Phish Scale assessment
