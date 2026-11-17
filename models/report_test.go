@@ -143,3 +143,64 @@ func (s *ModelsSuite) TestGetCampaignReportIsScrubSafe(c *check.C) {
 	c.Assert(after.Meta.SMTPName, check.Equals, before.Meta.SMTPName)
 	c.Assert(after.Meta.ScrubbedDate.IsZero(), check.Equals, false)
 }
+
+// insertBareCampaign inserts a campaign row with only the scalar fields the
+// trend needs
+func (s *ModelsSuite) insertBareCampaign(c *check.C, teamID int64, name, status string, completed time.Time) Campaign {
+	camp := Campaign{
+		UserId:        1,
+		TeamId:        teamID,
+		Name:          name,
+		Status:        status,
+		CompletedDate: completed,
+		CreatedDate:   time.Now().UTC(),
+	}
+	err := db.Omit("Template", "Page", "SMTP", "Results", "Events").Create(&camp).Error
+	c.Assert(err, check.Equals, nil)
+	return camp
+}
+
+// TestComputeTrendLooksBackwardOnly verifies the trend includes only the
+// team's completed campaigns at or before the current ones
+func (s *ModelsSuite) TestComputeTrendLooksBackwardOnly(c *check.C) {
+	team := int64(910)
+	other := int64(911)
+	t0 := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	s.insertBareCampaign(c, team, "A", CampaignComplete, t0)
+	s.insertBareCampaign(c, team, "B", CampaignComplete, t0.AddDate(0, 0, 1))
+	current := s.insertBareCampaign(c, team, "Current", CampaignComplete, t0.AddDate(0, 0, 2))
+	// Completed after the current campaign
+	s.insertBareCampaign(c, team, "Future", CampaignComplete, t0.AddDate(0, 0, 3))
+	// Not yet completed
+	s.insertBareCampaign(c, team, "InProgress", CampaignInProgress, time.Time{})
+	// A different team's campaign is never visible here
+	s.insertBareCampaign(c, other, "OtherTeam", CampaignComplete, t0)
+
+	trend, err := computeTrend(current, team)
+	c.Assert(err, check.Equals, nil)
+	c.Assert(len(trend), check.Equals, 3)
+	c.Assert(trend[0].Name, check.Equals, "A")
+	c.Assert(trend[1].Name, check.Equals, "B")
+	c.Assert(trend[2].Name, check.Equals, "Current")
+	c.Assert(trend[0].IsCurrent, check.Equals, false)
+	c.Assert(trend[2].IsCurrent, check.Equals, true)
+	c.Assert(trend[2].CampaignId, check.Equals, current.Id)
+}
+
+// TestComputeTrendInProgressCurrent verifies that when the report is for an
+// in-progress campaign, the cutoff is "now"
+func (s *ModelsSuite) TestComputeTrendInProgressCurrent(c *check.C) {
+	team := int64(912)
+	t0 := time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
+	s.insertBareCampaign(c, team, "Done1", CampaignComplete, t0)
+	s.insertBareCampaign(c, team, "Done2", CampaignComplete, t0.AddDate(0, 0, 1))
+	current := s.insertBareCampaign(c, team, "Live", CampaignInProgress, time.Time{})
+
+	trend, err := computeTrend(current, team)
+	c.Assert(err, check.Equals, nil)
+	c.Assert(len(trend), check.Equals, 3)
+	c.Assert(trend[2].Name, check.Equals, "Live")
+	c.Assert(trend[2].IsCurrent, check.Equals, true)
+	c.Assert(trend[2].CompletedDate.IsZero(), check.Equals, true)
+}
