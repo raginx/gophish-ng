@@ -220,6 +220,18 @@ var api = {
         // GET /campaigns/:id/report (funnel counts, rates, timing, timeline).
         reportData: function (id) {
             return query("/campaigns/" + id + "/report", "GET", {}, true)
+        },
+        // phishScale contains the endpoints for /campaigns/:id/phishscale,
+        // the NIST Phish Scale assessment
+        phishScale: {
+            // get() - Queries the current assessment
+            get: function (id) {
+                return query("/campaigns/" + id + "/phishscale", "GET", {}, true)
+            },
+            // save() Upserts the assessment at PUT /campaigns/:id/phishscale
+            save: function (id, data) {
+                return query("/campaigns/" + id + "/phishscale", "PUT", data, false)
+            }
         }
     },
     // groups contains the endpoints for /groups

@@ -39,3 +39,23 @@ to import.
 > matching format version. If you see an "Unsupported content pack
 > format_version" error, the pack was likely exported from a much older or
 > newer Gophish-NG version.
+
+## Starter Content Pack
+
+Gophish-NG ships with a ready-made starter pack so you don't have to write
+your first Email Template and Landing Page from scratch. It's a Content Pack
+like any other, built around a fictional company, *Hooked Media Co.*, and it
+contains three paired examples:
+
+| Email Template | Matching Landing Page |
+| --- | --- |
+| Hooked Media IT – Password Expiration Notice | HookedID Sign In – Password Reset |
+| Hooked Media HR – Open Enrollment Deadline | HookedID Sign In – Benefits Portal |
+| Hooked Media Docs – Shared Spreadsheet Notification | HookedID Sign In – Document Access |
+
+The file is `static/content-packs/starter.json`, included in the release
+archive and the Docker image. Import it the same way as any other pack
+(**Content Packs → Import**), then review and adapt the Templates and Pages
+to your own scenario before launching a campaign. You'll still need to add a
+[Sending Profile](sending-profiles.md) and a [Group](groups.md) of
+your own, since those aren't part of a Content Pack.

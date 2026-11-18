@@ -70,6 +70,7 @@ vulnerabilities.
 - [Building From Source](#building-from-source)
 - [Docker](#docker)
 - [Setup](#setup)
+- [Quick Start](#quick-start)
 - [Documentation](#documentation)
 - [Issues](#issues)
 - [Contact](#contact)
@@ -87,9 +88,7 @@ per-recipient tracking, all through a single web UI.
 
 Pre-built binaries for this fork are available on the
 [releases page](https://github.com/raginx/gophish-ng/releases). Alternatively,
-build from source (see below). If you're looking for official upstream
-binaries instead, see the
-[upstream releases page](https://github.com/gophish/gophish/releases/).
+build from source (see below). 
 
 ## Building From Source
 
@@ -138,21 +137,43 @@ output, e.g.:
 time="2020-07-29T01:24:08Z" level=info msg="Please login with the username admin and the password 4304d5255378177d"
 ```
 
+## Quick Start
+
+A phishing campaign is assembled from a few building blocks. Create each
+one from the sidebar, then tie them together in a campaign:
+
+1. **Sending Profile** the SMTP server the emails are sent through.
+2. **Email Template** the email recipients receive. Put the `{{.URL}}`
+   variable where the phishing link should go; opens and clicks are tracked
+   for you.
+3. **Landing Page** where the link leads, and optionally where submitted
+   credentials are captured.
+4. **Users & Groups** the recipients to target.
+5. **Campaign** pick a template, landing page, sending profile, and group,
+   set the phishing URL, and launch. Follow live results on the campaign's
+   results page, and open its **Report** for the aggregate, printable summary
+   (including the NIST Phish Scale difficulty and the program trend).
+
+### Starter templates
+
+Don't want to write the first template from scratch? This fork ships a
+**starter Content Pack** with three example phishing emails and matching
+landing pages for a fictional company, *Hooked Media Co.* Go to
+**Content Packs → Import**, choose `static/content-packs/starter.json` (it's
+included in the release archive and the Docker image), and import it. You'll
+get ready-made Email Templates and Landing Pages, leaving only a Sending
+Profile and a Group to add before launching.
+
 ## Documentation
 
 The full user guide is available at
 **[raginx.github.io/gophish-ng](https://raginx.github.io/gophish-ng/)**.
-Since this fork tracks upstream Gophish closely, the
-[upstream documentation](http://getgophish.com/documentation) also mostly
-applies.
+
 
 ## Issues
 
 Found a bug specific to this fork? Please
-[file an issue](https://github.com/raginx/gophish-ng/issues/new) here. For
-issues that also affect upstream Gophish, consider checking the
-[upstream issue tracker](https://github.com/gophish/gophish/issues) as
-well.
+[file an issue](https://github.com/raginx/gophish-ng/issues/new) here. 
 
 ## Contact
 

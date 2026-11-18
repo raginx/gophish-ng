@@ -172,6 +172,121 @@ function renderResilience(stats) {
     $("#resilience").html(text)
 }
 
+// renderPhishScale surfaces the NIST Phish Scale detection-difficulty verdict
+// next to the funnel
+function renderPhishScale(ps) {
+    if (!ps || !ps.assessed || !ps.difficulty) {
+        return
+    }
+    var colors = {
+        very_difficult: "bg-danger",
+        moderately_difficult: "bg-warning text-dark",
+        moderately_to_least_difficult: "bg-warning text-dark",
+        least_difficult: "bg-success"
+    }
+    var color = colors[ps.difficulty] || "bg-secondary"
+    $("#ps-difficulty").text(ps.difficulty_label || ps.difficulty).attr("class", "badge fs-6 " + color)
+    var premise = ps.premise_alignment ? capitalize(ps.premise_alignment) : "-"
+    var band = ps.cue_band ? capitalize(ps.cue_band) : "-"
+    $("#ps-breakdown").html(
+        "Premise alignment: <b>" + premise + "</b> &middot; Cues: <b>" + ps.cue_count +
+        "</b> (" + band + "). Detection difficulty contextualizes the click rate above."
+    )
+    $("#phish-scale-section").show()
+}
+
+// renderTrend plots the program-level funnel-rate trend across the team's
+// campaigns leading up to and including this one
+function renderTrend(trend) {
+    if (!trend || trend.length < 2) {
+        return
+    }
+    var names = trend.map(function (p) {
+        return p.name
+    })
+    // Series data are flat, index-aligned arrays so duplicate campaign names
+    // never confuse the category axi
+    var pct = function (key) {
+        return trend.map(function (p) {
+            return +(p.rates[key] * 100).toFixed(1)
+        })
+    }
+    var currentIndex = trend.length - 1
+    trend.forEach(function (p, i) {
+        if (p.is_current) {
+            currentIndex = i
+        }
+    })
+
+    $("#trend-section").show()
+    var chart = echarts.init(document.getElementById("trend_chart"))
+    var series = function (name, key) {
+        return {
+            name: name,
+            type: "line",
+            smooth: true,
+            symbol: "circle",
+            symbolSize: 6,
+            data: pct(key)
+        }
+    }
+    // A dashed vertical line marks the campaign this report is for.
+    var clicked = series("Clicked", "click")
+    clicked.markLine = {
+        silent: true,
+        symbol: "none",
+        lineStyle: { type: "dashed", color: "#428bca" },
+        label: { formatter: "This campaign", position: "insideEndTop", color: "#428bca" },
+        data: [{ xAxis: currentIndex }]
+    }
+    chart.setOption({
+        tooltip: {
+            trigger: "axis",
+            formatter: function (params) {
+                var p = trend[params[0].dataIndex]
+                var lines = ["<b>" + $("<div>").text(p.name).html() + "</b>"]
+                if (isRealDate(p.completed_date)) {
+                    lines.push("Completed " + fmtDate(p.completed_date))
+                }
+                lines.push(p.total + " recipients")
+                params.forEach(function (s) {
+                    lines.push(s.marker + s.seriesName + ": <b>" + s.value + "%</b>")
+                })
+                return lines.join("<br>")
+            }
+        },
+        legend: { data: ["Opened", "Clicked", "Submitted Data", "Reported"], top: 0 },
+        grid: { top: 40, bottom: trend.length > 4 ? 60 : 30, left: "1%", right: "2%", containLabel: true },
+        xAxis: {
+            type: "category",
+            data: names,
+            axisLabel: {
+                interval: 0,
+                rotate: trend.length > 4 ? 30 : 0,
+                formatter: function (v) {
+                    return v.length > 14 ? v.slice(0, 13) + "…" : v
+                }
+            }
+        },
+        yAxis: { type: "value", name: "% of recipients", axisLabel: { formatter: "{value}%" } },
+        series: [
+            series("Opened", "open"),
+            clicked,
+            series("Submitted Data", "submit"),
+            series("Reported", "report")
+        ]
+    })
+    // The report can be printed, and the chart needs to resize with the page.
+    $(window).on("resize", function () {
+        chart.resize()
+    })
+
+    $("#trend-caption").text(
+        "Funnel rates across " + trend.length +
+        " campaigns leading up to and including this one. The dashed line marks this campaign."
+    )
+}
+
 // renderTimeline draws cumulative engagement (opens, clicks, submissions) over
 // time as lines - the classic "how fast did recipients fall for it" curve.
 // With no engagement events there's nothing to plot, so it shows a message in
@@ -258,12 +373,14 @@ $(document).ready(function () {
 
         renderMeta(report.meta, report.anonymized)
         renderExecutiveSummary(report.stats, report.rates)
+        renderPhishScale(report.phish_scale)
         renderAuditHeader(report.meta, generatedAt)
         renderDataProtection(report.meta, report.anonymized)
         renderTiles(report.stats, report.rates)
         renderNoInteraction(report.stats)
         renderResilience(report.stats)
         renderTiming(report.timing)
+        renderTrend(report.trend || [])
         renderTimeline(report.timeline || [])
 
         $("#loading").hide()

@@ -71,9 +71,17 @@
             color: #6c757d;
         }
 
-        #timeline_chart {
+        #timeline_chart,
+        #trend_chart {
             width: 100%;
             height: 320px;
+        }
+
+        /* Caption under a chart explaining what it shows. */
+        .chart-caption {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
         }
 
         /* One-line management takeaway, set apart from the body text. */
@@ -145,6 +153,16 @@
 
             <p class="executive-summary" id="executive-summary"></p>
 
+            <div id="phish-scale-section" class="card mb-2" style="display:none">
+                <div class="card-body d-flex flex-wrap align-items-center gap-3">
+                    <div>
+                        <div class="text-muted small text-uppercase">NIST Phish Scale</div>
+                        <span id="ps-difficulty" class="badge fs-6"></span>
+                    </div>
+                    <div class="text-muted" id="ps-breakdown"></div>
+                </div>
+            </div>
+
             <h2 class="h5 mt-4 mb-3">Audit information</h2>
             <div class="card">
                 <div class="card-body">
@@ -163,6 +181,12 @@
             <div class="stat-tiles" id="stat-tiles"></div>
             <p class="mt-3 mb-1" id="no-interaction"></p>
             <p class="mb-0" id="resilience"></p>
+
+            <div id="trend-section" style="display:none">
+                <h2 class="h5 mt-5 mb-3">Program trend</h2>
+                <div id="trend_chart"></div>
+                <p class="chart-caption" id="trend-caption"></p>
+            </div>
 
             <h2 class="h5 mt-5 mb-3">Engagement over time</h2>
             <div id="timeline_chart"></div>

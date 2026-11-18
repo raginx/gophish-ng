@@ -336,10 +336,10 @@ $(document).ready(function () {
                     var launchDate;
                     if (moment(campaign.launch_date).isAfter(moment())) {
                         launchDate = "Scheduled to start: " + moment(campaign.launch_date).format('MMMM Do YYYY, h:mm:ss a')
-                        var quickStats = launchDate + "<br><br>" + "Number of recipients: " + campaign.stats.total
+                        var quickStats = launchDate + "<br>" + "Number of recipients: " + campaign.stats.total
                     } else {
                         launchDate = "Launch Date: " + moment(campaign.launch_date).format('MMMM Do YYYY, h:mm:ss a')
-                        var quickStats = launchDate + "<br><br>" + "Number of recipients: " + campaign.stats.total + "<br><br>" + "Emails opened: " + campaign.stats.opened + "<br><br>" + "Emails clicked: " + campaign.stats.clicked + "<br><br>" + "Submitted Credentials: " + campaign.stats.submitted_data + "<br><br>" + "Errors : " + campaign.stats.error + "<br><br>" + "Reported : " + campaign.stats.email_reported
+                        var quickStats = launchDate + "<br>" + "Number of recipients: " + campaign.stats.total + "<br>" + "Emails opened: " + campaign.stats.opened + "<br>" + "Emails clicked: " + campaign.stats.clicked + "<br>" + "Submitted Credentials: " + campaign.stats.submitted_data + "<br>" + "Errors : " + campaign.stats.error + "<br>" + "Reported : " + campaign.stats.email_reported
                     }
                     // Add it to the list
                     campaignRows.push([
@@ -350,7 +350,7 @@ $(document).ready(function () {
                         campaign.stats.clicked,
                         campaign.stats.submitted_data,
                         campaign.stats.email_reported,
-                        "<span class=\"badge " + label + "\" data-bs-toggle=\"tooltip\" data-bs-placement=\"right\" data-bs-html=\"true\" title=\"" + escapeHtml(quickStats) + "\">" + campaign.status + "</span>",
+                        "<span class=\"badge " + label + "\" data-bs-toggle=\"tooltip\" data-bs-placement=\"right\" data-bs-html=\"true\" title=\"" + quickStats + "\">" + campaign.status + "</span>",
                         "<div class='pull-right'><a class='btn btn-sm btn-primary' href='/campaigns/" + campaign.id + "' data-bs-toggle='tooltip' data-bs-placement='left' title='View Results'>\
                     <i class='fa fa-bar-chart'></i>\
                     </a>" + (canModifyObjects() ? "\
@@ -358,9 +358,9 @@ $(document).ready(function () {
                     <i class='fa fa-trash-o'></i>\
                     </button>" : "") + "</div>"
                     ])
-                    initTooltips()
                 })
                 campaignTable.rows.add(campaignRows).draw()
+                initTooltips()
                 // Build the charts
                 generateStatsPieCharts(campaigns)
                 generateTimelineChart(campaigns)
