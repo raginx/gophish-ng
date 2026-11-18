@@ -24,9 +24,7 @@ jobs:
       uses: actions/checkout@v7
 
     - name: Get dependencies
-      run: |
-        go get -v -t -d ./...
-        go get gopkg.in/check.v1
+      run: go mod download
 
     - name: Build
       run: go build -v .
