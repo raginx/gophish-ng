@@ -15,6 +15,7 @@ import (
 
 	log "github.com/raginx/gophish-ng/logger"
 	gormmysql "gorm.io/driver/mysql"
+	gormpostgres "gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
@@ -35,6 +36,16 @@ const DefaultMySQLMaxOpenConns int = 25
 // server's own wait_timeout (default 8h, but often lower on shared hosting)
 // closes it out from under us.
 const DefaultMySQLConnMaxLifetime = 5 * time.Minute
+
+// DefaultPostgresMaxOpenConns is the default connection pool size for
+// PostgreSQL. Like MySQL it is a networked server that handles concurrent
+// connections well, so it gets the same default rather than SQLite's single
+// connection.
+const DefaultPostgresMaxOpenConns int = DefaultMySQLMaxOpenConns
+
+// DefaultPostgresConnMaxLifetime bounds how long a pooled PostgreSQL
+// connection is reused, for the same reasons as DefaultMySQLConnMaxLifetime.
+const DefaultPostgresConnMaxLifetime = DefaultMySQLConnMaxLifetime
 
 // DefaultAdminUsername is the default username for the administrative user
 const DefaultAdminUsername = "admin"
@@ -88,6 +99,8 @@ func chooseDBDialect(name string) string {
 	switch name {
 	case "mysql":
 		return "mysql"
+	case "postgres":
+		return "postgres"
 	// Default database is sqlite3
 	default:
 		return "sqlite3"
@@ -108,8 +121,11 @@ func resolveMaxOpenConns(dbName string, override int) int {
 	if override != 0 {
 		return override
 	}
-	if chooseDBDialect(dbName) == "mysql" {
+	switch chooseDBDialect(dbName) {
+	case "mysql":
 		return DefaultMySQLMaxOpenConns
+	case "postgres":
+		return DefaultPostgresMaxOpenConns
 	}
 	return 1
 }
@@ -189,9 +205,14 @@ func Setup(c *config.Config) error {
 
 	// Open our database connection
 	var dialector gorm.Dialector
-	if chooseDBDialect(conf.DBName) == "mysql" {
+	switch chooseDBDialect(conf.DBName) {
+	case "mysql":
 		dialector = gormmysql.Open(conf.DBPath)
-	} else {
+	case "postgres":
+		// db_path is a PostgreSQL connection string (DSN or URL), e.g.
+		// "host=localhost user=gophish password=... dbname=gophish sslmode=require".
+		dialector = gormpostgres.Open(conf.DBPath)
+	default:
 		dialector = sqlite.Open(conf.DBPath)
 	}
 	gormConf := &gorm.Config{
@@ -222,8 +243,11 @@ func Setup(c *config.Config) error {
 		return err
 	}
 	sqlDB.SetMaxOpenConns(resolveMaxOpenConns(conf.DBName, conf.DBMaxOpenConns))
-	if chooseDBDialect(conf.DBName) == "mysql" {
+	switch chooseDBDialect(conf.DBName) {
+	case "mysql":
 		sqlDB.SetConnMaxLifetime(DefaultMySQLConnMaxLifetime)
+	case "postgres":
+		sqlDB.SetConnMaxLifetime(DefaultPostgresConnMaxLifetime)
 	}
 	// Migrate up to the latest version
 	err = goose.SetDialect(chooseDBDialect(conf.DBName))
