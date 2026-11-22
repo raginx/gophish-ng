@@ -125,7 +125,7 @@ func resetMySQLSchema(t *testing.T, conf *config.Config) {
 	if err != nil {
 		t.Fatalf("open MySQL for reset: %v", err)
 	}
-	defer sqlDB.Close()
+	defer func() { _ = sqlDB.Close() }()
 	rows, err := sqlDB.Query("SHOW TABLES")
 	if err != nil {
 		t.Fatalf("list tables: %v", err)
@@ -134,12 +134,12 @@ func resetMySQLSchema(t *testing.T, conf *config.Config) {
 	for rows.Next() {
 		var table string
 		if err := rows.Scan(&table); err != nil {
-			rows.Close()
+			_ = rows.Close()
 			t.Fatalf("scan table name: %v", err)
 		}
 		tables = append(tables, table)
 	}
-	rows.Close()
+	_ = rows.Close()
 	if _, err := sqlDB.Exec("SET FOREIGN_KEY_CHECKS=0"); err != nil {
 		t.Fatalf("disable foreign key checks: %v", err)
 	}
