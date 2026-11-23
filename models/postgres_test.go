@@ -127,7 +127,7 @@ func resetPostgresSchema(t *testing.T, conf *config.Config) {
 	if err != nil {
 		t.Fatalf("open PostgreSQL for reset: %v", err)
 	}
-	defer sqlDB.Close()
+	defer func() { _ = sqlDB.Close() }()
 	for _, stmt := range []string{"DROP SCHEMA public CASCADE", "CREATE SCHEMA public"} {
 		if _, err := sqlDB.Exec(stmt); err != nil {
 			t.Fatalf("%s: %v", stmt, err)
