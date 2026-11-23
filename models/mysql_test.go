@@ -16,7 +16,7 @@ import (
 // It only runs when GOPHISH_TEST_MYSQL_DSN points at a MySQL database
 // dedicated to tests, e.g.
 //
-//	GOPHISH_TEST_MYSQL_DSN="gophish:gophish@tcp(127.0.0.1:3306)/gophish_test?parseTime=true&charset=utf8mb4&loc=Local" go test ./models/ -run TestMySQL
+//	GOPHISH_TEST_MYSQL_DSN="gophish:gophish@tcp(127.0.0.1:3306)/gophish_test?parseTime=true&charset=utf8mb4&loc=Local&sql_mode=%27ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27" go test ./models/ -run TestMySQL
 //
 // With GOPHISH_TEST_MYSQL_RESET=1 all tables in that database are DROPPED
 // first, so the full migration chain is exercised from an empty database;
