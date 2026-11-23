@@ -1,0 +1,78 @@
+name: DB integration
+
+# Server databases (MySQL, PostgreSQL) can't be exercised by the default
+# `go test ./...` run, which uses in-memory SQLite. This workflow spins up both
+# as service containers and runs the dialect/migration integration tests
+# against them.
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'db/**'
+      - 'models/**'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/db-integration.yml'
+  pull_request:
+    paths:
+      - 'db/**'
+      - 'models/**'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/db-integration.yml'
+
+jobs:
+  integration:
+    name: MySQL + PostgreSQL
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: gophish
+          POSTGRES_PASSWORD: gophish
+          POSTGRES_DB: gophish_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U gophish -d gophish_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: gophish_test
+          MYSQL_USER: gophish
+          MYSQL_PASSWORD: gophish
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -ugophish -pgophish"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 15
+
+    env:
+      GOPHISH_TEST_POSTGRES_DSN: "host=localhost port=5432 user=gophish password=gophish dbname=gophish_test sslmode=disable"
+      GOPHISH_TEST_MYSQL_DSN: "gophish:gophish@tcp(127.0.0.1:3306)/gophish_test?parseTime=true&charset=utf8mb4&loc=Local"
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: "1.26"
+
+      - name: Get dependencies
+        run: go mod download
+
+      - name: Run database integration tests
+        run: go test -count=1 -v ./models/ -run 'TestPostgresMigrationsAndBootstrap|TestMySQLMigrationsAndBootstrap'
