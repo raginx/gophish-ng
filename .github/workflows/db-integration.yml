@@ -60,7 +60,7 @@ jobs:
 
     env:
       GOPHISH_TEST_POSTGRES_DSN: "host=localhost port=5432 user=gophish password=gophish dbname=gophish_test sslmode=disable"
-      GOPHISH_TEST_MYSQL_DSN: "gophish:gophish@tcp(127.0.0.1:3306)/gophish_test?parseTime=true&charset=utf8mb4&loc=Local"
+      GOPHISH_TEST_MYSQL_DSN: "gophish:gophish@tcp(127.0.0.1:3306)/gophish_test?parseTime=true&charset=utf8mb4&loc=Local&sql_mode=%27ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION%27"
 
     steps:
       - name: Check out code
