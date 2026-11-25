@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/raginx/gophish-ng/audit"
 	log "github.com/raginx/gophish-ng/logger"
 )
 
@@ -65,6 +66,7 @@ func TestLoadConfig(t *testing.T) {
 	expectedConfig.TestFlag = false
 	expectedConfig.AdminConf.CSRFKey = ""
 	expectedConfig.Logging = &log.Config{}
+	expectedConfig.AuditLog = &audit.Config{}
 	if !reflect.DeepEqual(expectedConfig, conf) {
 		t.Fatalf("invalid config received. expected %#v got %#v", expectedConfig, conf)
 	}

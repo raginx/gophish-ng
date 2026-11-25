@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 
+	"github.com/raginx/gophish-ng/audit"
 	gophishcrypto "github.com/raginx/gophish-ng/crypto"
 	log "github.com/raginx/gophish-ng/logger"
 )
@@ -43,11 +44,12 @@ type Config struct {
 	// default) picks a dialect-appropriate default: 1 for SQLite (which
 	// only supports a single writer), or a small pool for MySQL. Only
 	// needed to tune for a restrictive MySQL max_connections limit.
-	DBMaxOpenConns int         `json:"db_max_open_conns"`
-	MigrationsPath string      `json:"migrations_prefix"`
-	TestFlag       bool        `json:"test_flag"`
-	ContactAddress string      `json:"contact_address"`
-	Logging        *log.Config `json:"logging"`
+	DBMaxOpenConns int           `json:"db_max_open_conns"`
+	MigrationsPath string        `json:"migrations_prefix"`
+	TestFlag       bool          `json:"test_flag"`
+	ContactAddress string        `json:"contact_address"`
+	Logging        *log.Config   `json:"logging"`
+	AuditLog       *audit.Config `json:"audit_log"`
 	// SecretKey is a base64-encoded 32-byte key (e.g. from `openssl rand
 	// -base64 32`) used to encrypt secrets that need to be stored at rest,
 	// such as OAuth2 refresh tokens for IMAP email reporting
@@ -84,6 +86,9 @@ func LoadConfig(filepath string) (*Config, error) {
 	}
 	if config.Logging == nil {
 		config.Logging = &log.Config{}
+	}
+	if config.AuditLog == nil {
+		config.AuditLog = &audit.Config{}
 	}
 	// Choosing the migrations directory based on the database used.
 	// The old liamstask/goose recursively walked this path looking for
