@@ -4,11 +4,23 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/raginx/gophish-ng/audit"
+	ctx "github.com/raginx/gophish-ng/context"
 	mid "github.com/raginx/gophish-ng/middleware"
 	"github.com/raginx/gophish-ng/middleware/ratelimit"
 	"github.com/raginx/gophish-ng/models"
 	"github.com/raginx/gophish-ng/worker"
 )
+
+// auditActor builds an audit actor from the API-authenticated user in the
+// request context
+func auditActor(r *http.Request) *audit.Actor {
+	u, ok := ctx.Get(r, "user").(models.User)
+	if !ok {
+		return nil
+	}
+	return &audit.Actor{ID: u.Id, Username: u.Username}
+}
 
 // ServerOption is an option to apply to the API server.
 type ServerOption func(*Server)

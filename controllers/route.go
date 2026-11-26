@@ -16,6 +16,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/jordan-wright/unindexed"
+	"github.com/raginx/gophish-ng/audit"
 	"github.com/raginx/gophish-ng/auth"
 	"github.com/raginx/gophish-ng/config"
 	ctx "github.com/raginx/gophish-ng/context"
@@ -349,6 +350,12 @@ func (as *AdminServer) Settings(w http.ResponseWriter, r *http.Request) {
 			api.JSONResponse(w, msg, http.StatusInternalServerError)
 			return
 		}
+		audit.Record(audit.Event{
+			Event:    audit.EventPasswordChanged,
+			Outcome:  audit.OutcomeSuccess,
+			Actor:    &audit.Actor{ID: u.Id, Username: u.Username},
+			SourceIP: audit.SourceIP(r),
+		})
 		api.JSONResponse(w, msg, http.StatusOK)
 	}
 }
@@ -405,6 +412,16 @@ func (as *AdminServer) Webhooks(w http.ResponseWriter, r *http.Request) {
 	getTemplate(w, "webhooks", params)
 }
 
+// auditActor builds an audit actor from the authenticated user in the request
+// context, or nil when there is none.
+func auditActor(r *http.Request) *audit.Actor {
+	u, ok := ctx.Get(r, "user").(models.User)
+	if !ok {
+		return nil
+	}
+	return &audit.Actor{ID: u.Id, Username: u.Username}
+}
+
 // Impersonate allows an admin to login to a user account without needing the password
 func (as *AdminServer) Impersonate(w http.ResponseWriter, r *http.Request) {
 
@@ -421,6 +438,13 @@ func (as *AdminServer) Impersonate(w http.ResponseWriter, r *http.Request) {
 		if err := session.Save(r, w); err != nil {
 			log.Error(err)
 		}
+		audit.Record(audit.Event{
+			Event:    audit.EventImpersonate,
+			Outcome:  audit.OutcomeSuccess,
+			Actor:    auditActor(r),
+			Target:   &audit.Target{Type: "user", ID: u.Id, Name: u.Username},
+			SourceIP: audit.SourceIP(r),
+		})
 	}
 	http.Redirect(w, r, "/", http.StatusFound)
 }
@@ -455,6 +479,13 @@ func (as *AdminServer) Login(w http.ResponseWriter, r *http.Request) {
 		u, err := models.GetUserByUsername(username)
 		if err != nil {
 			log.Error(err)
+			audit.Record(audit.Event{
+				Event:    audit.EventLoginFailure,
+				Outcome:  audit.OutcomeFailure,
+				Reason:   audit.ReasonUnknownUser,
+				Actor:    &audit.Actor{Username: username},
+				SourceIP: audit.SourceIP(r),
+			})
 			as.handleInvalidLogin(w, r, "Invalid Username/Password")
 			return
 		}
@@ -462,10 +493,24 @@ func (as *AdminServer) Login(w http.ResponseWriter, r *http.Request) {
 		err = auth.ValidatePassword(password, u.Hash)
 		if err != nil {
 			log.Error(err)
+			audit.Record(audit.Event{
+				Event:    audit.EventLoginFailure,
+				Outcome:  audit.OutcomeFailure,
+				Reason:   audit.ReasonInvalidPassword,
+				Actor:    &audit.Actor{ID: u.Id, Username: u.Username},
+				SourceIP: audit.SourceIP(r),
+			})
 			as.handleInvalidLogin(w, r, "Invalid Username/Password")
 			return
 		}
 		if u.AccountLocked {
+			audit.Record(audit.Event{
+				Event:    audit.EventLoginFailure,
+				Outcome:  audit.OutcomeFailure,
+				Reason:   audit.ReasonAccountLocked,
+				Actor:    &audit.Actor{ID: u.Id, Username: u.Username},
+				SourceIP: audit.SourceIP(r),
+			})
 			as.handleInvalidLogin(w, r, "Account Locked")
 			return
 		}
@@ -479,6 +524,12 @@ func (as *AdminServer) Login(w http.ResponseWriter, r *http.Request) {
 		if err := session.Save(r, w); err != nil {
 			log.Error(err)
 		}
+		audit.Record(audit.Event{
+			Event:    audit.EventLoginSuccess,
+			Outcome:  audit.OutcomeSuccess,
+			Actor:    &audit.Actor{ID: u.Id, Username: u.Username},
+			SourceIP: audit.SourceIP(r),
+		})
 		as.nextOrIndex(w, r)
 	}
 }
@@ -491,6 +542,12 @@ func (as *AdminServer) Logout(w http.ResponseWriter, r *http.Request) {
 	if err := session.Save(r, w); err != nil {
 		log.Error(err)
 	}
+	audit.Record(audit.Event{
+		Event:    audit.EventLogout,
+		Outcome:  audit.OutcomeSuccess,
+		Actor:    auditActor(r),
+		SourceIP: audit.SourceIP(r),
+	})
 	http.Redirect(w, r, "/login", http.StatusFound)
 }
 
@@ -553,6 +610,13 @@ func (as *AdminServer) ResetPassword(w http.ResponseWriter, r *http.Request) {
 			getTemplate(w, "reset_password", params)
 			return
 		}
+		audit.Record(audit.Event{
+			Event:    audit.EventPasswordChanged,
+			Outcome:  audit.OutcomeSuccess,
+			Reason:   audit.ReasonForcedReset,
+			Actor:    &audit.Actor{ID: u.Id, Username: u.Username},
+			SourceIP: audit.SourceIP(r),
+		})
 		Flash(w, r, "success", "Your password has been changed successfully")
 		if err := session.Save(r, w); err != nil {
 			log.Error(err)

@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/raginx/gophish-ng/audit"
 	"github.com/raginx/gophish-ng/auth"
 	ctx "github.com/raginx/gophish-ng/context"
 	log "github.com/raginx/gophish-ng/logger"
@@ -129,6 +130,17 @@ func (as *Server) Users(w http.ResponseWriter, r *http.Request) {
 			JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusInternalServerError)
 			return
 		}
+		audit.Record(audit.Event{
+			Event:    audit.EventUserCreated,
+			Outcome:  audit.OutcomeSuccess,
+			Actor:    auditActor(r),
+			Target:   &audit.Target{Type: "user", ID: user.Id, Name: user.Username},
+			SourceIP: audit.SourceIP(r),
+			Details: map[string]any{
+				"role":           role.Slug,
+				"account_locked": user.AccountLocked,
+			},
+		})
 		JSONResponse(w, user, http.StatusOK)
 		return
 	}
@@ -167,6 +179,13 @@ func (as *Server) User(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		log.Infof("Deleted user account for %s", existingUser.Username)
+		audit.Record(audit.Event{
+			Event:    audit.EventUserDeleted,
+			Outcome:  audit.OutcomeSuccess,
+			Actor:    auditActor(r),
+			Target:   &audit.Target{Type: "user", ID: existingUser.Id, Name: existingUser.Username},
+			SourceIP: audit.SourceIP(r),
+		})
 		JSONResponse(w, models.Response{Success: true, Message: "User deleted Successfully!"}, http.StatusOK)
 	case r.Method == "PUT":
 		ur := &userRequest{}
@@ -182,6 +201,13 @@ func (as *Server) User(w http.ResponseWriter, r *http.Request) {
 			JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusBadRequest)
 			return
 		}
+		// Snapshot the before-state so the audit event can report exactly
+		// which fields changed.
+		beforeUsername := existingUser.Username
+		beforeRole := existingUser.Role.Slug
+		beforeTeam := existingUser.Team.Name
+		beforeLocked := existingUser.AccountLocked
+		beforePCR := existingUser.PasswordChangeRequired
 		existingUser.Username = ur.Username
 		// Only users with the ModifySystem permission are able to update a
 		// user's role. This prevents a privilege escalation letting users
@@ -260,6 +286,33 @@ func (as *Server) User(w http.ResponseWriter, r *http.Request) {
 			JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusInternalServerError)
 			return
 		}
+		changes := map[string]any{}
+		if existingUser.Username != beforeUsername {
+			changes["username"] = map[string]any{"from": beforeUsername, "to": existingUser.Username}
+		}
+		if role.Slug != beforeRole {
+			changes["role"] = map[string]any{"from": beforeRole, "to": role.Slug}
+		}
+		if team.Name != beforeTeam {
+			changes["team"] = map[string]any{"from": beforeTeam, "to": team.Name}
+		}
+		if existingUser.AccountLocked != beforeLocked {
+			changes["account_locked"] = map[string]any{"from": beforeLocked, "to": existingUser.AccountLocked}
+		}
+		if existingUser.PasswordChangeRequired != beforePCR {
+			changes["password_change_required"] = map[string]any{"from": beforePCR, "to": existingUser.PasswordChangeRequired}
+		}
+		if ur.Password != "" {
+			changes["password_reset"] = true
+		}
+		audit.Record(audit.Event{
+			Event:    audit.EventUserModified,
+			Outcome:  audit.OutcomeSuccess,
+			Actor:    auditActor(r),
+			Target:   &audit.Target{Type: "user", ID: existingUser.Id, Name: existingUser.Username},
+			SourceIP: audit.SourceIP(r),
+			Details:  changes,
+		})
 		JSONResponse(w, existingUser, http.StatusOK)
 	}
 }

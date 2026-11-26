@@ -34,6 +34,7 @@ import (
 
 	"gopkg.in/alecthomas/kingpin.v2"
 
+	"github.com/raginx/gophish-ng/audit"
 	"github.com/raginx/gophish-ng/config"
 	"github.com/raginx/gophish-ng/controllers"
 	"github.com/raginx/gophish-ng/dialer"
@@ -95,6 +96,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Setup the audit log sink (no-op unless enabled in config).
+	if err := audit.Setup(conf.AuditLog); err != nil {
+		log.Fatal(err)
+	}
+	defer func() { _ = audit.Close() }()
 
 	// Provide the option to disable the built-in mailer
 	// Setup the global variables and settings

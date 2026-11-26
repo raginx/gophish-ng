@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/raginx/gophish-ng/audit"
 	ctx "github.com/raginx/gophish-ng/context"
 	log "github.com/raginx/gophish-ng/logger"
 	"github.com/raginx/gophish-ng/models"
@@ -50,10 +51,25 @@ func (as *Server) Campaigns(w http.ResponseWriter, r *http.Request) {
 			JSONResponse(w, models.Response{Success: false, Message: err.Error()}, http.StatusBadRequest)
 			return
 		}
+		campaignTarget := &audit.Target{Type: "campaign", ID: c.Id, Name: c.Name}
+		audit.Record(audit.Event{
+			Event:    audit.EventCampaignCreated,
+			Outcome:  audit.OutcomeSuccess,
+			Actor:    auditActor(r),
+			Target:   campaignTarget,
+			SourceIP: audit.SourceIP(r),
+		})
 		// If the campaign is scheduled to launch immediately, send it to the worker.
 		// Otherwise, the worker will pick it up at the scheduled time
 		if c.Status == models.CampaignInProgress {
 			go as.worker.LaunchCampaign(c)
+			audit.Record(audit.Event{
+				Event:    audit.EventCampaignLaunched,
+				Outcome:  audit.OutcomeSuccess,
+				Actor:    auditActor(r),
+				Target:   campaignTarget,
+				SourceIP: audit.SourceIP(r),
+			})
 		}
 		JSONResponse(w, c, http.StatusCreated)
 	}
@@ -93,6 +109,13 @@ func (as *Server) Campaign(w http.ResponseWriter, r *http.Request) {
 			JSONResponse(w, models.Response{Success: false, Message: "Error deleting campaign"}, http.StatusInternalServerError)
 			return
 		}
+		audit.Record(audit.Event{
+			Event:    audit.EventCampaignDeleted,
+			Outcome:  audit.OutcomeSuccess,
+			Actor:    auditActor(r),
+			Target:   &audit.Target{Type: "campaign", ID: c.Id, Name: c.Name},
+			SourceIP: audit.SourceIP(r),
+		})
 		JSONResponse(w, models.Response{Success: true, Message: "Campaign deleted successfully!"}, http.StatusOK)
 	}
 }
@@ -249,6 +272,13 @@ func (as *Server) CampaignComplete(w http.ResponseWriter, r *http.Request) {
 			JSONResponse(w, models.Response{Success: false, Message: "Error completing campaign"}, http.StatusInternalServerError)
 			return
 		}
+		audit.Record(audit.Event{
+			Event:    audit.EventCampaignCompleted,
+			Outcome:  audit.OutcomeSuccess,
+			Actor:    auditActor(r),
+			Target:   &audit.Target{Type: "campaign", ID: id},
+			SourceIP: audit.SourceIP(r),
+		})
 		JSONResponse(w, models.Response{Success: true, Message: "Campaign completed successfully!"}, http.StatusOK)
 	}
 }
@@ -267,6 +297,13 @@ func (as *Server) CampaignScrub(w http.ResponseWriter, r *http.Request) {
 			JSONResponse(w, models.Response{Success: false, Message: "Error anonymizing campaign"}, http.StatusInternalServerError)
 			return
 		}
+		audit.Record(audit.Event{
+			Event:    audit.EventCampaignScrubbed,
+			Outcome:  audit.OutcomeSuccess,
+			Actor:    auditActor(r),
+			Target:   &audit.Target{Type: "campaign", ID: id},
+			SourceIP: audit.SourceIP(r),
+		})
 		JSONResponse(w, models.Response{Success: true, Message: "Campaign anonymized successfully!"}, http.StatusOK)
 	}
 }
