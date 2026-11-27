@@ -81,6 +81,7 @@ nav:
       - User Management: api/user-management.md
   - Reference:
       - Template Reference: reference/template-reference.md
+      - Audit Log: reference/audit-log.md
       - Additional References: reference/additional-references.md
       - FAQ: reference/faq.md
   - About:
