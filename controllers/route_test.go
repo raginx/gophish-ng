@@ -1,13 +1,18 @@
 package controllers
 
 import (
+	"bufio"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/raginx/gophish-ng/audit"
 )
 
 func attemptLogin(t *testing.T, ctx *testContext, client *http.Client, username, password, optionalPath string) *http.Response {
@@ -86,6 +91,67 @@ func TestInvalidCredentials(t *testing.T) {
 	expected := http.StatusUnauthorized
 	if got != expected {
 		t.Fatalf("invalid status code received. expected %d got %d", expected, got)
+	}
+}
+
+// TestAuditLogLoginEvents drives real login requests through the HTTP stack
+// with the audit sink enabled and asserts that a failed and a successful login
+// each produce the expected JSON-line event
+func TestAuditLogLoginEvents(t *testing.T) {
+	ctx := setupTest(t)
+	defer tearDown(t, ctx)
+
+	path := filepath.Join(t.TempDir(), "audit.log")
+	if err := audit.Setup(&audit.Config{Enabled: true, Path: path}); err != nil {
+		t.Fatalf("audit.Setup: %v", err)
+	}
+	// Leave the process-global sink disabled again for any later test.
+	defer func() { _ = audit.Close() }()
+
+	if resp := attemptLogin(t, ctx, nil, "admin", "bogus", ""); resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("failed login: got status %d", resp.StatusCode)
+	}
+	if resp := attemptLogin(t, ctx, nil, "admin", "gophish", ""); resp.StatusCode != http.StatusOK {
+		t.Fatalf("successful login: got status %d", resp.StatusCode)
+	}
+
+	var events []audit.Event
+	f, err := os.Open(path)
+	if err != nil {
+		t.Fatalf("open audit log: %v", err)
+	}
+	defer func() { _ = f.Close() }()
+	sc := bufio.NewScanner(f)
+	for sc.Scan() {
+		if strings.TrimSpace(sc.Text()) == "" {
+			continue
+		}
+		var e audit.Event
+		if err := json.Unmarshal(sc.Bytes(), &e); err != nil {
+			t.Fatalf("audit line is not valid JSON: %v (%q)", err, sc.Text())
+		}
+		events = append(events, e)
+	}
+
+	var sawFailure, sawSuccess bool
+	for _, e := range events {
+		switch e.Event {
+		case audit.EventLoginFailure:
+			if e.Outcome == audit.OutcomeFailure && e.Reason == audit.ReasonInvalidPassword &&
+				e.Actor != nil && e.Actor.Username == "admin" {
+				sawFailure = true
+			}
+		case audit.EventLoginSuccess:
+			if e.Outcome == audit.OutcomeSuccess && e.Actor != nil && e.Actor.Username == "admin" && e.Actor.ID != 0 {
+				sawSuccess = true
+			}
+		}
+	}
+	if !sawFailure {
+		t.Errorf("expected a login_failure(invalid_password) event, got %+v", events)
+	}
+	if !sawSuccess {
+		t.Errorf("expected a login_success event, got %+v", events)
 	}
 }
 
