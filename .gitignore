@@ -30,6 +30,7 @@ gophish_admin.key
 gophish.db*
 gophish-ng
 ROADMAP.md
+audit.log
 
 # MkDocs build output
 /site
